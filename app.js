@@ -42,9 +42,8 @@ arcadeData.forEach(game => {
     // Image integration is prepared. For now it uses neon styled text for the marquees.
     card.innerHTML = `
         <div class="marquee-container">
-            <!-- Uncomment and add images to the 'images' folder matching these names: -->
-            <!-- <img src="images/${game.title.toLowerCase().replace(/[^a-z0-9]/g, '')}.jpg" class="marquee-image" alt="${game.title}"> -->
-            <div class="marquee-text">${game.title}</div>
+            <img src="images/${game.title.toLowerCase().replace(/[^a-z0-9]/g, '')}.jpg" class="marquee-image" alt="${game.title}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+            <div class="marquee-text" style="display: none;">${game.title}</div>
         </div>
         <div class="score-row">
             <span class="initials">${game.initials}</span>
