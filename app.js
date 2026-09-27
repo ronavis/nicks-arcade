@@ -91,21 +91,62 @@ renderList();
 // Modal Logic
 const modal = document.getElementById('admin-modal');
 const closeBtn = document.querySelector('.close-btn');
-const loginBtn = document.getElementById('google-login-btn');
+const settingsBtn = document.getElementById('settingsBtn');
 const loginView = document.getElementById('login-view');
 const adminView = document.getElementById('admin-view');
 
-function checkLoginHash() {
-    if(window.location.hash === "#login") {
-        // Pause crawl animation while modal is open
-        listElement.style.animationPlayState = 'paused';
-        modal.style.display = "flex";
+// Tabs Logic
+const tabScores = document.getElementById('tabScores');
+const tabAdmins = document.getElementById('tabAdmins');
+const scoresPanel = document.getElementById('scoresPanel');
+const adminsPanel = document.getElementById('adminsPanel');
+
+tabScores.addEventListener('click', () => {
+    tabScores.classList.add('active');
+    tabAdmins.classList.remove('active');
+    scoresPanel.classList.add('active');
+    scoresPanel.style.display = 'block';
+    adminsPanel.classList.remove('active');
+    adminsPanel.style.display = 'none';
+});
+
+tabAdmins.addEventListener('click', () => {
+    tabAdmins.classList.add('active');
+    tabScores.classList.remove('active');
+    adminsPanel.classList.add('active');
+    adminsPanel.style.display = 'block';
+    scoresPanel.classList.remove('active');
+    scoresPanel.style.display = 'none';
+    renderAdminList();
+});
+
+
+function openModal() {
+    listElement.style.animationPlayState = 'paused';
+    modal.style.display = "flex";
+    
+    // Check if already authenticated locally
+    if (localStorage.getItem('arcade_admin_token')) {
+        loginView.style.display = "none";
+        adminView.style.display = "block";
+    } else {
         loginView.style.display = "block";
         adminView.style.display = "none";
     }
 }
+
+function checkLoginHash() {
+    if(window.location.hash === "#login") {
+        openModal();
+    }
+}
 window.addEventListener('hashchange', checkLoginHash);
 checkLoginHash();
+
+settingsBtn.addEventListener('click', () => {
+    window.location.hash = "login";
+    openModal();
+});
 
 closeBtn.addEventListener('click', () => {
     modal.style.display = "none";
@@ -113,20 +154,87 @@ closeBtn.addEventListener('click', () => {
     listElement.style.animationPlayState = 'running';
 });
 
-loginBtn.addEventListener('click', () => {
-    // Simulate Google Login for admins "Nick" or "Ron"
-    const user = prompt("Google Sign-In Simulation:\\n\\nEnter your email (e.g., nick@gmail.com or ron@gmail.com):");
-    if(user && (user.toLowerCase().startsWith("nick") || user.toLowerCase().startsWith("ron"))) {
-        alert("Welcome Admin!");
-        loginView.style.display = "none";
-        adminView.style.display = "block";
-    } else if (user) {
-        alert("Access Denied. Admins only.");
-        modal.style.display = "none";
-        window.location.hash = "";
-        listElement.style.animationPlayState = 'running';
+// Load default admins
+let authorizedAdmins = JSON.parse(localStorage.getItem('arcade_admins')) || [];
+if (authorizedAdmins.length === 0) {
+    authorizedAdmins = ['ron@gmail.com']; // Temporary master admin placeholder
+    localStorage.setItem('arcade_admins', JSON.stringify(authorizedAdmins));
+}
+
+// Google Auth Callback
+function handleCredentialResponse(response) {
+    try {
+        // Decode the JWT token to get the user's email
+        const token = response.credential;
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+
+        const payload = JSON.parse(jsonPayload);
+        const userEmail = payload.email.toLowerCase();
+
+        if (authorizedAdmins.includes(userEmail)) {
+            // Success
+            localStorage.setItem('arcade_admin_token', token);
+            loginView.style.display = "none";
+            adminView.style.display = "block";
+        } else {
+            // Unauthorized
+            alert(`Access Denied. ${userEmail} is not an authorized admin.`);
+        }
+    } catch (e) {
+        console.error("Authentication Error:", e);
+        alert("Authentication failed.");
+    }
+}
+
+// Manage Admins
+function renderAdminList() {
+    const adminListEl = document.getElementById('adminList');
+    adminListEl.innerHTML = '';
+    authorizedAdmins.forEach(email => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span>${email}</span> <span class="remove-admin" data-email="${email}">[X]</span>`;
+        adminListEl.appendChild(li);
+    });
+    
+    document.querySelectorAll('.remove-admin').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const emailToRemove = e.target.getAttribute('data-email');
+            if(authorizedAdmins.length === 1) {
+                alert("Cannot remove the last admin!");
+                return;
+            }
+            authorizedAdmins = authorizedAdmins.filter(a => a !== emailToRemove);
+            localStorage.setItem('arcade_admins', JSON.stringify(authorizedAdmins));
+            renderAdminList();
+        });
+    });
+}
+
+document.getElementById('submitAdmin').addEventListener('click', () => {
+    const newAdmin = document.getElementById('newAdminEmail').value.trim().toLowerCase();
+    const msg = document.getElementById('adminManageMessage');
+    if (newAdmin && newAdmin.includes('@')) {
+        if (!authorizedAdmins.includes(newAdmin)) {
+            authorizedAdmins.push(newAdmin);
+            localStorage.setItem('arcade_admins', JSON.stringify(authorizedAdmins));
+            document.getElementById('newAdminEmail').value = '';
+            msg.innerText = "Admin added successfully.";
+            msg.style.color = "#00ff00";
+            renderAdminList();
+        } else {
+            msg.innerText = "Admin already exists.";
+            msg.style.color = "#ffff00";
+        }
+    } else {
+        msg.innerText = "Invalid email address.";
+        msg.style.color = "#ff0000";
     }
 });
+
 
 // Search functionality
 const searchInput = document.getElementById('game-search');
@@ -167,26 +275,31 @@ document.getElementById('submit-score').addEventListener('click', () => {
     if(!selectedGame) { alert("Select a game first!"); return; }
     const newScore = document.getElementById('new-score').value;
     const newInitials = document.getElementById('new-initials').value.toUpperCase();
+    const msg = document.getElementById('adminMessage');
     
     if(newScore && newInitials.length > 0) {
         // Simple regex to add commas to number if they didn't
         const formattedScore = parseInt(newScore.replace(/,/g, '')).toLocaleString();
         selectedGame.score = formattedScore;
         selectedGame.initials = newInitials;
-        alert("Score updated successfully!");
+        
+        msg.innerText = "Score updated successfully!";
+        msg.style.color = "#00ff00";
         
         // Reset form
-        searchInput.value = '';
-        document.getElementById('new-score').value = '';
-        document.getElementById('new-initials').value = '';
-        selectedGame = null;
+        setTimeout(() => {
+            msg.innerText = '';
+            searchInput.value = '';
+            document.getElementById('new-score').value = '';
+            document.getElementById('new-initials').value = '';
+            selectedGame = null;
+        }, 1500);
         
-        // Close modal and re-render
-        modal.style.display = "none";
-        window.location.hash = "";
+        // Re-render
         renderList();
-        listElement.style.animationPlayState = 'running';
+        listElement.style.animationPlayState = 'paused';
     } else {
-        alert("Please enter a valid score and initials.");
+        msg.innerText = "Please enter a valid score and initials.";
+        msg.style.color = "#ff0000";
     }
 });

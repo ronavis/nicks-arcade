@@ -136,3 +136,71 @@ input { background: #000; border: 1px solid var(--neon-cyan); color: #fff; font-
     0%, 19.999%, 22%, 62.999%, 64%, 64.999%, 70%, 100% { opacity: 1; }
     20%, 21.999%, 63%, 63.999%, 65%, 69.999% { opacity: 0.4; }
 }
+
+/* Settings Button */
+.settings-btn {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  font-size: 2rem;
+  cursor: pointer;
+  z-index: 100;
+  transition: transform 0.2s, text-shadow 0.2s;
+  color: #fff;
+  text-shadow: 0 0 5px #fff, 0 0 10px #ff00ff;
+}
+.settings-btn:hover {
+  transform: rotate(90deg);
+  text-shadow: 0 0 10px #fff, 0 0 20px #00ffff;
+}
+
+/* Tabs */
+.dashboard-tabs {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #ff00ff;
+}
+.tab-btn {
+  background: transparent;
+  color: #fff;
+  border: none;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.8rem;
+  padding: 10px;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.2s, text-shadow 0.2s;
+}
+.tab-btn.active {
+  opacity: 1;
+  text-shadow: 0 0 10px #00ffff;
+  border-bottom: 3px solid #00ffff;
+}
+.tab-panel {
+  display: none;
+}
+.tab-panel.active {
+  display: block;
+}
+
+/* Admin List */
+#adminList {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 20px;
+  text-align: left;
+}
+#adminList li {
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+  color: #00ffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.remove-admin {
+  color: #ff0055;
+  cursor: pointer;
+  font-size: 0.8rem;
+}

@@ -6,15 +6,17 @@
     <title>Nick's Arcade High Scores</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="crt-overlay"></div>
     
     <!-- Header stays fixed on top -->
-    <header class="neon-header">
+    <header class="neon-header" style="position: relative;">
         <h1 class="flicker">NICK'S ARCADE</h1>
         <h2>HIGH SCORES</h2>
+        <div class="settings-btn" id="settingsBtn" title="Admin Settings">⚙️</div>
     </header>
 
     <!-- Main crawl area -->
@@ -30,15 +32,46 @@
             <span class="close-btn">&times;</span>
             <div id="login-view">
                 <h2>Google Sign-In</h2>
-                <button id="google-login-btn" class="neon-btn">Sign in with Google</button>
+                <p>Please log in with your Google account.</p>
+                <div id="g_id_onload"
+                     data-client_id="YOUR_GOOGLE_CLIENT_ID"
+                     data-context="signin"
+                     data-ux_mode="popup"
+                     data-callback="handleCredentialResponse"
+                     data-auto_prompt="false">
+                </div>
+                <div class="g_id_signin"
+                     data-type="standard"
+                     data-shape="rectangular"
+                     data-theme="outline"
+                     data-text="signin_with"
+                     data-size="large"
+                     data-logo_alignment="left">
+                </div>
             </div>
             <div id="admin-view" style="display: none;">
-                <h2>ENTER NEW SCORE</h2>
-                <input type="text" id="game-search" placeholder="Search Game...">
-                <div id="search-results"></div>
-                <input type="number" id="new-score" placeholder="Score">
-                <input type="text" id="new-initials" placeholder="Initials (3 letters)" maxlength="3">
-                <button id="submit-score" class="neon-btn">SUBMIT</button>
+                <div class="dashboard-tabs">
+                    <button class="tab-btn active" id="tabScores">Update Scores</button>
+                    <button class="tab-btn" id="tabAdmins">Manage Admins</button>
+                </div>
+                
+                <div id="scoresPanel" class="tab-panel active">
+                    <h2>ENTER NEW SCORE</h2>
+                    <input type="text" id="game-search" placeholder="Search Game...">
+                    <div id="search-results"></div>
+                    <input type="number" id="new-score" placeholder="Score">
+                    <input type="text" id="new-initials" placeholder="Initials (3 letters)" maxlength="3">
+                    <button id="submit-score" class="neon-btn">SUBMIT</button>
+                    <p id="adminMessage"></p>
+                </div>
+
+                <div id="adminsPanel" class="tab-panel" style="display: none;">
+                    <h2>MANAGE ADMINS</h2>
+                    <ul id="adminList"></ul>
+                    <input type="email" id="newAdminEmail" placeholder="admin@gmail.com">
+                    <button id="submitAdmin" class="neon-btn" style="margin-top: 10px;">ADD ADMIN</button>
+                    <p id="adminManageMessage"></p>
+                </div>
             </div>
         </div>
     </div>
