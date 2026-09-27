@@ -6,7 +6,7 @@
     --text-primary: #fff;
     --font-heading: 'Press Start 2P', cursive;
     --font-score: 'VT323', monospace;
-    --max-width: 1200px;
+    --max-width: 1400px;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -220,7 +220,7 @@ body.theme-clean .game-row {
     background: transparent;
     padding: 0 1rem;
     grid-template-columns: 700px 1fr 200px;
-    gap: 4rem;
+    gap: 2rem;
 }
 body.theme-clean .marquee-container {
     width: 700px;
@@ -239,7 +239,7 @@ body.theme-clean .column-headers {
     background: linear-gradient(90deg, transparent, rgba(255, 0, 255, 0.05), transparent);
     color: var(--neon-cyan);
     text-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
-    gap: 4rem;
+    gap: 2rem;
 }
 
 /* Tabs */
