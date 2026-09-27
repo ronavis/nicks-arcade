@@ -95,6 +95,17 @@ const settingsBtn = document.getElementById('settingsBtn');
 const loginView = document.getElementById('login-view');
 const adminView = document.getElementById('admin-view');
 
+// Theme Switcher Logic
+const themeSelect = document.getElementById('themeSelect');
+if(themeSelect) {
+    themeSelect.addEventListener('change', (e) => {
+        document.body.className = '';
+        if(e.target.value !== 'theme-neon') {
+            document.body.classList.add(e.target.value);
+        }
+    });
+}
+
 // Tabs Logic
 const tabScores = document.getElementById('tabScores');
 const tabAdmins = document.getElementById('tabAdmins');

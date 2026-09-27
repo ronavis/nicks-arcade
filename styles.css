@@ -73,7 +73,7 @@ body {
 }
 
 @keyframes crawl {
-    0% { top: 100%; }
+    0% { top: 0%; }
     100% { top: -250%; }
 }
 
@@ -152,6 +152,43 @@ input { background: #000; border: 1px solid var(--neon-cyan); color: #fff; font-
 .settings-btn:hover {
   transform: rotate(90deg);
   text-shadow: 0 0 10px #fff, 0 0 20px #00ffff;
+}
+
+/* Theme Switcher */
+.neon-select {
+    background: #000;
+    color: var(--neon-cyan);
+    font-family: var(--font-score);
+    font-size: 1rem;
+    padding: 0.5rem;
+    border: 1px solid var(--neon-cyan);
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: 0 0 5px var(--neon-cyan);
+}
+.neon-select:focus {
+    outline: none;
+    box-shadow: 0 0 10px var(--neon-cyan);
+}
+
+/* Clean Theme Overrides */
+body.theme-clean .game-row {
+    border: none;
+    box-shadow: none;
+    background: transparent;
+    padding: 0;
+    grid-template-columns: 700px 1fr 200px;
+    margin-bottom: 2rem;
+}
+body.theme-clean .marquee-container {
+    width: 700px;
+    height: 210px;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+}
+body.theme-clean .marquee-text {
+    display: none !important; /* Hide fallback text on clean mode by default */
 }
 
 /* Tabs */
