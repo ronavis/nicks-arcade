@@ -157,7 +157,7 @@ closeBtn.addEventListener('click', () => {
 // Load default admins
 let authorizedAdmins = JSON.parse(localStorage.getItem('arcade_admins')) || [];
 if (authorizedAdmins.length === 0) {
-    authorizedAdmins = ['ron@gmail.com']; // Temporary master admin placeholder
+    authorizedAdmins = ['ronavis@gmail.com']; // Master admin
     localStorage.setItem('arcade_admins', JSON.stringify(authorizedAdmins));
 }
 
