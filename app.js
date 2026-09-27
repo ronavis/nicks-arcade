@@ -32,6 +32,10 @@ let arcadeData = [
     { title: "Super Mario Bros. 3", score: "47,090", initials: "SLK" },
     { title: "Tetris", score: "38,921", initials: "MAR" }
 ];
+const storedData = localStorage.getItem('arcadeData');
+if (storedData) {
+    try { arcadeData = JSON.parse(storedData); } catch(e) {}
+}
 
 const listElement = document.getElementById('arcade-list');
 
@@ -43,6 +47,8 @@ function renderList() {
         const row = document.createElement('div');
         row.className = 'game-row';
         const imgName = game.title.toLowerCase().replace(/[^a-z0-9]/g, '') + '.png';
+        const dateStr = game.date || "---";
+        const proofHTML = game.proof ? `<span class="proof" data-proof="${game.proof}">VIEW PHOTO</span>` : '<span class="proof" style="color:#555; text-decoration:none; cursor:default;">---</span>';
 
         row.innerHTML = `
             <div class="marquee-container">
@@ -52,11 +58,24 @@ function renderList() {
             <div class="score-col">
                 <span class="score">${game.score}</span>
             </div>
+            <div class="date-col">
+                <span class="date">${dateStr}</span>
+            </div>
             <div class="initials-col">
                 <span class="initials">${game.initials}</span>
             </div>
+            <div class="proof-col">
+                ${proofHTML}
+            </div>
         `;
         listElement.appendChild(row);
+    });
+
+    document.querySelectorAll('.proof[data-proof]').forEach(el => {
+        el.addEventListener('click', (e) => {
+            document.getElementById('photo-viewer-img').src = e.target.getAttribute('data-proof');
+            document.getElementById('photo-modal').style.display = 'flex';
+        });
     });
 
     const qrSection = document.createElement('div');
@@ -93,40 +112,106 @@ const settingsBtn = document.getElementById('settingsBtn');
 const loginView = document.getElementById('login-view');
 const adminView = document.getElementById('admin-view');
 
-// Theme Switcher Logic
-const themeSelect = document.getElementById('themeSelect');
-if(themeSelect) {
-    themeSelect.addEventListener('change', (e) => {
-        document.body.className = '';
-        if(e.target.value !== 'theme-neon') {
-            document.body.classList.add(e.target.value);
+// Photo Viewer Modal
+const closePhotoBtn = document.getElementById('closePhotoBtn');
+if (closePhotoBtn) {
+    closePhotoBtn.addEventListener('click', () => {
+        document.getElementById('photo-modal').style.display = 'none';
+        document.getElementById('photo-viewer-img').src = '';
+    });
+}
+
+// UI Settings Logic
+const marqueeSizeSlider = document.getElementById('marqueeSizeSlider');
+const marqueeSizeDisplay = document.getElementById('marqueeSizeDisplay');
+const fontUpload = document.getElementById('fontUpload');
+const resetFontBtn = document.getElementById('resetFontBtn');
+
+const savedMarqueeSize = localStorage.getItem('arcade_marquee_size');
+if(savedMarqueeSize && marqueeSizeSlider) {
+    marqueeSizeSlider.value = savedMarqueeSize;
+    marqueeSizeDisplay.innerText = savedMarqueeSize;
+    document.documentElement.style.setProperty('--marquee-width', savedMarqueeSize + 'px');
+    document.documentElement.style.setProperty('--marquee-height', (savedMarqueeSize * 0.3) + 'px');
+}
+
+const savedFont = localStorage.getItem('arcade_custom_font');
+if(savedFont) applyCustomFont(savedFont);
+
+if (marqueeSizeSlider) {
+    marqueeSizeSlider.addEventListener('input', (e) => {
+        const val = e.target.value;
+        marqueeSizeDisplay.innerText = val;
+        document.documentElement.style.setProperty('--marquee-width', val + 'px');
+        document.documentElement.style.setProperty('--marquee-height', (val * 0.3) + 'px');
+        localStorage.setItem('arcade_marquee_size', val);
+    });
+}
+
+if (fontUpload) {
+    fontUpload.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if(file) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                applyCustomFont(ev.target.result);
+                localStorage.setItem('arcade_custom_font', ev.target.result);
+            };
+            reader.readAsDataURL(file);
         }
     });
 }
 
+if (resetFontBtn) {
+    resetFontBtn.addEventListener('click', () => {
+        localStorage.removeItem('arcade_custom_font');
+        const styleEl = document.getElementById('customFontStyle');
+        if(styleEl) styleEl.remove();
+        fontUpload.value = '';
+    });
+}
+
+function applyCustomFont(dataUrl) {
+    let styleEl = document.getElementById('customFontStyle');
+    if(!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = 'customFontStyle';
+        document.head.appendChild(styleEl);
+    }
+    styleEl.innerHTML = `
+        @font-face {
+            font-family: 'CustomScoreFont';
+            src: url(${dataUrl});
+        }
+        :root {
+            --font-score: 'CustomScoreFont', monospace;
+        }
+    `;
+}
+
 // Tabs Logic
-const tabScores = document.getElementById('tabScores');
-const tabAdmins = document.getElementById('tabAdmins');
-const scoresPanel = document.getElementById('scoresPanel');
-const adminsPanel = document.getElementById('adminsPanel');
-
-tabScores.addEventListener('click', () => {
-    tabScores.classList.add('active');
-    tabAdmins.classList.remove('active');
-    scoresPanel.classList.add('active');
-    scoresPanel.style.display = 'block';
-    adminsPanel.classList.remove('active');
-    adminsPanel.style.display = 'none';
-});
-
-tabAdmins.addEventListener('click', () => {
-    tabAdmins.classList.add('active');
-    tabScores.classList.remove('active');
-    adminsPanel.classList.add('active');
-    adminsPanel.style.display = 'block';
-    scoresPanel.classList.remove('active');
-    scoresPanel.style.display = 'none';
-    renderAdminList();
+const tabs = document.querySelectorAll('.tab-btn');
+tabs.forEach(tab => {
+    tab.addEventListener('click', (e) => {
+        document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => {
+            p.classList.remove('active');
+            p.style.display = 'none';
+        });
+        
+        e.target.classList.add('active');
+        if(e.target.id === 'tabScores') {
+            document.getElementById('scoresPanel').style.display = 'block';
+            document.getElementById('scoresPanel').classList.add('active');
+        } else if(e.target.id === 'tabAdmins') {
+            document.getElementById('adminsPanel').style.display = 'block';
+            document.getElementById('adminsPanel').classList.add('active');
+            renderAdminList();
+        } else if(e.target.id === 'tabSettings') {
+            document.getElementById('settingsPanel').style.display = 'block';
+            document.getElementById('settingsPanel').classList.add('active');
+        }
+    });
 });
 
 
@@ -280,33 +365,75 @@ searchInput.addEventListener('input', (e) => {
     });
 });
 
+// Resize image helper
+function resizeImage(file, callback) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const max_size = 800;
+            let width = img.width;
+            let height = img.height;
+            if (width > height && width > max_size) {
+                height *= max_size / width;
+                width = max_size;
+            } else if (height > max_size) {
+                width *= max_size / height;
+                height = max_size;
+            }
+            canvas.width = width;
+            canvas.height = height;
+            canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+            callback(canvas.toDataURL('image/jpeg', 0.8));
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
 document.getElementById('submit-score').addEventListener('click', () => {
     if(!selectedGame) { alert("Select a game first!"); return; }
     const newScore = document.getElementById('new-score').value;
     const newInitials = document.getElementById('new-initials').value.toUpperCase();
+    const proofFile = document.getElementById('new-proof').files[0];
     const msg = document.getElementById('adminMessage');
     
     if(newScore && newInitials.length > 0) {
-        // Simple regex to add commas to number if they didn't
         const formattedScore = parseInt(newScore.replace(/,/g, '')).toLocaleString();
-        selectedGame.score = formattedScore;
-        selectedGame.initials = newInitials;
+        const dateStr = new Date().toLocaleDateString();
         
-        msg.innerText = "Score updated successfully!";
-        msg.style.color = "#00ff00";
-        
-        // Reset form
-        setTimeout(() => {
-            msg.innerText = '';
-            searchInput.value = '';
-            document.getElementById('new-score').value = '';
-            document.getElementById('new-initials').value = '';
-            selectedGame = null;
-        }, 1500);
-        
-        // Re-render
-        renderList();
-        listElement.style.animationPlayState = 'paused';
+        const saveScore = (proofDataURL) => {
+            selectedGame.score = formattedScore;
+            selectedGame.initials = newInitials;
+            selectedGame.date = dateStr;
+            if(proofDataURL) selectedGame.proof = proofDataURL;
+            
+            localStorage.setItem('arcadeData', JSON.stringify(arcadeData));
+            
+            msg.innerText = "Score updated successfully!";
+            msg.style.color = "#00ff00";
+            
+            setTimeout(() => {
+                msg.innerText = '';
+                searchInput.value = '';
+                document.getElementById('new-score').value = '';
+                document.getElementById('new-initials').value = '';
+                document.getElementById('new-proof').value = '';
+                selectedGame = null;
+            }, 1500);
+            
+            renderList();
+            listElement.style.animationPlayState = 'paused';
+        };
+
+        if(proofFile) {
+            msg.innerText = "Processing image...";
+            msg.style.color = "#ffff00";
+            resizeImage(proofFile, saveScore);
+        } else {
+            saveScore(null);
+        }
     } else {
         msg.innerText = "Please enter a valid score and initials.";
         msg.style.color = "#ff0000";
