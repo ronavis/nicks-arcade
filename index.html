@@ -72,7 +72,15 @@
                     <input type="text" id="game-search" placeholder="Search Game...">
                     <div id="search-results"></div>
                     <input type="number" id="new-score" placeholder="Score">
-                    <input type="text" id="new-initials" placeholder="Initials (3 letters)" maxlength="3">
+                    
+                    <div style="margin-top: 1rem; color: #0ff;">Enter Initials</div>
+                    <div id="arcade-initials-display">
+                        <span class="initial-char active" id="char1">_</span>
+                        <span class="initial-char" id="char2">_</span>
+                        <span class="initial-char" id="char3">_</span>
+                    </div>
+                    <div id="arcade-keyboard"></div>
+                    <input type="hidden" id="new-initials">
                     <label class="custom-file-upload">
                         <input type="file" id="new-proof" accept="image/*" capture="environment">
                         📸 Upload Photo Evidence (Optional)

@@ -392,6 +392,50 @@ function resizeImage(file, callback) {
     reader.readAsDataURL(file);
 }
 
+// Arcade Keyboard Logic
+const chars = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','DEL','END'];
+const keyboard = document.getElementById('arcade-keyboard');
+let currentInitials = [];
+
+function renderKeyboard() {
+    keyboard.innerHTML = '';
+    chars.forEach(c => {
+        const btn = document.createElement('div');
+        btn.className = 'key-btn';
+        if(c === 'DEL') btn.classList.add('del');
+        if(c === 'END') btn.classList.add('end');
+        btn.innerText = c;
+        btn.addEventListener('click', () => handleKey(c));
+        keyboard.appendChild(btn);
+    });
+}
+
+function updateInitialsDisplay() {
+    for(let i=1; i<=3; i++) {
+        const el = document.getElementById('char'+i);
+        el.innerText = currentInitials[i-1] || '_';
+        el.classList.remove('active');
+    }
+    if (currentInitials.length < 3) {
+        document.getElementById('char' + (currentInitials.length + 1)).classList.add('active');
+    }
+    document.getElementById('new-initials').value = currentInitials.join('');
+}
+
+function handleKey(c) {
+    if (c === 'DEL') {
+        currentInitials.pop();
+    } else if (c === 'END') {
+        document.getElementById('submit-score').click();
+    } else {
+        if (currentInitials.length < 3) {
+            currentInitials.push(c);
+        }
+    }
+    updateInitialsDisplay();
+}
+renderKeyboard();
+
 document.getElementById('submit-score').addEventListener('click', () => {
     if(!selectedGame) { alert("Select a game first!"); return; }
     const newScore = document.getElementById('new-score').value;
@@ -419,6 +463,8 @@ document.getElementById('submit-score').addEventListener('click', () => {
                 searchInput.value = '';
                 document.getElementById('new-score').value = '';
                 document.getElementById('new-initials').value = '';
+                currentInitials = [];
+                updateInitialsDisplay();
                 document.getElementById('new-proof').value = '';
                 selectedGame = null;
             }, 1500);
