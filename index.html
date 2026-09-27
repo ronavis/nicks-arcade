@@ -73,8 +73,10 @@
                     <div id="search-results"></div>
                     <input type="number" id="new-score" placeholder="Score">
                     <input type="text" id="new-initials" placeholder="Initials (3 letters)" maxlength="3">
-                    <label for="new-proof" style="display:block; text-align:left; color:#0ff; margin-top:10px;">Upload Photo Evidence (Optional):</label>
-                    <input type="file" id="new-proof" accept="image/*" capture="environment" style="border:none; padding-left:0;">
+                    <label class="custom-file-upload">
+                        <input type="file" id="new-proof" accept="image/*" capture="environment">
+                        📸 Upload Photo Evidence (Optional)
+                    </label>
                     <button id="submit-score" class="neon-btn">SUBMIT</button>
                     <p id="adminMessage"></p>
                 </div>
@@ -94,9 +96,12 @@
                         <input type="range" id="marqueeSizeSlider" min="300" max="1000" value="700" style="width: 100%;">
                     </div>
                     <div style="margin-bottom: 20px;">
-                        <label style="color:#0ff; font-size:1.2rem;">Upload Custom Font (.ttf, .woff):</label><br>
-                        <input type="file" id="fontUpload" accept=".ttf,.woff,.woff2" style="border:none; padding-left:0; color:#fff;">
-                        <button id="resetFontBtn" class="neon-btn" style="padding: 0.5rem 1rem; font-size:0.8rem; margin-top:5px;">Reset Font</button>
+                        <label class="custom-file-upload" style="border-color: var(--neon-pink); color: var(--neon-pink);">
+                            <input type="file" id="fontUpload" accept=".ttf,.woff,.woff2">
+                            🅰️ Upload Custom Font (.ttf, .woff)
+                        </label>
+                        <br>
+                        <button id="resetFontBtn" class="neon-btn" style="padding: 0.5rem 1rem; font-size:0.8rem; margin-top:15px; border-color:var(--neon-pink); color:var(--neon-pink);">Reset Font</button>
                     </div>
                 </div>
             </div>
