@@ -427,8 +427,19 @@ input:not([type="file"]):not([type="range"]):focus {
 }
 
 @media (max-width: 600px) {
-    .neon-header h1 { font-size: 2.5rem; }
-    .neon-header h2 { font-size: 1rem; }
+    .neon-header h1 { 
+        font-size: 2.2rem; 
+        line-height: 1.3; 
+        margin-bottom: 1rem; 
+    }
+    .neon-header h2 { font-size: 0.9rem; }
+    .header-controls {
+        top: 15px;
+        right: 15px;
+    }
+    .settings-btn {
+        font-size: 1.5rem;
+    }
     .game-row {
         grid-template-columns: 1fr;
         grid-template-areas: 
