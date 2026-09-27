@@ -48,6 +48,29 @@ body {
     font-size: 1.5rem; color: var(--neon-cyan); text-shadow: 0 0 10px var(--neon-cyan); letter-spacing: 4px;
 }
 
+/* Column Headers */
+.column-headers {
+    display: grid;
+    grid-template-columns: 350px 1fr 200px;
+    align-items: center;
+    gap: 2rem;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 1rem 3rem;
+    color: var(--neon-pink);
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    text-shadow: 0 0 10px var(--neon-pink);
+    width: 100%;
+    z-index: 10;
+    position: relative;
+    border-bottom: 2px solid var(--bg-color);
+}
+.column-headers div:nth-child(2),
+.column-headers div:nth-child(3) {
+    text-align: center;
+}
+
 /* Crawl Animation Container */
 .crawl-container {
     flex-grow: 1;
@@ -104,12 +127,11 @@ body {
 .marquee-text { font-family: var(--font-heading); font-size: 0.8rem; color: var(--neon-yellow); text-align: center; text-shadow: 0 0 10px var(--neon-yellow); padding: 0 10px;}
 
 .score-col, .initials-col {
-    display: flex; flex-direction: column; align-items: center;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;
 }
 
-.col-label { font-size: 1.2rem; color: #888; margin-bottom: 0.5rem; letter-spacing: 2px; }
-.score { font-size: 2.5rem; color: var(--neon-cyan); text-shadow: 0 0 8px var(--neon-cyan); }
-.initials { font-size: 2.5rem; color: var(--neon-pink); text-shadow: 0 0 8px var(--neon-pink); }
+.score { font-size: 2.5rem; color: var(--neon-cyan); text-shadow: 0 0 8px var(--neon-cyan); text-align: center; width: 100%; }
+.initials { font-size: 2.5rem; color: var(--neon-pink); text-shadow: 0 0 8px var(--neon-pink); text-align: center; width: 100%; }
 
 .qr-section {
     display: flex; flex-direction: column; align-items: center; margin-top: 4rem; padding-bottom: 4rem;
@@ -189,6 +211,9 @@ body.theme-clean .marquee-container {
 }
 body.theme-clean .marquee-text {
     display: none !important; /* Hide fallback text on clean mode by default */
+}
+body.theme-clean .column-headers {
+    grid-template-columns: 700px 1fr 200px;
 }
 
 /* Tabs */

@@ -50,11 +50,9 @@ function renderList() {
                 <div class="marquee-text" style="display: none;">${game.title}</div>
             </div>
             <div class="score-col">
-                <span class="col-label">SCORE</span>
                 <span class="score">${game.score}</span>
             </div>
             <div class="initials-col">
-                <span class="col-label">INITIALS</span>
                 <span class="initials">${game.initials}</span>
             </div>
         `;
