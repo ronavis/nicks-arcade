@@ -8,6 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
     <div class="crt-overlay"></div>
@@ -83,8 +84,9 @@
                     <input type="hidden" id="new-initials">
                     <label class="custom-file-upload">
                         <input type="file" id="new-proof" accept="image/*" capture="environment">
-                        📸 Upload Photo Evidence (Optional)
+                        📸 Upload Photo Evidence (Auto-Detects Game & Score)
                     </label>
+                    <div id="ocr-status" style="color: var(--neon-yellow); margin-top: 10px; font-size: 0.8rem; display: none;"></div>
                     <button id="submit-score" class="neon-btn">SUBMIT</button>
                     <p id="adminMessage"></p>
                 </div>

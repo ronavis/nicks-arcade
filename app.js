@@ -436,6 +436,64 @@ function handleKey(c) {
 }
 renderKeyboard();
 
+// OCR Auto-Detect Logic
+document.getElementById('new-proof').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const statusEl = document.getElementById('ocr-status');
+    statusEl.style.display = 'block';
+    statusEl.innerText = 'Scanning image for Game and Score...';
+    
+    try {
+        const result = await Tesseract.recognize(file, 'eng');
+        const text = result.data.text;
+        
+        // 1. Detect Game
+        let foundGame = null;
+        for (let game of arcadeData) {
+            if (text.toLowerCase().includes(game.title.toLowerCase())) {
+                foundGame = game;
+                break;
+            }
+        }
+        
+        // 2. Detect Score (find largest number block)
+        const numberMatches = text.match(/\b\d{1,3}(,\d{3})*\b/g) || text.match(/\b\d+\b/g);
+        let foundScore = null;
+        if (numberMatches) {
+            let maxVal = -1;
+            for (let match of numberMatches) {
+                const val = parseInt(match.replace(/,/g, ''));
+                if (val > maxVal && val > 100) { // arbitrary threshold to ignore stray small digits
+                    maxVal = val;
+                    foundScore = match;
+                }
+            }
+        }
+        
+        let statusMsg = "Scan Complete! ";
+        if (foundGame) {
+            selectedGame = foundGame;
+            document.getElementById('game-search').value = foundGame.title;
+            statusMsg += `Game: ${foundGame.title} | `;
+        }
+        if (foundScore) {
+            document.getElementById('new-score').value = foundScore.replace(/,/g, '');
+            statusMsg += `Score: ${foundScore}`;
+        }
+        
+        if(!foundGame && !foundScore) {
+            statusMsg = "Could not auto-detect game or score. Please enter manually.";
+        }
+        statusEl.innerText = statusMsg;
+        
+    } catch (err) {
+        statusEl.innerText = "OCR Failed.";
+        console.error(err);
+    }
+});
+
 document.getElementById('submit-score').addEventListener('click', () => {
     if(!selectedGame) { alert("Select a game first!"); return; }
     const newScore = document.getElementById('new-score').value;
