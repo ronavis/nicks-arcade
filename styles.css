@@ -103,6 +103,22 @@ body {
 }
 
 /* Row Layout */
+.column-headers {
+    display: grid;
+    grid-template-columns: var(--marquee-width) 1fr 150px 200px 100px;
+    align-items: center;
+    gap: 2rem;
+    padding: 0 1rem;
+    margin-bottom: 1rem;
+}
+.header-col {
+    color: var(--neon-pink);
+    font-size: 1.5rem;
+    text-transform: uppercase;
+    text-align: center;
+    text-shadow: 0 0 10px var(--neon-pink);
+    width: 100%;
+}
 .game-row {
     display: grid;
     grid-template-columns: var(--marquee-width) 1fr 150px 200px 100px;
@@ -132,7 +148,7 @@ body {
     transition: all 0.3s ease;
 }
 
-.marquee-image { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
+.marquee-image { width: 100%; height: 100%; object-fit: contain; border-radius: 6px; }
 .marquee-text { display: none !important; }
 
 .score-col, .initials-col, .date-col, .proof-col {

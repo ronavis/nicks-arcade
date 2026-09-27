@@ -1,7 +1,7 @@
 let arcadeData = [
     { title: "Asteroids", score: "8,560", initials: "COL" },
     { title: "BurgerTime", score: "15,100", initials: "NIC" },
-    { title: "Bust-A-Move", score: "1,734,150", initials: "RJW" },
+    { title: "Bubble Bobble", score: "1,734,150", initials: "RJW" },
     { title: "Centipede", score: "17,609", initials: "BMH" },
     { title: "Crystal Castles", score: "51,070", initials: "MAR" },
     { title: "Dig Dug", score: "31,700", initials: "MBW" },
