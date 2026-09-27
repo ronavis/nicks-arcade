@@ -17,17 +17,13 @@
         <h1 class="flicker">NICK'S ARCADE</h1>
         <h2>HIGH SCORES</h2>
         <div class="header-controls">
-            <select id="themeSelect" class="neon-select">
-                <option value="theme-neon">Theme: Classic Neon</option>
-                <option value="theme-clean">Theme: Clean (Large Marquees)</option>
-            </select>
             <div class="settings-btn" id="settingsBtn" title="Admin Settings">⚙️</div>
         </div>
     </header>
 
     <!-- Static Column Headers -->
     <div class="column-headers">
-        <div>GAME</div>
+        <div></div>
         <div>SCORE</div>
         <div>INITIALS</div>
     </div>
@@ -63,6 +59,12 @@
                 </div>
             </div>
             <div id="admin-view" style="display: none;">
+                <div style="margin-bottom: 20px;">
+                    <select id="themeSelect" class="neon-select" style="width: 100%;">
+                        <option value="theme-neon">Theme: Classic Neon</option>
+                        <option value="theme-clean">Theme: Clean (Large Marquees)</option>
+                    </select>
+                </div>
                 <div class="dashboard-tabs">
                     <button class="tab-btn active" id="tabScores">Update Scores</button>
                     <button class="tab-btn" id="tabAdmins">Manage Admins</button>
