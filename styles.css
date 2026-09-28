@@ -102,63 +102,111 @@ body {
     100% { top: -250%; }
 }
 
-/* Row Layout */
-.column-headers {
-    display: grid;
-    grid-template-columns: var(--marquee-width) 1fr 150px 200px 100px;
-    align-items: center;
-    gap: 2rem;
-    padding: 0 1rem;
-    margin-bottom: 1rem;
-}
-.header-col {
-    color: var(--neon-pink);
-    font-size: 1.5rem;
-    text-transform: uppercase;
-    text-align: center;
-    text-shadow: 0 0 10px var(--neon-pink);
-    width: 100%;
-}
+/* === PORTRAIT TV LAYOUT — Primary layout, compact card rows === */
+.column-headers { display: none; } /* Cards are self-labeling, no header row needed */
+
 .game-row {
     display: grid;
-    grid-template-columns: var(--marquee-width) 1fr 150px 200px 100px;
+    grid-template-columns: 180px 1fr;
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+        "image title"
+        "image score"
+        "image meta";
     align-items: center;
-    gap: 2rem;
-    padding: 0 1rem;
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-    transition: transform 0.3s ease, filter 0.3s ease;
+    gap: 0.4rem 1.2rem;
+    padding: 0.75rem 1rem;
+    background: rgba(15, 15, 25, 0.7);
+    border: 1px solid rgba(0, 255, 255, 0.12);
+    border-radius: 12px;
+    backdrop-filter: blur(8px);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
 }
 .game-row:hover {
-    transform: scale(1.02);
-    filter: brightness(1.2);
+    transform: scale(1.01);
+    border-color: rgba(0, 255, 255, 0.4);
 }
 
 .marquee-container {
-    width: var(--marquee-width);
-    height: var(--marquee-height);
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-    display: flex; justify-content: center; align-items: center;
+    grid-area: image;
+    width: 180px;
+    height: 56px;
     overflow: hidden;
-    transition: all 0.3s ease;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.8);
+    flex-shrink: 0;
+    align-self: center;
 }
-
-.marquee-image { width: 100%; height: 100%; object-fit: contain; border-radius: 6px; }
+.marquee-image { 
+    width: 100%; 
+    height: 100%; 
+    object-fit: cover; 
+    object-position: center;
+    border-radius: 8px; 
+    display: block;
+}
 .marquee-text { display: none !important; }
 
-.score-col, .initials-col, .date-col, .proof-col {
-    display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;
+/* Title row — game name */
+.game-title-col {
+    grid-area: title;
+    font-family: var(--font-heading);
+    font-size: 0.6rem;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 1px;
+    line-height: 1.4;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.score { font-size: 3rem; color: #fff; text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan); text-align: center; width: 100%; }
-.initials { font-size: 3rem; color: #fff; text-shadow: 0 0 10px var(--neon-pink), 0 0 20px var(--neon-pink); text-align: center; width: 100%; }
-.date { font-size: 1.5rem; color: var(--neon-yellow); text-shadow: 0 0 5px var(--neon-yellow); text-align: center; width: 100%; }
-.proof { font-size: 1.5rem; color: var(--neon-cyan); text-align: center; width: 100%; cursor: pointer; text-decoration: underline; text-shadow: 0 0 5px var(--neon-cyan); }
+/* Score row */
+.score-col {
+    grid-area: score;
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+}
+.score {
+    font-size: 2.2rem;
+    color: #fff;
+    text-shadow: 0 0 8px var(--neon-cyan), 0 0 16px var(--neon-cyan);
+    line-height: 1;
+}
+
+/* Meta row — initials, date, proof */
+.meta-row {
+    grid-area: meta;
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    flex-wrap: wrap;
+}
+.initials-col, .date-col, .proof-col {
+    display: flex;
+    align-items: center;
+}
+.initials {
+    font-size: 1.6rem;
+    color: var(--neon-pink);
+    text-shadow: 0 0 8px var(--neon-pink);
+}
+.date {
+    font-size: 1.2rem;
+    color: rgba(255, 255, 0, 0.7);
+}
+.proof {
+    font-size: 1.1rem;
+    color: var(--neon-cyan);
+    cursor: pointer;
+    text-decoration: underline;
+    text-shadow: 0 0 5px var(--neon-cyan);
+}
+
 
 .qr-section {
     display: flex; flex-direction: column; align-items: center; margin-top: 4rem; padding-bottom: 4rem;
@@ -403,75 +451,24 @@ input:not([type="file"]):not([type="range"]):focus {
 .key-btn.end { background: rgba(0,255,0,0.2); border-color: #0f0; color: #0f0; grid-column: span 2; }
 .key-btn.end:hover { background: #0f0; color: #000; }
 
-/* Responsive Layouts */
-@media (max-width: 1200px) {
-    .column-headers { display: none; }
-    .game-row {
-        grid-template-columns: 1fr 1fr;
-        grid-template-areas: 
-            "image image"
-            "score initials"
-            "date proof";
-        background: rgba(20, 20, 30, 0.6);
-        padding: 2rem;
-        border-radius: 20px;
-        border: 1px solid rgba(0, 243, 255, 0.2);
-        gap: 1rem;
-        backdrop-filter: blur(10px);
-        max-width: 90%;
-        margin: 0 auto 2rem;
-    }
-    .marquee-container {
-        grid-area: image;
-        width: 100%;
-        height: auto;
-        aspect-ratio: 10 / 3;
-        max-width: var(--marquee-width);
-        margin: 0 auto 1rem;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.8);
-        border-radius: 12px;
-    }
-    .score-col { grid-area: score; align-items: flex-start; }
-    .initials-col { grid-area: initials; align-items: flex-end; }
-    .date-col { grid-area: date; align-items: flex-start; }
-    .proof-col { grid-area: proof; align-items: flex-end; }
+/* Responsive tweaks — layout is already portrait-first */
+@media (max-width: 500px) {
+    .neon-header { gap: 0.8rem; padding: 0.8rem 1rem; }
+    .header-qr { display: none; }
+    .neon-header h1 { font-size: 1.8rem; }
+    .neon-header h2 { font-size: 0.7rem; letter-spacing: 3px; }
+    .settings-btn { font-size: 1.4rem; }
 
-    .score::before { content: 'SCORE'; display: block; font-family: var(--font-heading); font-size: 0.8rem; color: #888; margin-bottom: 5px; }
-    .initials::before { content: 'INITIALS'; display: block; font-family: var(--font-heading); font-size: 0.8rem; color: #888; margin-bottom: 5px; }
-    .date::before { content: 'DATE'; display: block; font-family: var(--font-heading); font-size: 0.8rem; color: #888; margin-bottom: 5px; }
-    .proof::before { content: 'EVIDENCE'; display: block; font-family: var(--font-heading); font-size: 0.8rem; color: #888; margin-bottom: 5px; }
-}
-
-@media (max-width: 600px) {
-    .neon-header h1 { 
-        font-size: 2.2rem; 
-        line-height: 1.3; 
-        margin-bottom: 1rem; 
-    }
-    .neon-header h2 { font-size: 0.9rem; }
-    .header-controls {
-        top: 15px;
-        right: 15px;
-    }
-    .settings-btn {
-        font-size: 1.5rem;
-    }
     .game-row {
-        grid-template-columns: 1fr;
-        grid-template-areas: 
-            "image"
-            "score"
-            "initials"
-            "date"
-            "proof";
-        text-align: center;
-        padding: 1rem;
+        grid-template-columns: 120px 1fr;
+        padding: 0.6rem 0.8rem;
+        gap: 0.3rem 0.8rem;
     }
-    .score-col, .initials-col, .date-col, .proof-col {
-        align-items: center;
-        margin-bottom: 1rem;
-    }
-    .score, .initials { font-size: 3rem; }
-    .modal-content { padding: 1.5rem; }
-    .tab-btn { padding: 0.5rem 1rem; font-size: 0.7rem; }
+    .marquee-container { width: 120px; height: 38px; }
+    .game-title-col { font-size: 0.5rem; }
+    .score { font-size: 1.6rem; }
+    .initials { font-size: 1.2rem; }
+    .date { font-size: 1rem; }
+    .modal-content { padding: 1rem; }
+    .tab-btn { padding: 0.5rem 0.8rem; font-size: 0.6rem; }
 }
