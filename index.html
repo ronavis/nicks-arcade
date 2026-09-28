@@ -15,8 +15,14 @@
     
     <!-- Header stays fixed on top -->
     <header class="neon-header">
-        <h1 class="flicker">NICK'S ARCADE</h1>
-        <h2>HIGH SCORES</h2>
+        <div class="header-qr" id="header-qr" title="Scan to enter scores">
+            <div id="qrcode-header"></div>
+            <p class="qr-label">SCAN TO<br>ENTER SCORES</p>
+        </div>
+        <div class="header-title">
+            <h1 class="flicker">NICK'S ARCADE</h1>
+            <h2>HIGH SCORES</h2>
+        </div>
         <div class="header-controls">
             <div class="settings-btn" id="settingsBtn" title="Admin Settings">⚙️</div>
         </div>
@@ -43,22 +49,24 @@
         <div class="modal-content">
             <span class="close-btn">&times;</span>
             <div id="login-view">
-                <h2>Google Sign-In</h2>
-                <p>Please log in with your Google account.</p>
-                <div id="g_id_onload"
-                     data-client_id="569822322277-ng39tk1vcecgjfes85bs16umb5k47mc7.apps.googleusercontent.com"
-                     data-context="signin"
-                     data-ux_mode="popup"
-                     data-callback="handleCredentialResponse"
-                     data-auto_prompt="false">
-                </div>
-                <div class="g_id_signin"
-                     data-type="standard"
-                     data-shape="rectangular"
-                     data-theme="outline"
-                     data-text="signin_with"
-                     data-size="large"
-                     data-logo_alignment="left">
+                <h2>ADMIN LOGIN</h2>
+                <p>Sign in with your Google account to update scores and manage the leaderboard.</p>
+                <div class="google-signin-wrapper">
+                    <div id="g_id_onload"
+                         data-client_id="569822322277-ng39tk1vcecgjfes85bs16umb5k47mc7.apps.googleusercontent.com"
+                         data-context="signin"
+                         data-ux_mode="popup"
+                         data-callback="handleCredentialResponse"
+                         data-auto_prompt="false">
+                    </div>
+                    <div class="g_id_signin"
+                         data-type="standard"
+                         data-shape="rectangular"
+                         data-theme="outline"
+                         data-text="signin_with"
+                         data-size="large"
+                         data-logo_alignment="left">
+                    </div>
                 </div>
             </div>
             <div id="admin-view" style="display: none;">

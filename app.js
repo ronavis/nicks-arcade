@@ -78,29 +78,22 @@ function renderList() {
         });
     });
 
-    const qrSection = document.createElement('div');
-    qrSection.className = 'qr-section';
-    qrSection.innerHTML = `
-        <p>SCAN TO LOGIN<br>& ENTER SCORES</p>
-        <div id="qrcode"></div>
-    `;
-    listElement.appendChild(qrSection);
-
-    // Generate QR Code pointing to this page with a login hash
-    new QRCode(document.getElementById("qrcode"), {
-        text: window.location.href.split('#')[0] + "#login",
-        width: 150,
-        height: 150,
-        colorDark : "#000000",
-        colorLight : "#ffffff",
-        correctLevel : QRCode.CorrectLevel.H
-    });
-    
-    // Clicking the QR code simulates scanning it on the same device
-    document.getElementById("qrcode").addEventListener('click', () => {
-        window.location.hash = "login";
-        checkLoginHash();
-    });
+    // Generate QR Code in the header
+    const qrHeaderEl = document.getElementById('qrcode-header');
+    if (qrHeaderEl && !qrHeaderEl.hasChildNodes()) {
+        new QRCode(qrHeaderEl, {
+            text: window.location.href.split('#')[0] + "#login",
+            width: 80,
+            height: 80,
+            colorDark : "#000000",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H
+        });
+        document.getElementById('header-qr').addEventListener('click', () => {
+            window.location.hash = "login";
+            checkLoginHash();
+        });
+    }
 }
 
 renderList();
