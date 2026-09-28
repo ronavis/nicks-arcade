@@ -7,22 +7,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="stylesheet" href="styles.css?v=20260928-2">
 </head>
 <body>
     <div class="crt-overlay"></div>
     
     <!-- Header stays fixed on top -->
     <header class="neon-header">
-        <div class="header-qr" id="header-qr" title="Scan to enter scores">
-            <div id="qrcode-header"></div>
-            <p class="qr-label">SCAN TO<br>ENTER SCORES</p>
-        </div>
-        <div class="header-title">
-            <h1 class="flicker">NICK'S ARCADE</h1>
-            <h2>HIGH SCORES</h2>
-        </div>
+        <h1 class="flicker">NICK'S ARCADE</h1>
+        <h2>HIGH SCORES</h2>
         <div class="header-controls">
             <div class="settings-btn" id="settingsBtn" title="Admin Settings">⚙️</div>
         </div>
@@ -30,11 +23,11 @@
 
     <!-- Static Column Headers -->
     <div class="column-headers">
-        <div class="header-col">GAME</div>
-        <div class="header-col">SCORE</div>
-        <div class="header-col">INITIALS</div>
-        <div class="header-col">DATE</div>
-        <div class="header-col">PROOF</div>
+        <div></div>
+        <div>SCORE</div>
+        <div>DATE</div>
+        <div>INITIALS</div>
+        <div>PROOF</div>
     </div>
 
     <!-- Main crawl area -->
@@ -49,24 +42,22 @@
         <div class="modal-content">
             <span class="close-btn">&times;</span>
             <div id="login-view">
-                <h2>ADMIN LOGIN</h2>
-                <p>Sign in with your Google account to update scores and manage the leaderboard.</p>
-                <div class="google-signin-wrapper">
-                    <div id="g_id_onload"
-                         data-client_id="569822322277-ng39tk1vcecgjfes85bs16umb5k47mc7.apps.googleusercontent.com"
-                         data-context="signin"
-                         data-ux_mode="popup"
-                         data-callback="handleCredentialResponse"
-                         data-auto_prompt="false">
-                    </div>
-                    <div class="g_id_signin"
-                         data-type="standard"
-                         data-shape="rectangular"
-                         data-theme="outline"
-                         data-text="signin_with"
-                         data-size="large"
-                         data-logo_alignment="left">
-                    </div>
+                <h2>Google Sign-In</h2>
+                <p>Please log in with your Google account.</p>
+                <div id="g_id_onload"
+                     data-client_id="569822322277-ng39tk1vcecgjfes85bs16umb5k47mc7.apps.googleusercontent.com"
+                     data-context="signin"
+                     data-ux_mode="popup"
+                     data-callback="handleCredentialResponse"
+                     data-auto_prompt="false">
+                </div>
+                <div class="g_id_signin"
+                     data-type="standard"
+                     data-shape="rectangular"
+                     data-theme="outline"
+                     data-text="signin_with"
+                     data-size="large"
+                     data-logo_alignment="left">
                 </div>
             </div>
             <div id="admin-view" style="display: none;">
@@ -92,9 +83,9 @@
                     <input type="hidden" id="new-initials">
                     <label class="custom-file-upload">
                         <input type="file" id="new-proof" accept="image/*" capture="environment">
-                        📸 Upload Photo Evidence
+                        📸 Upload Photo Evidence (Auto-Detects Game & Score)
                     </label>
-                    
+                    <div id="ocr-status" style="color: var(--neon-yellow); margin-top: 10px; font-size: 0.8rem; display: none;"></div>
                     <button id="submit-score" class="neon-btn">SUBMIT</button>
                     <p id="adminMessage"></p>
                 </div>
