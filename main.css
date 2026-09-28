@@ -162,9 +162,8 @@ body {
 .game-row {
     display: grid;
     grid-template-columns: 160px 1fr;
-    grid-template-rows: auto auto auto;
+    grid-template-rows: auto auto;
     grid-template-areas:
-        "image title"
         "image score"
         "image meta";
     align-items: center;

@@ -55,7 +55,6 @@ function renderList() {
                 <img src="images/${imgName}?v=2" class="marquee-image" alt="${game.title}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                 <div class="marquee-text" style="display: none;">${game.title}</div>
             </div>
-            <div class="game-title-col">${game.title}</div>
             <div class="score-col">
                 <span class="score">${game.score}</span>
             </div>
