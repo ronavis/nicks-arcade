@@ -73,26 +73,25 @@ function renderList() {
             document.getElementById('photo-modal').style.display = 'flex';
         });
     });
-
-    // Generate QR Code in the header
-    const qrHeaderEl = document.getElementById('qrcode-header');
-    if (qrHeaderEl && !qrHeaderEl.hasChildNodes()) {
-        new QRCode(qrHeaderEl, {
-            text: window.location.href.split('#')[0] + "#login",
-            width: 80,
-            height: 80,
-            colorDark : "#000000",
-            colorLight : "#ffffff",
-            correctLevel : QRCode.CorrectLevel.H
-        });
-        document.getElementById('header-qr').addEventListener('click', () => {
-            window.location.hash = "login";
-            checkLoginHash();
-        });
-    }
 }
 
 renderList();
+
+// Duplicate rows for seamless infinite crawl loop
+(function setupSeamlessScroll() {
+    const list = document.getElementById('arcade-list');
+    const originals = Array.from(list.children);
+    originals.forEach(node => {
+        list.appendChild(node.cloneNode(true));
+    });
+    // Re-attach proof photo listeners to cloned rows
+    list.querySelectorAll('.proof[data-proof]').forEach(el => {
+        el.addEventListener('click', (e) => {
+            document.getElementById('photo-viewer-img').src = e.target.getAttribute('data-proof');
+            document.getElementById('photo-modal').style.display = 'flex';
+        });
+    });
+})();
 
 // Modal Logic
 const modal = document.getElementById('admin-modal');
@@ -225,6 +224,25 @@ function checkLoginHash() {
 }
 window.addEventListener('hashchange', checkLoginHash);
 checkLoginHash();
+
+// Initialize header QR code (must be after checkLoginHash is defined)
+(function initQR() {
+    const qrHeaderEl = document.getElementById('qrcode-header');
+    if (qrHeaderEl && !qrHeaderEl.hasChildNodes()) {
+        new QRCode(qrHeaderEl, {
+            text: window.location.href.split('#')[0],
+            width: 80,
+            height: 80,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+        document.getElementById('header-qr').addEventListener('click', () => {
+            window.location.hash = "login";
+            checkLoginHash();
+        });
+    }
+})();
 
 settingsBtn.addEventListener('click', () => {
     window.location.hash = "login";

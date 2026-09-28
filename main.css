@@ -1,6 +1,6 @@
 /* ============================================
    NICK'S ARCADE — main.css
-   Portrait-TV-first layout
+   Portrait-TV-first layout, v3
    ============================================ */
 
 :root {
@@ -11,7 +11,6 @@
     --text-primary: #fff;
     --font-heading: 'Press Start 2P', cursive;
     --font-score: 'VT323', monospace;
-    --max-width: 900px;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -44,12 +43,12 @@ body {
 .neon-header {
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 1rem 1.5rem;
+    justify-content: space-between;
+    padding: 0.8rem 1.2rem;
     position: relative;
     z-index: 100;
-    gap: 1.5rem;
     flex-shrink: 0;
+    border-bottom: 1px solid rgba(255, 0, 255, 0.2);
 }
 
 .header-qr {
@@ -64,14 +63,14 @@ body {
 .header-qr:hover { transform: scale(1.05); }
 #qrcode-header {
     background: #fff;
-    padding: 5px;
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0,255,255,0.5);
+    padding: 4px;
+    border-radius: 4px;
+    box-shadow: 0 0 10px rgba(0,255,255,0.6);
 }
 #qrcode-header img { display: block; }
 .qr-label {
     font-family: var(--font-heading);
-    font-size: 0.4rem;
+    font-size: 0.38rem;
     color: var(--neon-yellow);
     text-shadow: 0 0 5px var(--neon-yellow);
     text-align: center;
@@ -82,33 +81,34 @@ body {
 .header-title {
     text-align: center;
     flex: 1;
+    padding: 0 1rem;
 }
 .neon-header h1 {
     font-family: var(--font-heading);
-    font-size: clamp(1.6rem, 5vw, 3rem);
+    font-size: clamp(1.2rem, 4vw, 2.6rem);
     color: #fff;
-    text-shadow: 0 0 5px #fff, 0 0 15px var(--neon-pink), 0 0 30px var(--neon-pink), 0 0 50px var(--neon-pink);
-    margin-bottom: 0.3rem;
+    text-shadow: 0 0 5px #fff, 0 0 15px var(--neon-pink), 0 0 30px var(--neon-pink);
+    margin-bottom: 0.2rem;
     letter-spacing: 2px;
 }
 .neon-header h2 {
     font-family: var(--font-heading);
-    font-size: clamp(0.6rem, 2vw, 1rem);
+    font-size: clamp(0.45rem, 1.5vw, 0.8rem);
     color: var(--neon-cyan);
     text-shadow: 0 0 10px var(--neon-cyan);
-    letter-spacing: 6px;
+    letter-spacing: 5px;
     opacity: 0.9;
 }
 
 .header-controls {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
     flex-shrink: 0;
     z-index: 100;
 }
 .settings-btn {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     cursor: pointer;
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     color: #fff;
@@ -119,7 +119,7 @@ body {
     text-shadow: 0 0 10px #fff, 0 0 30px var(--neon-cyan);
 }
 
-/* Flicker animation */
+/* Flicker */
 .flicker { animation: flicker 4s infinite alternate; }
 @keyframes flicker {
     0%, 19.999%, 22%, 62.999%, 64%, 64.999%, 70%, 100% { opacity: 1; }
@@ -127,67 +127,69 @@ body {
 }
 
 /* =====================
-   CRAWL / LIST AREA
+   CRAWL AREA
+   Seamless loop: list is duplicated in JS so we only
+   animate top: 0 → top: -50% (one full set height)
    ===================== */
 .crawl-container {
     flex: 1;
     position: relative;
     overflow: hidden;
-    mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 6%, black 94%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 6%, black 94%, transparent 100%);
 }
 
 .list {
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
-    padding: 1rem;
-    max-width: var(--max-width);
-    margin: 0 auto;
+    gap: 0.5rem;
+    padding: 0.8rem 1rem;
     position: absolute;
     width: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    animation: crawl 50s linear infinite;
+    left: 0;
+    top: 0;
+    /* Animation moves exactly -50% (one set of items); JS duplicates the items below */
+    animation: crawl 60s linear infinite;
 }
 
 @keyframes crawl {
-    0%   { top: 0; }
-    100% { top: -200%; }
+    0%   { transform: translateY(0); }
+    100% { transform: translateY(-50%); }
 }
 
 /* =====================
-   GAME ROW — Portrait card
+   GAME ROW — full-width portrait card
+   Left: wide marquee thumbnail
+   Right: score (big) + initials/date/proof row
    ===================== */
 .game-row {
     display: grid;
-    grid-template-columns: 160px 1fr;
+    grid-template-columns: 45% 55%;
     grid-template-rows: auto auto;
     grid-template-areas:
         "image score"
         "image meta";
     align-items: center;
-    gap: 0.25rem 1rem;
-    padding: 0.6rem 0.8rem;
-    background: rgba(15, 15, 28, 0.75);
+    gap: 0.2rem 1rem;
+    padding: 0.5rem 0.8rem;
+    background: rgba(12, 12, 24, 0.8);
     border: 1px solid rgba(0, 255, 255, 0.1);
-    border-radius: 10px;
-    backdrop-filter: blur(6px);
+    border-radius: 8px;
     transition: border-color 0.2s ease;
     width: 100%;
 }
 .game-row:hover {
-    border-color: rgba(0, 255, 255, 0.35);
+    border-color: rgba(0, 255, 255, 0.3);
 }
 
-/* Marquee thumbnail */
+/* Marquee — widescreen aspect ratio fills the left column */
 .marquee-container {
     grid-area: image;
-    width: 160px;
-    height: 50px;
+    width: 100%;
+    aspect-ratio: 3 / 1;
     overflow: hidden;
     border-radius: 6px;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.8);
+    box-shadow: 0 3px 12px rgba(0,0,0,0.9);
     align-self: center;
 }
 .marquee-image {
@@ -200,41 +202,29 @@ body {
 }
 .marquee-text { display: none !important; }
 
-/* Game title */
-.game-title-col {
-    grid-area: title;
-    font-family: var(--font-heading);
-    font-size: 0.5rem;
-    color: rgba(255,255,255,0.6);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    line-height: 1.4;
-}
-
 /* Score */
 .score-col {
     grid-area: score;
     display: flex;
     align-items: baseline;
-    gap: 0.5rem;
+    padding-left: 0.3rem;
 }
 .score {
     font-family: var(--font-score);
-    font-size: 2rem;
+    font-size: clamp(1.8rem, 5vw, 3rem);
     color: #fff;
-    text-shadow: 0 0 6px var(--neon-cyan), 0 0 14px var(--neon-cyan);
+    text-shadow: 0 0 8px var(--neon-cyan), 0 0 18px var(--neon-cyan);
     line-height: 1;
 }
 
-/* Meta: initials · date · proof */
+/* Meta row: initials · date · proof */
 .meta-row {
     grid-area: meta;
     display: flex;
     align-items: center;
     gap: 1rem;
+    padding-left: 0.3rem;
+    flex-wrap: wrap;
 }
 .initials-col, .date-col, .proof-col {
     display: flex;
@@ -242,18 +232,18 @@ body {
 }
 .initials {
     font-family: var(--font-score);
-    font-size: 1.4rem;
+    font-size: clamp(1.2rem, 3.5vw, 2rem);
     color: var(--neon-pink);
     text-shadow: 0 0 6px var(--neon-pink);
 }
 .date {
     font-family: var(--font-score);
-    font-size: 1rem;
+    font-size: clamp(0.9rem, 2.5vw, 1.4rem);
     color: rgba(255,255,0,0.65);
 }
 .proof {
     font-family: var(--font-score);
-    font-size: 1rem;
+    font-size: clamp(0.9rem, 2.5vw, 1.3rem);
     color: var(--neon-cyan);
     cursor: pointer;
     text-decoration: underline;
@@ -267,30 +257,30 @@ body {
     display: none;
     position: fixed; top: 0; left: 0;
     width: 100%; height: 100%;
-    background: rgba(0,0,0,0.85);
-    backdrop-filter: blur(10px);
+    background: rgba(0,0,0,0.88);
+    backdrop-filter: blur(12px);
     z-index: 2000;
     justify-content: center;
     align-items: center;
 }
 .modal-content {
-    background: rgba(10, 10, 20, 0.95);
+    background: rgba(8, 8, 18, 0.97);
     border: 1px solid rgba(0, 255, 255, 0.2);
     box-shadow: 0 0 60px rgba(0, 255, 255, 0.08);
-    padding: 2.5rem;
+    padding: 2rem 2.5rem;
     border-radius: 20px;
     text-align: center;
     position: relative;
     width: 95vw;
-    max-width: 700px;
+    max-width: 680px;
     height: 92vh;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
 }
 .close-btn {
-    position: absolute; top: 16px; right: 24px;
-    font-size: 2.5rem; color: #fff;
+    position: absolute; top: 14px; right: 20px;
+    font-size: 2.2rem; color: #fff;
     cursor: pointer; font-family: sans-serif; transition: 0.2s;
 }
 .close-btn:hover { color: var(--neon-pink); text-shadow: 0 0 10px var(--neon-pink); }
@@ -308,33 +298,33 @@ body {
 }
 #login-view h2 {
     font-family: var(--font-heading);
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     color: var(--neon-pink);
     text-shadow: 0 0 15px var(--neon-pink);
-    letter-spacing: 4px;
+    letter-spacing: 3px;
 }
 #login-view p {
     color: rgba(255,255,255,0.55);
     font-family: var(--font-score);
     font-size: 1.3rem;
-    max-width: 380px;
+    max-width: 360px;
     line-height: 1.5;
 }
 .google-signin-wrapper {
     background: rgba(255,255,255,0.04);
     border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 16px;
-    padding: 2rem 3rem;
-    box-shadow: 0 0 30px rgba(255,0,255,0.08), inset 0 0 20px rgba(0,0,0,0.3);
+    border-radius: 14px;
+    padding: 1.8rem 2.5rem;
+    box-shadow: 0 0 25px rgba(255,0,255,0.08), inset 0 0 20px rgba(0,0,0,0.3);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1.2rem;
 }
 .google-signin-wrapper::before {
     content: '🔐 ADMIN ACCESS';
     font-family: var(--font-heading);
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     color: var(--neon-yellow);
     text-shadow: 0 0 8px var(--neon-yellow);
     letter-spacing: 3px;
@@ -347,14 +337,14 @@ body {
     background: transparent;
     color: var(--neon-cyan);
     font-family: var(--font-heading);
-    font-size: 0.9rem;
-    padding: 0.9rem 1.8rem;
+    font-size: 0.85rem;
+    padding: 0.8rem 1.6rem;
     border: 2px solid var(--neon-cyan);
     border-radius: 6px;
     cursor: pointer;
     text-shadow: 0 0 5px var(--neon-cyan);
     box-shadow: 0 0 10px var(--neon-cyan) inset, 0 0 10px var(--neon-cyan);
-    margin-top: 1rem;
+    margin-top: 0.8rem;
     transition: 0.2s;
 }
 .neon-btn:hover { background: var(--neon-cyan); color: #000; }
@@ -365,8 +355,8 @@ input:not([type="file"]):not([type="range"]) {
     color: #fff;
     font-family: var(--font-score);
     font-size: 1.4rem;
-    padding: 0.8rem 1.2rem;
-    margin: 0.7rem 0;
+    padding: 0.75rem 1.1rem;
+    margin: 0.6rem 0;
     width: 100%;
     border-radius: 10px;
     transition: all 0.3s ease;
@@ -380,16 +370,16 @@ input:not([type="file"]):not([type="range"]):focus {
 
 .custom-file-upload {
     display: inline-block;
-    padding: 0.8rem 1.5rem;
+    padding: 0.75rem 1.3rem;
     cursor: pointer;
     background: rgba(0,0,0,0.5);
     color: var(--neon-cyan);
     border: 2px dashed var(--neon-cyan);
     border-radius: 10px;
     font-family: var(--font-score);
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     transition: all 0.3s ease;
-    margin-top: 8px;
+    margin-top: 6px;
     width: 100%;
 }
 .custom-file-upload:hover {
@@ -404,8 +394,8 @@ input:not([type="file"]):not([type="range"]):focus {
 .dashboard-tabs {
     display: flex;
     justify-content: center;
-    gap: 0.8rem;
-    margin-bottom: 1.5rem;
+    gap: 0.7rem;
+    margin-bottom: 1.3rem;
     flex-wrap: wrap;
 }
 .tab-btn {
@@ -414,8 +404,8 @@ input:not([type="file"]):not([type="range"]):focus {
     border: 1px solid rgba(255,0,255,0.3);
     border-radius: 30px;
     font-family: var(--font-heading);
-    font-size: 0.7rem;
-    padding: 0.7rem 1.2rem;
+    font-size: 0.65rem;
+    padding: 0.65rem 1.1rem;
     cursor: pointer;
     opacity: 0.7;
     transition: all 0.3s ease;
@@ -429,9 +419,9 @@ input:not([type="file"]):not([type="range"]):focus {
 .tab-panel {
     display: none;
     width: 100%;
-    padding: 1.5rem;
+    padding: 1.3rem;
     background: rgba(0,0,0,0.4);
-    border-radius: 16px;
+    border-radius: 14px;
     border: 1px solid rgba(0,255,255,0.1);
 }
 .tab-panel.active { display: block; }
@@ -447,10 +437,10 @@ input:not([type="file"]):not([type="range"]):focus {
     border: 1px solid rgba(0,255,255,0.3);
     border-radius: 8px;
     display: none;
-    background: rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.85);
 }
 .search-item {
-    padding: 0.8rem 1rem;
+    padding: 0.75rem 1rem;
     border-bottom: 1px solid rgba(255,255,255,0.1);
     cursor: pointer;
     font-size: 1.2rem;
@@ -461,16 +451,16 @@ input:not([type="file"]):not([type="range"]):focus {
 /* =====================
    ADMIN LIST
    ===================== */
-#adminList { list-style: none; padding: 0; margin-bottom: 20px; text-align: left; }
+#adminList { list-style: none; padding: 0; margin-bottom: 18px; text-align: left; }
 #adminList li {
     margin-bottom: 10px;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     color: var(--neon-cyan);
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
-.remove-admin { color: #ff0055; cursor: pointer; font-size: 0.8rem; }
+.remove-admin { color: #ff0055; cursor: pointer; font-size: 0.78rem; }
 
 /* =====================
    INITIALS KEYBOARD
@@ -501,7 +491,7 @@ input:not([type="file"]):not([type="range"]):focus {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 0.4rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.3rem;
     font-family: var(--font-score);
 }
 .key-btn {
@@ -509,7 +499,7 @@ input:not([type="file"]):not([type="range"]):focus {
     border: 1px solid var(--neon-cyan);
     color: #fff;
     font-size: 1.4rem;
-    padding: 0.7rem 0;
+    padding: 0.65rem 0;
     cursor: pointer;
     text-align: center;
     border-radius: 6px;
@@ -522,7 +512,7 @@ input:not([type="file"]):not([type="range"]):focus {
 .key-btn.end:hover { background: #0f0; color: #000; }
 
 /* =====================
-   THEME / MISC
+   SETTINGS
    ===================== */
 .neon-select {
     appearance: none;
@@ -545,37 +535,33 @@ input:not([type="file"]):not([type="range"]):focus {
 /* Photo Modal */
 #photo-modal .modal-content {
     max-width: 95%;
+    height: auto;
     max-height: 90vh;
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 10px;
-    height: auto;
 }
 
 /* =====================
    MOBILE TWEAKS
-   (layout is portrait-first so minimal overrides needed)
    ===================== */
-@media (max-width: 480px) {
-    .neon-header { gap: 0.6rem; padding: 0.6rem 0.8rem; }
+@media (max-width: 500px) {
+    .neon-header { padding: 0.5rem 0.8rem; gap: 0.5rem; }
     .header-qr { display: none; }
-    .neon-header h1 { font-size: 1.5rem; }
-    .neon-header h2 { font-size: 0.55rem; letter-spacing: 3px; }
-    .settings-btn { font-size: 1.4rem; }
+    .neon-header h1 { font-size: 1.3rem; }
+    .neon-header h2 { font-size: 0.4rem; letter-spacing: 3px; }
+    .settings-btn { font-size: 1.3rem; }
 
     .game-row {
-        grid-template-columns: 110px 1fr;
-        gap: 0.2rem 0.7rem;
-        padding: 0.5rem 0.6rem;
+        grid-template-columns: 42% 58%;
+        padding: 0.4rem 0.6rem;
     }
-    .marquee-container { width: 110px; height: 35px; }
-    .game-title-col { font-size: 0.42rem; }
-    .score { font-size: 1.5rem; }
+    .score { font-size: 1.6rem; }
     .initials { font-size: 1.1rem; }
-    .date { font-size: 0.9rem; }
+    .date { font-size: 0.85rem; }
 
-    .modal-content { padding: 1rem; }
-    .tab-btn { padding: 0.5rem 0.8rem; font-size: 0.6rem; }
-    .google-signin-wrapper { padding: 1.5rem; }
+    .modal-content { padding: 0.8rem; }
+    .tab-btn { padding: 0.4rem 0.7rem; font-size: 0.55rem; }
+    .google-signin-wrapper { padding: 1.2rem; }
 }
