@@ -12,16 +12,16 @@ A shared high-score board for Nick’s basement arcade: a rotating portrait disp
   <tr>
     <th>Portrait scoreboard</th>
     <th>Arcade score entry</th>
-    <th>Add a missing game</th>
+    <th>Admin marquee search</th>
   </tr>
   <tr>
-    <td align="center" valign="top"><a href="docs/screenshots/tv-scoreboard.png"><img src="docs/screenshots/tv-scoreboard.png" alt="Live portrait scoreboard featuring Galaga, larger spaced initials, neighboring records and the QR code" height="480"></a></td>
+    <td align="center" valign="top"><a href="docs/screenshots/scoreboard-current.png"><img src="docs/screenshots/scoreboard-current.png" alt="Live mobile scoreboard with double-row dot-matrix scores, reserved date space, neighboring records and the QR code" height="480"></a></td>
     <td align="center" valign="top"><a href="docs/screenshots/mobile-score-entry.png"><img src="docs/screenshots/mobile-score-entry.png" alt="Phone score entry with NIC initials, the full arcade alphabet keypad and optional proof photo" height="480"></a></td>
-    <td align="center" valign="top"><a href="docs/screenshots/add-game.png"><img src="docs/screenshots/add-game.png" alt="Game search offering to add Teenage Mutant Ninja Turtles and select the score type" height="480"></a></td>
+    <td align="center" valign="top"><a href="docs/screenshots/marquee-catalog.png"><img src="docs/screenshots/marquee-catalog.png" alt="Admin visual marquee search for adding eligible games to Nick’s arcade" height="480"></a></td>
   </tr>
 </table>
 
-Click a screenshot to open the full-resolution PNG. The TV image is captured from the live site at **1080 × 1920**. Phone images show the current app in its labeled local preview with example initials and an unsubmitted score; no live records were created for these screenshots. Captured September 29, 2026.
+Click a screenshot to open it. The scoreboard is a live 390 × 844 capture; marquee search is a 390 × 844 local admin preview. The score-entry screenshot is an earlier September 29 capture of the same initials-entry flow, before the latest typography updates. Preview examples did not create live records. All screenshots were captured September 29, 2026.
 
 ## How to play
 
@@ -41,8 +41,10 @@ Ron and Nick are the arcade administrators. Admin controls allow score correctio
 
 - **Notifications:** recent score submissions, first records and record breaks, with a red unread badge on both phone and TV **My account** buttons, and **Mark all read**. A player whose account held the previous record sees **Your record was broken**, the new score, previous record and challenger’s optional taunt.
 - **My scores:** your recent submissions and linked imported records with game artwork, current-record status and attached proof photos. Removed entries are hidden here and retained in admin history.
-- **Settings:** save three default initials for fresh entries, plus a default victory taunt and an on/off switch under **Set up your taunt**. Automatic taunts are off by default and accompany only a score that beats another player’s existing record. Turning the setting off preserves the saved text; players can edit or clear a taunt before posting. Admins can also save the shared TV rotation interval (5–120 seconds). Open displays receive timing changes within five seconds, and the setting survives restarts. Preferences and notification read status follow your Google account across devices.
+- **Settings:** save three default initials for fresh entries, plus a default victory taunt and an on/off switch under **Set up your taunt**. Automatic taunts are off by default and accompany only a score that beats another player’s existing record. Turning the setting off preserves the saved text; players can edit or clear a taunt before posting. Admins can also save the shared TV rotation interval (5–120 seconds) and the **Bypass my games restriction** switch using **Save arcade settings**. Open displays receive timing changes within five seconds, and the setting survives restarts. Preferences and notification read status follow your Google account across devices.
 - **Manage scores:** available to verified admins from My account and the TV’s three-line menu. Choose a game, see its artwork and current record, search submissions by initials/email/score, and edit or remove a score with a clear confirmation. Removed entries are hidden by default and can be included for review. Corrections can also edit or clear a taunt. Regular players and signed-out visitors do not see admin controls; the server independently enforces admin access.
+
+- **Manage games:** available only to admins. Search the visual marquee catalog, add eligible cabinets before they have a score, or remove a game from the eligible collection while retaining its score history. See [Manage games](#manage-games-admins) below.
 
 The optional **Victory taunt** is limited to 140 characters. Keep it friendly. Text is displayed as text, never interpreted as HTML. Removing a submission also removes it from the activity feed.
 
@@ -52,9 +54,9 @@ Notifications are inside the app; no email or phone push alerts are sent. The ba
 
 - Portrait 9:16 Record Spotlight design with turquoise and cream, game artwork, a prominent score and larger, spaced initials.
 - Featured game changes every 15 seconds by default; admins can choose 5–120 seconds in Account → Settings → TV Display, with three neighboring records and a permanent QR code. Pause, previous/next, fullscreen and rotation controls are available. Automatic rotation respects the browser’s reduced-motion preference.
-- The collection starts with Nick’s **32 imported records**, not a 32-game limit. **The Simpsons** is also available for its first entry. Signed-in players can add missing games with their first score.
+- The collection starts with Nick’s **32 imported records**, not a 32-game limit. **The Simpsons** is also available for its first entry. Admins approve additional cabinets through Manage games. Players can submit other games only while the shared bypass setting is enabled.
 - Search ignores punctuation and spacing. Newly added games are saved in the shared database and become available on other devices, the TV and the admin screen.
-- New games use a generic Nick’s Arcade marquee until game-specific artwork is supplied. The game name is displayed separately.
+- Catalog selections include their marquee artwork. Manual titles use matching curated artwork when available and a neutral graphic otherwise. Images load on demand; an unavailable image falls back to the neutral graphic. The game name is displayed separately.
 
 ## Photos from phones
 
@@ -103,11 +105,12 @@ A localhost QR code will not connect a separate phone to this computer. Use the 
 
 ```sh
 npm run check
+npm test
 npm run build
 .venv/bin/python -m pytest -q
 ```
 
-The latest backend test run passed **72 tests**, covering persistence, new-game creation, concurrent submissions, duplicate retries, scoring/time rules, Google token validation, admin permissions, photo processing/privacy, origin restrictions, rate limits and backup/restore. All 33 supplied game entries were exercised in submission tests and browser search checks.
+The September 29 validation passed **72 backend tests and 10 frontend tests**, covering persistence, new-game creation, concurrent submissions, duplicate retries, scoring/time rules, Google token validation, admin permissions, photo processing/privacy, origin restrictions, rate limits backup/restore, collection eligibility, the bypass switch, catalog selection, celebration detection and date labels. All 33 supplied game entries were exercised in submission tests and browser search checks.
 
 For a production frontend build:
 
@@ -115,17 +118,18 @@ For a production frontend build:
 ARCADE_API_BASE=https://midconversation.com/arcade-api npm run build
 ```
 
-Publish **only `dist/`** to the existing `gh-pages` branch. Keep databases, proof photos, environment files and backend code out of that publication. Backend changes require a separate VPS release. The build copies the supplied games’ artwork plus the generic new-game marquee; it does not publish the repository’s entire artwork archive.
+Publish **only `dist/`** to the existing `gh-pages` branch. Keep databases, proof photos, environment files and backend code out of that publication. Backend changes require a separate VPS release. The build copies curated game artwork, the neutral fallback and shared UI assets. The searchable catalog is served by the API; its wider artwork collection loads from pinned public GitHub image URLs. The full archive is not included in the Pages build.
 
 ## Validation status and remaining checks
 
-Completed checks include real Google sign-in, phone QR scanning and score submission, live score/photo submission from a desktop browser, admin correction/removal, automatic record fallback, production restart persistence and backup restoration. The latest initials adjustment was checked at portrait sizes and verified on the published site.
+Completed checks include real Google sign-in, phone QR scanning and score submission, live score/photo submission from a desktop browser, admin correction/removal, automatic record fallback, production restart persistence and backup restoration. The latest collection update was checked in the browser for catalog search, adding a cabinet without a score, first-score entry, bypass on/off, and regular-player restrictions. Mobile layouts were checked at 390 pixels wide. Published frontend files were verified against the production build.
 
 Still to confirm:
 
 - Retry the original iPhone photo against the updated uploader.
 - Test Nick’s actual TV/browser for orientation, fullscreen, readability and sustained rotation.
-- Use a second real Google account to verify the non-admin experience; automated permission checks already pass.
+- Have Nick sign in with his own Google account and confirm his admin controls. Ron/Nick role parity and regular-player restrictions pass automated tests; the agent has not performed Nick’s live Google sign-in.
+- Verify the full regular-player flow with a second real non-admin Google account; local browser role checks pass.
 - Resolve source-record questions with Nick: Bubble Bobble versus Bust-a-Move, one Street Fighter edition, and whether VS. Excitebike’s original `1:02:30` means `1:02.30` (minutes:seconds.hundredths).
 
 Imported starting records have unknown original dates and are seeded once, not reset on restart. Earlier browser-local scores are not silently imported; preserve any such records before discarding an old browser session.
@@ -140,9 +144,9 @@ These links point to the current source branch while the PR remains open:
 
 ## Artwork and packages
 
-The favicon is a custom transparent pixel-art interpretation of Pitfall Harry. Existing game artwork comes from the repository; four marquees were recovered from Nick’s shared presentation. Game marks belong to their owners. The UI bundles Jersey 10 (OFL), Phosphor icons (MIT) and QRCode (MIT), with notices in `dist/vendor/licenses/`. Backend dependencies, including Pillow and the HEIF decoder, are pinned in `server/requirements.txt`.
+The favicon is a custom transparent pixel-art interpretation of Pitfall Harry. Artwork comes from the existing repository, Nick’s shared presentation, and documented cabinet-marquee sources. The visual catalog contains **9,543 entries including variants**, with supplementary cabinet artwork for 1,685 exact matches. Some remaining entries use the older stylized pack images; the catalog previews show the image before it is selected. See [artwork sources](https://github.com/ronavis/nicks-arcade/blob/codex/arcade-record-spotlight/docs/artwork-sources.md). Game marks belong to their owners. The UI bundles Bitcount Grid Double and Jersey 10 (OFL), Phosphor icons (MIT) and QRCode (MIT), with notices in `dist/vendor/licenses/`. Backend dependencies, including Pillow and the HEIF decoder, are pinned in `server/requirements.txt`.
 
-Score and initials typography uses locally hosted Bitcount Grid Double with round dots and double-row strokes; headings retain Jersey 10. Font licenses are included in the published vendor/licenses directory.
+Scores, initials and the main Nick’s Arcade / High Scores branding use locally hosted Bitcount Grid Double with round dots and double-row strokes. Supporting display labels use Jersey 10. Font licenses are included in the published vendor/licenses directory.
 
 ### New-record TV celebrations
 
@@ -154,7 +158,7 @@ Run `npm test` for celebration detection regression checks.
 
 The featured record and celebration show a compact green dot-matrix improvement badge when the original previous record is known. Points use ↑ +2,400; timed records use ↓ 1.10s. Tap the badge for an explanation. Imported/first records and corrected submissions omit uncertain comparisons. Around the arcade rows remain unchanged.
 
-Featured records show their submission date and elapsed days (“Set N days ago”). Imported records explicitly say their date is unknown, and corrected records use a submitted-date label. My scores includes submission timestamps. Empty games say “Set the first record”; Manage scores explains that there is no saved submission to edit/delete and offers Enter the first score.
+Featured records show their submission date and elapsed days (“Set N days ago”). Undated imported records leave the date row blank without collapsing its space; corrected records use a submitted-date label. This measures time since submission, not a reconstructed continuous record reign. My scores includes submission timestamps. Empty games say “Set the first record”; Manage scores explains that there is no saved submission to edit/delete and offers Enter the first score.
 
 ### Manage games (admins)
 
@@ -164,6 +168,6 @@ Open **My account → Manage games**, or **Menu → Manage games** on the TV. Se
 
 Under **My account → Settings → Arcade rules**, admins can enable **Bypass my games restriction**. It defaults to off. Off permits scores only for the approved collection, including for admins. On lets signed-in players browse the wider catalog or enter another title. Outside games are not automatically approved: turning bypass off hides them and blocks further scores while retaining their history. The server enforces this independently of the UI, and the setting persists across restarts.
 
-Ron (`ronavis@gmail.com`) and Nick (`njwright@gmail.com`) have the same admin permissions. Personal scores, notifications, and preferences still belong to each signed-in account. Nick must use his own Google account.
+Ron and Nick have the same admin permissions through their configured Google accounts. Personal scores, notifications, and preferences still belong to each signed-in account. Nick must use his own Google account.
 
 Undated legacy records leave the date row blank while preserving its layout space.
