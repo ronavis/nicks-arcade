@@ -96,3 +96,7 @@ Source/backend 93fbb63 adds per-account saved taunt text and an enable/disable s
 65 backend tests pass; JavaScript check/build pass. Normal-player mobile UI validation confirmed saving enabled text and retaining disabled status/text after reload. Backup before-taunt-93fbb63 completed before backend activation; live API is healthy, database integrity passes, pre-existing score/profile columns exactly match the backup. Mission Control PID 2920079 unchanged. Pages c1e2518; default README 4853382.
 
 Published app.js, main.css and index.html match the tested production artifact.
+
+## Friendly fair-play footer — September 29, 2026
+
+Source a7c1c75 / Pages 4deee86 adds a cream square to the right of Scan. Play. Post.: “PLAY FAIR. Keep it fun. Post scores earned at Nick’s arcade. Brag honestly.” QR and note have equal square dimensions and aligned lower edges. Portrait browser checks at 1080x1920 and 540x960 show no footer overflow. JavaScript checks/build pass; published HTML/CSS match the tested artifact. No score or service changes.
