@@ -110,3 +110,9 @@ Public HTML, CSS and JavaScript match the production menu artifact.
 ## Correct Simpsons artwork — September 29, 2026
 
 Source 28db784 / Pages c6d8cd0 replaces the previously recovered space-themed pack graphic with the 3840x1132 cabinet marquee documented in docs/artwork-sources.md. Existing catalog path preserved; Simpsons-specific image cache version and script version updated. JavaScript checks/build pass. Pages reports built; public HTML, script and image bytes match the production artifact. Live browser selected The Simpsons and confirmed the correct image loads at 3840x1132. No backend or score changes.
+
+## Bolder fair-play square — September 29, 2026
+
+Source 169ba29 / Pages c4be7e6 increases fair-play contrast with a dark panel, cream border and bold body text, larger turquoise heading and red divider. Shortened middle copy to “Earn it at Nick’s arcade.” QR footprint retained; local portrait browser confirms no text overflow. Build and diff checks pass. No service or score changes.
+
+Live HTML and CSS match the tested build after publication.
