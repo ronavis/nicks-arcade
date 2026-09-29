@@ -25,8 +25,8 @@ Click a screenshot to open it. The scoreboard is a live 390 × 844 capture; marq
 
 ## How to play
 
-1. Scan the QR code on the scoreboard, or open the score-entry link.
-2. Sign in with Google. Your email does not appear on the public scoreboard.
+1. Scan the QR code or open the main site to see the shared scoreboard on your phone or TV.
+2. Use **Menu → My account** to sign in with Google. After sign-in you return to the main scoreboard. Choose **Menu → Enter a score** when you are ready to post. Your email does not appear on the public scoreboard.
 3. Choose one of Nick’s approved arcade games. If a cabinet is missing, ask Nick or Ron to add it through **Manage games**. Admins can enable **Bypass my games restriction** to allow submissions for other games.
 4. Enter your score and tap three letters on the arcade alphabet keypad. Use **DEL** to correct an initial.
 5. Optionally attach a photo, then choose **Post score**.
@@ -37,7 +37,7 @@ Ron and Nick are the arcade administrators. Admin controls allow score correctio
 
 ## Your account, notifications and friendly rivalry
 
-**My account** is visible near the top of score entry and in the TV controls. When signed out, it takes you to Google sign-in; when signed in, it opens your account. It provides:
+**My account** is visible near the top of score entry and in the TV controls. When signed out, it takes you to Google sign-in; successful sign-in returns to the shared scoreboard. When already signed in, it opens your account. Reloading an existing signed-in score-entry or admin page preserves that page. It provides:
 
 - **Notifications:** recent score submissions, first records and record breaks, with a red unread badge on both phone and TV **My account** buttons, and **Mark all read**. A player whose account held the previous record sees **Your record was broken**, the new score, previous record and challenger’s optional taunt.
 - **My scores:** your recent submissions and linked imported records with game artwork, current-record status and attached proof photos. Removed entries are hidden here and retained in admin history.
