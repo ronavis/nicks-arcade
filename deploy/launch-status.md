@@ -148,3 +148,11 @@ User-authorized private configuration update preserves Ron and adds Nick's previ
 - Source `8cbc838`; Pages `e68d03271668a403179760bb9682a5571c1939f3`.
 - Increased score font weight to 900 and added a proportional 0.016em outline, preserving round dots. CSS cache version updated.
 - Build/check passed; TV and mobile inspected with local preview records. Published HTML and CSS match the build. No production data changed.
+
+
+## Double-row dot construction — 2026-09-29
+
+- Source `a77aac7`; Pages `92e494489c74db28be863847a12fd4c81ec465d3`.
+- Replaced Doto with Bitcount Grid Double, using round elements at weight 400. Removed the synthetic outline. Build ships the new font and license and removes Doto.
+- JavaScript check and build passed. Local browser inspection confirmed double-row strokes on TV, plus mobile long record/12-digit input and RON keypad entry. No scores submitted.
+- Published HTML, CSS, font and license match production build bytes.
