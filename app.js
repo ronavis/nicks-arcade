@@ -1,10 +1,10 @@
 'use strict';
 const $ = (id) => document.getElementById(id);
-const state = { games: [], selected: 'galaga', featured: 'galaga', initials: '', user: null, token: '', config: null, paused: false, posting: false, requestId: crypto.randomUUID(), editing: null, objectUrl: null, pickerFor: 'entry', connected: false };
+const state = { games: [], pendingGame: null, selected: 'galaga', featured: 'galaga', initials: '', user: null, token: '', config: null, paused: false, posting: false, requestId: crypto.randomUUID(), editing: null, objectUrl: null, pickerFor: 'entry', connected: false };
 const apiBase = (window.ARCADE_CONFIG?.apiBase || '/api').replace(/\/$/, '');
 const display = new Intl.NumberFormat('en-US');
 const node = (tag, className, text) => { const el = document.createElement(tag); if (className) el.className = className; if (text !== undefined) el.textContent = text; return el; };
-const gameById = (id) => state.games.find(game => game.id === id);
+const gameById = (id) => state.games.find(game => game.id === id) || (state.pendingGame?.id === id ? state.pendingGame : undefined);
 const scoreText = (game) => game?.record?.score || '—';
 const initialsText = (game) => game?.record?.initials || '___';
 const icon = (name) => { const el = node('i', `ph-bold ph-${name}`); el.setAttribute('aria-hidden', 'true'); return el; };
@@ -13,7 +13,7 @@ async function api(path, options = {}) {
   const headers = { ...(options.headers || {}) };
   if (state.token) headers.Authorization = `Bearer ${state.token}`;
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 20000);
+  const timer = setTimeout(() => controller.abort(), options.body instanceof FormData ? 120000 : 20000);
   try {
     const response = await fetch(`${apiBase}${path}`, { ...options, headers, signal: controller.signal, cache: 'no-store' });
     if (!response.ok) {
@@ -169,19 +169,30 @@ $('rotate').addEventListener('click', () => { document.body.classList.toggle('ro
 setInterval(() => { if (!state.paused && !document.hidden && !matchMedia('(prefers-reduced-motion: reduce)').matches && !document.querySelector('dialog[open]')) advance(); }, 15000);
 
 function renderPicker() {
-  const query = $('game-search').value.trim().toLowerCase();
-  const matches = state.games.filter(game => game.title.toLowerCase().includes(query));
+  const normalize = value => value.normalize('NFKD').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const query = normalize($('game-search').value);
+  const matches = state.games.filter(game => normalize(game.title).includes(query) || normalize(game.id).includes(query));
   $('game-options').replaceChildren(...matches.map(game => {
     const button = node('button', 'game-option'); const image = node('img'); image.src = game.image; image.alt = '';
     const info = node('div'); info.append(node('strong', '', game.title), node('small', '', `${scoreText(game)} · ${initialsText(game)}`));
     button.append(image, info);
-    button.addEventListener('click', () => { state.selected = game.id; $('score-input').value = ''; state.requestId = crypto.randomUUID(); renderEntry(); setMessage(); $('game-picker').close(); $('score-input').focus(); });
+    button.addEventListener('click', () => { state.pendingGame = null; state.selected = game.id; $('score-input').value = ''; state.requestId = crypto.randomUUID(); renderEntry(); setMessage(); $('game-picker').close(); $('score-input').focus(); });
     return button;
   }));
-  if (!matches.length) $('game-options').append(node('p', 'small', 'No games found. Try another name.'));
+  if (!matches.length) $('game-options').append(node('p', 'small', 'No games found yet. Add this game and set its first record.'));
+  $('add-game-fields').hidden = !query || state.games.some(game => normalize(game.title) === query || normalize(game.id) === query);
+  $('add-game').textContent = `Add “${$('game-search').value.trim()}”`;
+  $('add-game').disabled = !state.user;
 }
 $('change-game').addEventListener('click', () => { $('game-search').value = ''; renderPicker(); $('game-picker').showModal(); $('game-search').focus(); });
 $('game-search').addEventListener('input', renderPicker);
+$('add-game').addEventListener('click', () => {
+  const title = $('game-search').value.trim();
+  if (title.length < 2 || title.length > 80) return;
+  state.pendingGame = { id: 'new-game', title, kind: $('new-game-kind').value, image: 'images/new-game.svg', record: null };
+  state.selected = 'new-game'; $('score-input').value = ''; state.requestId = crypto.randomUUID();
+  renderEntry(); setMessage('Your first score will add this game to the arcade.'); $('game-picker').close(); $('score-input').focus();
+});
 $('close-picker').addEventListener('click', () => $('game-picker').close());
 $('score-input').addEventListener('input', () => { state.requestId = crypto.randomUUID(); setMessage(); });
 
@@ -190,22 +201,26 @@ function clearPhoto() {
   if (state.objectUrl) URL.revokeObjectURL(state.objectUrl); state.objectUrl = null;
   $('proof-preview').removeAttribute('src');
 }
+$('proof-preview').addEventListener('error', () => { $('proof-preview').hidden = true; $('photo-copy').textContent = 'Photo selected · ready to upload'; });
 $('remove-photo').addEventListener('click', () => { clearPhoto(); state.requestId = crypto.randomUUID(); });
 $('proof').addEventListener('change', () => {
   const file = $('proof').files[0]; if (!file) return;
-  if (file.size > 8 * 1024 * 1024 || !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) { clearPhoto(); setMessage('Choose a JPG, PNG or WebP photo smaller than 8 MB.', true); return; }
+  if (file.size > 40 * 1024 * 1024) { clearPhoto(); setMessage('Choose a photo under 40 MB. Most camera photos work as they are.', true); return; }
+  if (file.type && !['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence'].includes(file.type) && !/\.(heic|heif|jpe?g|png|webp)$/i.test(file.name)) { clearPhoto(); setMessage('Choose an iPhone HEIC, JPG, PNG or WebP photo.', true); return; }
   if (state.objectUrl) URL.revokeObjectURL(state.objectUrl);
-  state.objectUrl = URL.createObjectURL(file); $('proof-preview').src = state.objectUrl; $('photo-preview').hidden = false; $('photo-copy').textContent = 'Change proof photo'; state.requestId = crypto.randomUUID(); setMessage();
+  $('proof-preview').hidden = false; state.objectUrl = URL.createObjectURL(file); $('proof-preview').src = state.objectUrl; $('photo-preview').hidden = false; $('photo-copy').textContent = 'Change proof photo'; state.requestId = crypto.randomUUID(); setMessage();
 });
 $('score-form').addEventListener('submit', async event => {
   event.preventDefault();
   if (state.posting || !state.user) return;
   if (state.initials.length !== 3) { setMessage('Tap three letters to enter your initials.', true); $('alphabet').querySelector('button').focus(); return; }
   const form = new FormData(); form.set('gameId', state.selected); form.set('score', $('score-input').value.trim()); form.set('initials', state.initials); form.set('requestId', state.requestId);
+  if (state.pendingGame && state.selected === 'new-game') { form.set('gameTitle', state.pendingGame.title); form.set('gameKind', state.pendingGame.kind); }
   if ($('proof').files[0]) form.set('photo', $('proof').files[0]);
   state.posting = true; renderSession(); $('submit-score').textContent = 'Posting…'; setMessage();
   try {
     const result = await api('/scores', { method: 'POST', body: form });
+    if (result.game) { state.selected = result.game.id; state.pendingGame = null; if (!gameById(result.game.id)) state.games.push(result.game); }
     $('score-form').hidden = true; $('record-preview').hidden = true; $('success-panel').hidden = false;
     $('success-title').textContent = result.isRecord ? 'NEW HIGH SCORE!' : 'SCORE POSTED!';
     $('success-detail').textContent = `${result.record.initials} · ${result.record.score} on ${gameById(state.selected).title}. ${result.isRecord ? 'Your record is on the board.' : 'Your score is saved in the game’s history.'}`;
@@ -218,6 +233,9 @@ $('play-again').addEventListener('click', () => { $('success-panel').hidden = tr
 async function refreshBoard() {
   try {
     const result = await api('/leaderboard'); state.games = result.games; state.connected = true;
+    const adminSelection = $('admin-game').value;
+    $('admin-game').replaceChildren(...state.games.map(game => { const option = node('option', '', game.title); option.value = game.id; return option; }));
+    $('admin-game').value = adminSelection || state.selected;
     $('connection').hidden = true; renderBoard(); renderEntry();
   } catch (error) {
     state.connected = false; $('connection').hidden = false;
