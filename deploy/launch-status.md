@@ -213,3 +213,9 @@ User-authorized private configuration update preserves Ron and adds Nick's previ
 - Manage games in TV menu and account is admin-only. Search, first-score filter, Show on TV and enter/manage score shortcuts. Empty games display Be the first / Your initials here and join rotation/search. Neutral artwork for new titles.
 - 69 backend tests and eight frontend tests passed, checks/build passed. Local browser added NBA Jam with no score, filtered it and displayed it on TV; phone dialog inspected. No test games added to live catalog (still 33 games).
 - Backup /var/backups/nicks-arcade/pre-manage-games-20260929 completed. Current service 1611963 active; public health production/ok; unauthenticated creation rejected 401. Mission Control PID 2920079 unchanged. Live frontend bytes verified.
+
+### Unclaimed-game artwork — September 29, 2026
+
+- Source: `969a420`; Pages: `4a3674d3f2d08d930992a871dd227e11501f92b0`; default-branch README: `725ba7f6f099c70186e54b6426e7e5d868594b4d`.
+- Approved title/alias matching uses the 33 existing curated images plus the genuine NBA Jam cabinet marquee. Unknown titles and distinct unmatched editions retain the neutral fallback. Assigned artwork is preserved.
+- Ten frontend tests passed, build/check passed; NBA Jam with no score visually verified locally at 540 × 960. All five changed published files matched the local production build byte-for-byte. No backend changes or production game/score writes.
