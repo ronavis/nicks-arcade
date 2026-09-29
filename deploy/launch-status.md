@@ -78,3 +78,13 @@ Source 368cc46 adds a private server-configured initials crosswalk, one-time bin
 62 backend tests pass; JavaScript checks and production build pass. Live readback confirms seven RON records linked through an authenticated request. Every pre-existing score value, initials, photo reference, timestamp and removed state matches the backup; database integrity is okay. Nick's 13 NIC records and Martin's three MAR records await their sign-in; aliases NJW and RCA have no imported rows currently. Their identity mappings are kept only in the private service environment, not in this repository. Mission Control PID 2920079 remained unchanged. Historical activity is not reassigned.
 
 Pages 064d6f8 reports built, and public app.js/index.html bytes match the tested production build. Default-branch README updated separately in 59169ae.
+
+## Score artwork and test cleanup — September 29, 2026
+
+Source e50f95a adds game artwork to My scores, hides removed entries from that view (admin history preserved), and mirrors the unread badge on the TV account button. JavaScript checks/build pass. Local 390x844 browser validation confirmed all seven imported RON artwork images decode, and a rival record-break event shows the previous record and taunt; both badge labels show one unread and Mark all read clears the badges. The browser demonstration used only local preview data.
+
+Production cleanup: backed up SQLite and photos at /var/backups/nicks-arcade/before-tst-cleanup-20260929. Galaga TST was already removed. Soft-removed only Bubble Bobble TST (254258) with an audit entry; readback confirms zero active TST entries and all other score rows exactly unchanged. Backend release remains 368cc46; no service restart needed.
+
+Pages commit c6462ac; default-branch README 6eee784.
+
+Public app.js, main.css and index.html match the tested production artifact after Pages publication.
