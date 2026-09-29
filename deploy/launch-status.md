@@ -163,3 +163,12 @@ User-authorized private configuration update preserves Ron and adds Nick's previ
 - Source `a336630`; Pages `7fc70ae9a70ec3bc09f35fb89c68f016167c8c05`.
 - Increased featured score/initials and surrounding-game values while retaining prior line-box heights. Headers unchanged; abandoned header edit was removed before commit.
 - Check/build passed. Portrait browser inspection confirmed readable double-row dots and no horizontal overflow in score, initials, surrounding rows or footer. Public HTML/CSS match build bytes.
+
+
+## New-record TV celebration — 2026-09-29
+
+- Source `10cc321`; Pages `54f2654da498ab3640abb70b1e89986bd06d1f13`.
+- Silent 10-second TV takeover with artwork, initials, score, taunt, timed-record heading, and early-dismiss button. Rotation suspends during takeover; manual pause preserved. Reduced-motion entrance supported.
+- Public winner snapshots skip first load, repeated winners, corrected/old/fallback records, and stale reconnection events. Same-game intermediate wins between polls are not replayed. Up to five queued winners.
+- Seven detection regression tests, JS checks, and build pass. Local API submission triggered the real browser takeover; screenshot captured; automatic dismissal and no replay on refresh verified. No live records changed.
+- GitHub Pages built; four published frontend files match build bytes. Backend unchanged.
