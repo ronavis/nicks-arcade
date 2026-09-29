@@ -346,3 +346,113 @@ def test_concurrent_new_game_uses_one_catalog_entry(app):
     assert all(r.status_code == 201 for r in results)
     assert len({r.json['game']['id'] for r in results}) == 1
     assert record(app.test_client(), results[0].json['game']['id'])['score'] == '456'
+
+
+def test_account_private_history_and_settings(app):
+    c=app.test_client()
+    submit(c,'100',token='player')
+    submit(c,'200',token='admin')
+    assert c.get('/api/account').status_code==401
+    assert c.get('/api/activity').status_code==401
+    scores=c.get('/api/account',headers=headers()).json['scores']
+    assert len(scores)==1 and scores[0]['score']=='100'
+    assert 'email' not in scores[0]
+    assert c.patch('/api/account',headers=headers(),json={'initials':'nic'}).status_code==200
+    assert c.get('/api/account',headers=headers()).json['initials']=='NIC'
+    assert c.get('/api/account',headers=headers('admin')).json['initials']==''
+    assert c.patch('/api/account',headers=headers(),json={'initials':'ABCD'}).status_code==400
+    assert create_app(dict(app.config)).test_client().get('/api/account',headers=headers()).json['initials']=='NIC'
+
+
+def test_broken_record_notification_taunt_and_read_persistence(app):
+    c=app.test_client()
+    submit(c,'50000',initials='NIC',token='player')
+    submit(c,'51000',initials='RON',token='admin',taunt='Come take the crown!')
+    result=c.get('/api/activity',headers=headers()).json
+    event=result['events'][0]
+    assert event['yourRecordBroken'] and event['isRecord'] and event['unread']
+    assert event['score']=='51,000' and event['previousScore']=='50,000' and event['previousInitials']=='NIC'
+    assert event['taunt']=='Come take the crown!'
+    assert not any(k in event for k in ['user_sub','previous_sub','email'])
+    assert c.get('/api/account',headers=headers()).json['unread']==1
+    assert c.post('/api/activity/read',headers=headers(),json={'throughId':result['latestId']}).status_code==200
+    assert create_app(dict(app.config)).test_client().get('/api/account',headers=headers()).json['unread']==0
+    # One player's read cursor never marks another player's feed read.
+    assert c.get('/api/account',headers=headers('outsider')).json['unread']==2
+
+
+def test_no_notification_for_self_record_break_or_equal_score(app):
+    c=app.test_client()
+    submit(c,'50000',token='player')
+    submit(c,'51000',token='player')
+    submit(c,'51000',token='admin')
+    events=c.get('/api/activity',headers=headers()).json['events']
+    assert not any(e['yourRecordBroken'] for e in events)
+    assert events[0]['isRecord'] is False
+    assert c.get('/api/account',headers=headers()).json['unread']==1
+
+
+def test_new_game_first_record_and_time_record_notifications(app):
+    c=app.test_client()
+    first=submit(c,'1:02.30',game='',gameTitle='Notification Racer',gameKind='time')
+    game=first.json['game']['id']
+    assert c.get('/api/activity',headers=headers('admin')).json['events'][0]['previousScore'] is None
+    submit(c,'1:01.00',game=game,token='admin',taunt='Catch me!')
+    assert c.get('/api/activity',headers=headers()).json['events'][0]['yourRecordBroken']
+
+
+def test_activity_idempotency_and_failed_upload_atomicity(app):
+    c=app.test_client(); rid=str(uuid.uuid4())
+    assert submit(c,requestId=rid,taunt='Hello').status_code==201
+    assert submit(c,requestId=rid,taunt='Hello').status_code==200
+    assert len(c.get('/api/activity',headers=headers()).json['events'])==1
+    assert submit(c,requestId=rid,taunt='Different').status_code==409
+    assert submit(c,photo=(io.BytesIO(b'broken'),'broken.heic')).status_code==400
+    assert len(c.get('/api/activity',headers=headers()).json['events'])==1
+
+
+def test_admin_taunt_moderation_and_removed_events(app):
+    c=app.test_client()
+    result=submit(c,taunt='<img src=x onerror=alert(1)>')
+    sid=result.json['record']['id']
+    url='/api/admin/scores/'+sid
+    payload=dict(score='42500',initials='RON',revision=1,taunt='')
+    assert c.patch(url,headers=headers(),json=payload).status_code==403
+    assert c.patch(url,headers=headers('admin'),json=payload).status_code==200
+    event=c.get('/api/activity',headers=headers()).json['events'][0]
+    assert event['taunt']=='' and event['corrected']
+    assert c.delete(url,headers=headers('admin'),json={'revision':2}).status_code==200
+    assert c.get('/api/activity',headers=headers()).json['events']==[]
+    assert c.get('/api/account',headers=headers()).json['scores'][0]['deleted']
+    assert c.get('/api/account',headers=headers('outsider')).json['unread']==0
+
+
+def test_taunt_length_and_read_cursor_validation(app):
+    c=app.test_client()
+    assert submit(c,taunt='x'*141).status_code==400
+    assert submit(c,taunt='x'*140).status_code==201
+    for value in [None,-1,True,'1']:
+        assert c.post('/api/activity/read',headers=headers(),json={'throughId':value}).status_code==400
+    assert c.post('/api/activity/read',json={'throughId':1}).status_code==401
+    assert c.post('/api/activity/read',headers=headers(),json={'throughId':999999}).status_code==200
+    submit(c,'60000',token='admin')
+    assert c.get('/api/account',headers=headers()).json['unread']==1
+
+
+def test_backup_restores_notifications_and_account_preferences(app,tmp_path):
+    from scripts.backup import backup
+    c=app.test_client()
+    submit(c,'50000',token='player')
+    submit(c,'51000',token='admin',taunt='Your turn!')
+    c.patch('/api/account',headers=headers(),json={'initials':'NIC'})
+    latest=c.get('/api/activity',headers=headers()).json['latestId']
+    c.post('/api/activity/read',headers=headers(),json={'throughId':latest})
+    # Keep the backup outside the live directory.
+    import tempfile
+    with tempfile.TemporaryDirectory() as outside:
+        destination=backup(app.config['DATA_DIR'],outside+'/snapshot')
+        restored=create_app(dict(app.config,DATA_DIR=str(destination))).test_client()
+        account=restored.get('/api/account',headers=headers()).json
+        assert account['initials']=='NIC' and account['unread']==0
+        event=restored.get('/api/activity',headers=headers()).json['events'][0]
+        assert event['yourRecordBroken'] and event['taunt']=='Your turn!'

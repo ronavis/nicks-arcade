@@ -34,6 +34,10 @@ The live installation already exists. Do not repeat account/directory creation o
 5. Build the frontend with the production API endpoint and publish only `dist/` through a normal update to `gh-pages`. Preserve the prior commit. Wait for Pages to finish building and compare the published assets with the tested build. Version changed assets where necessary so existing browsers load the update on refresh.
 6. Verify the live changed flow and record results in [launch-status.md](launch-status.md). Run a plain `npm run build` afterward if using the same checkout for local preview.
 
+## Account and notification schema
+
+The account release adds `profiles` (default initials and notification read cursor), `activity` (submission events) and a `taunt` column on scores. Existing scores are preserved; old submissions are not backfilled as new notifications. Activity is written in the same transaction as the score, so retrying a submission does not duplicate notifications. Full SQLite backups automatically include these tables. Prefer a forward fix or account-aware release if rollback is needed; older code will not create activity for new submissions.
+
 ## Backups and recovery
 
 Run `python scripts/backup.py /var/lib/nicks-arcade /secure/backups/arcade-YYYYMMDD-HHMM` as an account that can read the service data. Each destination must be new. The script uses SQLite's online backup API, checks integrity, copies every referenced immutable photo, and writes COMPLETE only after success. Store a private off-host copy; the installed timer runs daily at 06:00 UTC, with missed runs caught up at boot. Backups are retained; no automatic deletion is configured. An initial private off-host copy was validated. Automatic off-host transfer is not configured. JSON admin export is useful for inspection but does not include photos and is not a complete backup.

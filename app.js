@@ -1,6 +1,6 @@
 'use strict';
 const $ = (id) => document.getElementById(id);
-const state = { games: [], pendingGame: null, selected: 'galaga', featured: 'galaga', initials: '', user: null, token: '', config: null, paused: false, posting: false, requestId: crypto.randomUUID(), editing: null, objectUrl: null, pickerFor: 'entry', connected: false };
+const state = { games: [], account: null, accountView: 'activity', latestEvent: 0, pendingGame: null, selected: 'galaga', featured: 'galaga', initials: '', user: null, token: '', config: null, paused: false, posting: false, requestId: crypto.randomUUID(), editing: null, objectUrl: null, pickerFor: 'entry', connected: false };
 const apiBase = (window.ARCADE_CONFIG?.apiBase || '/api').replace(/\/$/, '');
 const display = new Intl.NumberFormat('en-US');
 const node = (tag, className, text) => { const el = document.createElement(tag); if (className) el.className = className; if (text !== undefined) el.textContent = text; return el; };
@@ -101,7 +101,8 @@ function renderSession() {
   const signed = Boolean(state.user);
   $('login-panel').hidden = signed;
   $('entry-fields').disabled = !signed || state.posting;
-  $('signout').hidden = !signed;
+  $('account-button').hidden = !signed;
+  $('account-admin').hidden = !state.user?.admin;
   $('admin-link').hidden = !state.user?.admin;
   $('account-label').textContent = signed ? state.config?.demo ? `Preview account · ${state.user.admin ? 'admin' : 'player'}` : 'Signed in with Google' : 'Sign in to join the board';
   if (state.config?.demo && signed) $('account-label').title = 'Local test account. This is not a Google sign-in.';
@@ -111,10 +112,11 @@ async function signIn(token) {
   state.token = token;
   state.user = await api('/session');
   try { sessionStorage.setItem('arcade_session', token); } catch (_) { /* Private browsing can disable browser storage. */ }
-  renderSession(); setMessage();
+  renderSession(); setMessage(); await refreshAccount();
+  if (!state.initials && state.account?.initials) { state.initials = state.account.initials; renderInitials(); }
 }
 function signOut(announce = true) {
-  state.user = null; state.token = '';
+  state.user = null; state.token = ''; state.account = null; $('account-dialog').close(); $('unread-count').hidden = true; $('activity-list').replaceChildren(); $('my-scores-list').replaceChildren();
   try { sessionStorage.removeItem('arcade_session'); } catch (_) { /* Optional storage. */ }
   window.google?.accounts.id.disableAutoSelect(); renderSession();
   if (announce) setMessage('Signed out. Your unfinished entry stays on this screen.');
@@ -194,6 +196,7 @@ $('add-game').addEventListener('click', () => {
   renderEntry(); setMessage('Your first score will add this game to the arcade.'); $('game-picker').close(); $('score-input').focus();
 });
 $('close-picker').addEventListener('click', () => $('game-picker').close());
+$('taunt-input').addEventListener('input', () => { state.requestId = crypto.randomUUID(); });
 $('score-input').addEventListener('input', () => { state.requestId = crypto.randomUUID(); setMessage(); });
 
 function clearPhoto() {
@@ -214,7 +217,7 @@ $('score-form').addEventListener('submit', async event => {
   event.preventDefault();
   if (state.posting || !state.user) return;
   if (state.initials.length !== 3) { setMessage('Tap three letters to enter your initials.', true); $('alphabet').querySelector('button').focus(); return; }
-  const form = new FormData(); form.set('gameId', state.selected); form.set('score', $('score-input').value.trim()); form.set('initials', state.initials); form.set('requestId', state.requestId);
+  const form = new FormData(); form.set('gameId', state.selected); form.set('score', $('score-input').value.trim()); form.set('initials', state.initials); form.set('taunt', $('taunt-input').value.trim()); form.set('requestId', state.requestId);
   if (state.pendingGame && state.selected === 'new-game') { form.set('gameTitle', state.pendingGame.title); form.set('gameKind', state.pendingGame.kind); }
   if ($('proof').files[0]) form.set('photo', $('proof').files[0]);
   state.posting = true; renderSession(); $('submit-score').textContent = 'Posting…'; setMessage();
@@ -224,11 +227,11 @@ $('score-form').addEventListener('submit', async event => {
     $('score-form').hidden = true; $('record-preview').hidden = true; $('success-panel').hidden = false;
     $('success-title').textContent = result.isRecord ? 'NEW HIGH SCORE!' : 'SCORE POSTED!';
     $('success-detail').textContent = `${result.record.initials} · ${result.record.score} on ${gameById(state.selected).title}. ${result.isRecord ? 'Your record is on the board.' : 'Your score is saved in the game’s history.'}`;
-    state.featured = state.selected; state.requestId = crypto.randomUUID(); await refreshBoard();
+    state.featured = state.selected; state.requestId = crypto.randomUUID(); await refreshBoard(); await refreshAccount();
   } catch (error) { setMessage(error.message, true); }
   finally { state.posting = false; renderSession(); $('submit-score').textContent = 'Post score'; }
 });
-$('play-again').addEventListener('click', () => { $('success-panel').hidden = true; $('score-form').hidden = false; $('record-preview').hidden = false; $('score-input').value = ''; state.initials = ''; renderInitials(); clearPhoto(); setMessage(); $('score-input').focus(); });
+$('play-again').addEventListener('click', () => { $('success-panel').hidden = true; $('score-form').hidden = false; $('record-preview').hidden = false; $('score-input').value = ''; state.initials = state.account?.initials || ''; $('taunt-input').value = ''; renderInitials(); clearPhoto(); setMessage(); $('score-input').focus(); });
 
 async function refreshBoard() {
   try {
@@ -273,6 +276,7 @@ async function loadAdmin() {
 function openEdit(score, action) {
   state.editing = { score, action }; $('edit-heading').textContent = action === 'delete' ? 'REMOVE SCORE?' : 'CORRECT SCORE';
   $('edit-summary').textContent = action === 'delete' ? `Remove ${score.score} by ${score.initials}? The best remaining score will appear on the board. The removal is kept in the admin history.` : 'Save a correction to this submission. The change is recorded in the admin history.';
+  $('edit-taunt').hidden = action === 'delete'; $('edit-taunt-label').hidden = action === 'delete'; $('edit-taunt').value = score.taunt || '';
   $('edit-fields').hidden = action === 'delete'; $('edit-score').disabled = action === 'delete'; $('edit-initials').disabled = action === 'delete';
   $('edit-score').value = score.score; $('edit-initials').value = score.initials; $('edit-message').textContent = '';
   $('save-edit').textContent = action === 'delete' ? 'Remove score' : 'Save correction'; $('edit-dialog').showModal();
@@ -281,7 +285,7 @@ $('close-edit').addEventListener('click', () => $('edit-dialog').close());
 $('edit-form').addEventListener('submit', async event => {
   event.preventDefault(); const { score, action } = state.editing; $('save-edit').disabled = true;
   try {
-    await api(`/admin/scores/${score.id}`, { method: action === 'delete' ? 'DELETE' : 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ revision: score.revision, score: $('edit-score').value, initials: $('edit-initials').value }) });
+    await api(`/admin/scores/${score.id}`, { method: action === 'delete' ? 'DELETE' : 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ revision: score.revision, score: $('edit-score').value, initials: $('edit-initials').value, taunt: $('edit-taunt').value }) });
     $('edit-dialog').close(); await loadAdmin(); await refreshBoard();
   } catch (error) { $('edit-message').textContent = error.message; }
   finally { $('save-edit').disabled = false; }
@@ -299,6 +303,80 @@ $('export-records').addEventListener('click', async () => {
   try { const data = await api('/admin/export'); const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })); const a = node('a'); a.href = url; a.download = 'nicks-arcade-records.json'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
   catch (error) { $('admin-message').textContent = error.message; }
 });
+
+
+async function refreshAccount() {
+  if (!state.user) return;
+  const token = state.token;
+  try {
+    const result = await api('/account');
+    if (state.token !== token) return;
+    state.account = result;
+    $('unread-count').textContent = result.unread > 99 ? '99+' : String(result.unread);
+    $('unread-count').hidden = !result.unread;
+    $('account-button').setAttribute('aria-label', result.unread ? `Account, ${result.unread} unread notifications` : 'Account');
+  } catch (_) { /* Keep entry usable during temporary notification outages. */ }
+}
+function accountSection(view) {
+  state.accountView = view;
+  for (const [name, id] of [['activity','show-activity'], ['my-scores','show-my-scores'], ['settings','show-settings']]) {
+    $(name + '-section').hidden = name !== view;
+    $(id).setAttribute('aria-pressed', String(name === view));
+  }
+}
+async function loadAccount(view = state.accountView) {
+  if (!state.user) return;
+  accountSection(view); $('account-message').textContent = 'Loading…';
+  const token = state.token;
+  try {
+    if (view === 'activity') {
+      const result = await api('/activity'); if (token !== state.token) return;
+      state.latestEvent = result.latestId;
+      $('activity-list').replaceChildren(...result.events.map(event => {
+        const card = node('article', `activity-card${event.unread ? ' unread' : ''}`);
+        const title = event.yourRecordBroken ? 'YOUR RECORD WAS BROKEN!' : event.isRecord ? (event.previousScore ? 'NEW RECORD!' : 'FIRST RECORD!') : 'SCORE POSTED';
+        card.append(node('strong', 'activity-title', title), node('h4', '', event.gameTitle), node('p', '', `${event.initials} · ${event.score}`));
+        if (event.isRecord && event.previousScore) card.append(node('p', 'small', `Previous record: ${event.previousInitials} · ${event.previousScore}`));
+        if (event.taunt) card.append(node('blockquote', '', event.taunt));
+        card.append(node('p', 'small', new Date(event.createdAt * 1000).toLocaleString() + (event.corrected ? ' · Score corrected by admin' : '')));
+        return card;
+      }));
+      if (!result.events.length) $('activity-list').append(node('p', '', 'Quiet for now. The next score starts the action!'));
+      $('mark-read').disabled = !result.events.length;
+    } else {
+      const account = await api('/account'); if (token !== state.token) return; state.account = account;
+      if (view === 'settings') $('default-initials').value = account.initials;
+      else {
+        $('my-scores-list').replaceChildren(...account.scores.map(score => {
+          const card = node('article','activity-card');
+          card.append(node('h4','',score.gameTitle), node('p','',`${score.initials} · ${score.score}`), node('strong','small',score.deleted ? 'Removed by admin' : score.isRecord ? 'Current record holder' : 'Saved in game history'));
+          if (score.taunt) card.append(node('blockquote','',score.taunt));
+          if (score.hasPhoto && !score.deleted) { const button=node('button','text-button','View my photo'); button.addEventListener('click',()=>showPhoto(score.photoId)); card.append(button); }
+          return card;
+        }));
+        if (!account.scores.length) $('my-scores-list').append(node('p','','Your first score is waiting. Go claim a spot!'));
+      }
+    }
+    $('account-message').textContent = ''; await refreshAccount();
+  } catch (error) { $('account-message').textContent = error.message; }
+}
+$('account-button').addEventListener('click', () => {
+  $('account-identity').textContent = `${state.user.email} · ${state.user.admin ? 'Arcade admin' : 'Player'}`;
+  $('account-dialog').showModal(); loadAccount();
+});
+$('close-account').addEventListener('click', () => $('account-dialog').close());
+for (const [id, view] of [['show-activity','activity'],['show-my-scores','my-scores'],['show-settings','settings']]) $(id).addEventListener('click', () => loadAccount(view));
+$('account-admin').addEventListener('click', () => { $('admin-game').value = state.selected; $('account-dialog').close(); });
+$('mark-read').addEventListener('click', async () => {
+  try { await api('/activity/read', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({throughId:state.latestEvent})}); await loadAccount('activity'); }
+  catch(error) { $('account-message').textContent=error.message; }
+});
+$('settings-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  try { await api('/account',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({initials:$('default-initials').value})}); await refreshAccount(); $('account-message').textContent='Default initials saved.'; }
+  catch(error) { $('account-message').textContent=error.message; }
+});
+setInterval(() => { if (!document.hidden && state.user) { refreshAccount(); if ($('account-dialog').open && state.accountView === 'activity') loadAccount('activity'); } }, 15000);
 
 async function init() {
   route();

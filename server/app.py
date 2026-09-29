@@ -28,6 +28,13 @@ Image.MAX_IMAGE_PIXELS = 64_000_000
 register_heif_opener(thumbnails=False, decode_threads=2)
 
 
+def clean_taunt(value):
+    value = ' '.join(str(value).split())
+    if len(value) > 140 or any(unicodedata.category(c).startswith('C') for c in value):
+        raise ValueError('Keep your taunt to 140 characters of friendly arcade rivalry.')
+    return value
+
+
 def game_key(title):
     return re.sub('[^a-z0-9]', '', unicodedata.normalize('NFKD', title).lower())
 
@@ -109,8 +116,12 @@ def create_app(config=None, *, allow_demo=False):
             actor TEXT NOT NULL, action TEXT NOT NULL, before_json TEXT NOT NULL,
             after_json TEXT NOT NULL, created_at INTEGER NOT NULL
           );
+          CREATE TABLE IF NOT EXISTS profiles (user_sub TEXT PRIMARY KEY, initials TEXT NOT NULL DEFAULT '', read_event INTEGER NOT NULL DEFAULT 0);
+          CREATE TABLE IF NOT EXISTS activity (id INTEGER PRIMARY KEY AUTOINCREMENT, score_id TEXT NOT NULL UNIQUE REFERENCES scores(id), previous_sub TEXT, previous_initials TEXT, previous_value INTEGER, is_record INTEGER NOT NULL);
           CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);
         ''')
+        if 'taunt' not in {row[1] for row in db.execute('PRAGMA table_info(scores)')}:
+            db.execute("ALTER TABLE scores ADD COLUMN taunt TEXT NOT NULL DEFAULT ''")
         db.execute("BEGIN IMMEDIATE")
         for game in games:
             db.execute('INSERT OR IGNORE INTO games VALUES (?,?,?,?,?,?)',
@@ -209,11 +220,11 @@ def create_app(config=None, *, allow_demo=False):
     def public_record(row):
         return {'id': row['id'], 'score': display_score(row['value'], catalog()[row['game_id']]['kind']),
                 'initials': row['initials'], 'createdAt': row['created_at'] or None,
-                'hasPhoto': bool(row['photo_id']), 'photoId': row['photo_id'], 'revision': row['revision']}
+                'taunt': row['taunt'], 'hasPhoto': bool(row['photo_id']), 'photoId': row['photo_id'], 'revision': row['revision']}
 
     def winner(db, game_id):
         direction = 'ASC' if catalog()[game_id]['kind'] == 'time' else 'DESC'
-        return db.execute(f'SELECT * FROM scores WHERE game_id=? AND deleted_at IS NULL ORDER BY value {direction},created_at ASC,id ASC LIMIT 1', (game_id,)).fetchone()
+        return db.execute(f'SELECT * FROM scores WHERE game_id=? AND deleted_at IS NULL ORDER BY value {direction},created_at ASC,rowid ASC LIMIT 1', (game_id,)).fetchone()
 
     @app.get('/api/config')
     def configuration():
@@ -299,6 +310,7 @@ def create_app(config=None, *, allow_demo=False):
         if not re.fullmatch('[A-Z]{3}', initials):
             raise ValueError('Enter exactly three letters for your initials.')
         value = score_value(request.form.get('score', ''), kind)
+        taunt = clean_taunt(request.form.get('taunt', ''))
         request_id = request.form.get('requestId', '')
         try:
             uuid.UUID(request_id)
@@ -318,7 +330,7 @@ def create_app(config=None, *, allow_demo=False):
                     raise ValueError('That game already exists with a different score type. Choose it from search.')
             previous = db.execute('SELECT * FROM scores WHERE user_sub=? AND request_id=?', (g.user['sub'], request_id)).fetchone()
             if previous:
-                if (previous['game_id'], previous['value'], previous['initials']) != (game_id, value, initials):
+                if (previous['game_id'], previous['value'], previous['initials'], previous['taunt']) != (game_id, value, initials, taunt):
                     abort(409, 'This submission was already saved with different details. Start a new entry.')
                 return jsonify(record=public_record(previous), game=catalog()[game_id], isRecord=winner(db, game_id)['id'] == previous['id'], duplicate=True), 200
             now = int(time.time())
@@ -328,12 +340,15 @@ def create_app(config=None, *, allow_demo=False):
             daily = db.execute('SELECT COUNT(*) FROM scores WHERE user_sub=? AND created_at>?', (g.user['sub'], now - 86400)).fetchone()[0]
             if daily >= 100:
                 abort(429, 'The daily submission limit has been reached for this account.')
+            previous_winner = winner(db, game_id)
             photo_id = save_photo(request.files.get('photo'))
             score_id = str(uuid.uuid4())
             db.execute('INSERT INTO scores (id,game_id,value,initials,user_sub,user_email,photo_id,created_at,request_id) VALUES (?,?,?,?,?,?,?,?,?)',
                        (score_id, game_id, value, initials, g.user['sub'], g.user['email'], photo_id, now, request_id))
+            db.execute('UPDATE scores SET taunt=? WHERE id=?', (taunt, score_id))
             row = db.execute('SELECT * FROM scores WHERE id=?', (score_id,)).fetchone()
             best = winner(db, game_id)
+            db.execute('INSERT INTO activity (score_id,previous_sub,previous_initials,previous_value,is_record) VALUES (?,?,?,?,?)', (score_id, previous_winner['user_sub'] if previous_winner else None, previous_winner['initials'] if previous_winner else None, previous_winner['value'] if previous_winner else None, int(best['id'] == score_id)))
             db.commit()
             return jsonify(record=public_record(row), game=catalog()[game_id], isRecord=best['id'] == score_id), 201
         except Exception:
@@ -344,6 +359,51 @@ def create_app(config=None, *, allow_demo=False):
         finally:
             if db.in_transaction:
                 db.rollback()
+
+    @app.get('/api/account')
+    @authenticated()
+    def account():
+        db = get_db()
+        profile = db.execute('SELECT * FROM profiles WHERE user_sub=?', (g.user['sub'],)).fetchone()
+        cursor = profile['read_event'] if profile else 0
+        unread = db.execute('SELECT COUNT(*) FROM activity a JOIN scores s ON s.id=a.score_id WHERE a.id>? AND s.user_sub!=? AND s.deleted_at IS NULL', (cursor, g.user['sub'])).fetchone()[0]
+        rows = db.execute('SELECT * FROM scores WHERE user_sub=? ORDER BY created_at DESC,rowid DESC LIMIT 100', (g.user['sub'],)).fetchall()
+        return jsonify(initials=profile['initials'] if profile else '', unread=unread, scores=[public_record(row) | {'gameTitle': catalog()[row['game_id']]['title'], 'deleted': row['deleted_at'] is not None, 'isRecord': row['deleted_at'] is None and winner(db,row['game_id'])['id']==row['id']} for row in rows])
+
+    @app.patch('/api/account')
+    @authenticated()
+    def save_account():
+        initials = str((request.get_json(silent=True) or {}).get('initials','')).strip().upper()
+        if initials and not re.fullmatch('[A-Z]{3}', initials):
+            raise ValueError('Enter three letters or leave default initials blank.')
+        with get_db() as db:
+            db.execute("INSERT INTO profiles(user_sub,initials) VALUES (?,?) ON CONFLICT(user_sub) DO UPDATE SET initials=excluded.initials", (g.user['sub'],initials))
+        return jsonify(ok=True)
+
+    @app.get('/api/activity')
+    @authenticated()
+    def activity():
+        db = get_db()
+        profile = db.execute('SELECT read_event FROM profiles WHERE user_sub=?', (g.user['sub'],)).fetchone()
+        cursor = profile['read_event'] if profile else 0
+        rows = db.execute('SELECT a.*,s.game_id,s.value,s.initials,s.taunt,s.user_sub,s.created_at,s.revision FROM activity a JOIN scores s ON s.id=a.score_id WHERE s.deleted_at IS NULL ORDER BY a.id DESC LIMIT 100').fetchall()
+        events = []
+        for row in rows:
+            game = catalog()[row['game_id']]
+            events.append(dict(id=row['id'], gameTitle=game['title'], score=display_score(row['value'],game['kind']), initials=row['initials'], taunt=row['taunt'], createdAt=row['created_at'], isRecord=bool(row['is_record']), yourRecordBroken=bool(row['is_record'] and row['previous_sub']==g.user['sub'] and row['user_sub']!=g.user['sub']), previousInitials=row['previous_initials'], previousScore=display_score(row['previous_value'],game['kind']) if row['previous_value'] else None, unread=row['id']>cursor and row['user_sub']!=g.user['sub'], corrected=row['revision']>1))
+        return jsonify(events=events, latestId=events[0]['id'] if events else 0)
+
+    @app.post('/api/activity/read')
+    @authenticated()
+    def mark_activity_read():
+        value = (request.get_json(silent=True) or {}).get('throughId')
+        if type(value) is not int or value < 0:
+            raise ValueError('Choose a valid notification to mark as read.')
+        with get_db() as db:
+            latest = db.execute('SELECT COALESCE(MAX(id),0) FROM activity').fetchone()[0]
+            value = min(value,latest)
+            db.execute('INSERT INTO profiles(user_sub,read_event) VALUES (?,?) ON CONFLICT(user_sub) DO UPDATE SET read_event=MAX(profiles.read_event,excluded.read_event)', (g.user['sub'],value))
+        return jsonify(ok=True)
 
     @app.get('/api/photos/<photo_id>')
     @authenticated()
@@ -392,7 +452,7 @@ def create_app(config=None, *, allow_demo=False):
                 initials = str(payload.get('initials', '')).upper().strip()
                 if not re.fullmatch('[A-Z]{3}', initials):
                     raise ValueError('Enter exactly three letters.')
-                db.execute('UPDATE scores SET value=?,initials=?,revision=revision+1 WHERE id=?', (value, initials, score_id))
+                db.execute('UPDATE scores SET value=?,initials=?,taunt=?,revision=revision+1 WHERE id=?', (value, initials, clean_taunt(payload.get('taunt', row['taunt'])), score_id))
                 action = 'correct'
             after = db.execute('SELECT * FROM scores WHERE id=?', (score_id,)).fetchone()
             db.execute('INSERT INTO audit (score_id,actor,action,before_json,after_json,created_at) VALUES (?,?,?,?,?,?)',
