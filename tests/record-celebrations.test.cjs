@@ -1,0 +1,12 @@
+const {test} = require('node:test');
+const assert = require('node:assert/strict');
+const {createObserver} = require('../record-celebrations.js');
+const game = (id,score,extra={}) => ({id:'galaga',kind:'score',record:{id,score,initials:'RON',createdAt:100,revision:1,...extra}});
+const snapshot = (g,time=100) => ({games:[g],updatedAt:time});
+test('initial load and repeated polling never replay records',()=>{const o=createObserver();assert.deepEqual(o(snapshot(game('a','100'))),[]);assert.deepEqual(o(snapshot(game('a','100'),101)),[])});
+test('new higher record celebrates once and keeps taunt',()=>{const o=createObserver();o(snapshot(game('a','100')));const g=game('b','200',{createdAt:101,taunt:'Your turn!'});assert.equal(o(snapshot(g,102))[0].record.taunt,'Your turn!');assert.equal(o(snapshot(g,103)).length,0)});
+test('lower time wins, higher time does not',()=>{const o=createObserver();o(snapshot({...game('a','1:02.30'),kind:'time'}));assert.equal(o(snapshot({...game('b','1:01.20',{createdAt:101}),kind:'time'},101)).length,1);assert.equal(o(snapshot({...game('c','1:03.00',{createdAt:102}),kind:'time'},102)).length,0)});
+test('admin correction, old fallback, tie and removed winner do not celebrate',()=>{for(const g of [game('b','200',{revision:2}),game('b','200',{createdAt:50}),game('b','100'),{id:'galaga',record:null}]){const o=createObserver();o(snapshot(game('a','100')));assert.equal(o(snapshot(g,101)).length,0)}});
+test('first record after baseline celebrates',()=>{const o=createObserver();o(snapshot({id:'galaga',record:null}));assert.equal(o(snapshot(game('a','100'),101)).length,1)});
+test('reconnection does not celebrate stale wins',()=>{const o=createObserver();o(snapshot(game('a','100')));assert.equal(o(snapshot(game('b','200',{createdAt:101}),200)).length,0)});
+test('numeric comparison handles commas',()=>{const o=createObserver();o(snapshot(game('a','900')));assert.equal(o(snapshot(game('b','1,000'),101)).length,1)});

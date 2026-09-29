@@ -12,10 +12,11 @@
   <link rel="preload" href="vendor/bitcount-double.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="vendor/jersey10.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="vendor/icons/style.css">
-  <link rel="stylesheet" href="main.css?v=larger-scores-1">
+  <link rel="stylesheet" href="main.css?v=celebration-1">
   <script src="config.js" defer></script>
   <script src="vendor/qr.js" defer></script>
-  <script src="app.js?v=score-dots-1" defer></script>
+  <script src="record-celebrations.js?v=celebration-1" defer></script>
+  <script src="app.js?v=celebration-1" defer></script>
 </head>
 <body>
   <div id="preview-note" class="preview-note" hidden>LOCAL PREVIEW <span>Test scores stay here. Google sign-in is not being simulated.</span></div>
@@ -23,6 +24,13 @@
   <main id="experience" class="experience">
     <section id="display-panel" class="display-panel" aria-label="Arcade high score display">
       <div id="board" class="board">
+        <section id="record-celebration" class="record-celebration" aria-label="New arcade record" aria-live="polite" hidden>
+          <p class="celebration-kicker">THE ARCADE HAS A NEW CHAMPION</p><h2 id="celebration-heading">NEW HIGH SCORE!</h2>
+          <img id="celebration-art" alt=""><h3 id="celebration-game"></h3>
+          <div id="celebration-score" class="celebration-score"></div><div id="celebration-initials" class="celebration-initials"></div>
+          <blockquote id="celebration-taunt" hidden></blockquote><p class="celebration-return">Back to the scoreboard in a moment…</p>
+          <button id="dismiss-celebration" class="secondary">Back to scoreboard</button>
+        </section>
         <header class="board-header"><h1>NICK’S ARCADE</h1><p>HIGH SCORES</p></header>
         <div class="board-paper">
           <section class="spotlight" aria-label="Featured game">
