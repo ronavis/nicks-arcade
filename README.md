@@ -40,13 +40,13 @@ Ron is the initial administrator. Admin controls allow score corrections, remova
 **My account** is visible near the top of score entry and in the TV controls. When signed out, it takes you to Google sign-in; when signed in, it opens your account. It provides:
 
 - **Notifications:** recent score submissions, first records and record breaks, with an unread badge and **Mark all read**. A player whose account held the previous record sees **Your record was broken**, the new score, previous record and challenger’s optional taunt.
-- **My scores:** your latest 100 submissions, current-record status, removed-entry status and attached proof photos.
+- **My scores:** your latest 100 submissions and linked imported records, current-record status, removed-entry status and attached proof photos.
 - **Settings:** save three default initials for fresh entries. Admins can also save the shared TV rotation interval (5–120 seconds). Open displays receive timing changes within five seconds, and the setting survives restarts. Preferences and notification read status follow your Google account across devices.
 - **Manage scores:** a prominent shortcut for admins. Corrections can also edit or clear a taunt.
 
 The optional **Victory taunt** is limited to 140 characters. Keep it friendly. Text is displayed as text, never interpreted as HTML. Removing a submission also removes it from the activity feed.
 
-Notifications are inside the app; no email or phone push alerts are sent. The badge refreshes every 15 seconds while the page is visible, and the feed shows the latest 100 updates. Activity starts with submissions made after this feature was deployed. Imported starting records have initials but no linked Google account, so they cannot receive a personal record-break notice; everyone can still see the new-record activity. Ties and improvements to your own record do not create a personal “your record was broken” notice.
+Notifications are inside the app; no email or phone push alerts are sent. The badge refreshes every 15 seconds while the page is visible, and the feed shows the latest 100 updates. Activity starts with submissions made after this feature was deployed. Imported starting records can be linked to a Google account through a private, administrator-configured initials crosswalk. Linking happens when that account next makes an authenticated request and preserves the original initials and score. Once linked, future record breaks can generate personal notices; earlier notices are not reassigned. New submissions always belong to the signed-in Google account, regardless of the initials entered. Ties and improvements to your own record do not create a personal “your record was broken” notice.
 
 ## The display and game collection
 
