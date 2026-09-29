@@ -156,3 +156,10 @@ User-authorized private configuration update preserves Ron and adds Nick's previ
 - Replaced Doto with Bitcount Grid Double, using round elements at weight 400. Removed the synthetic outline. Build ships the new font and license and removes Doto.
 - JavaScript check and build passed. Local browser inspection confirmed double-row strokes on TV, plus mobile long record/12-digit input and RON keypad entry. No scores submitted.
 - Published HTML, CSS, font and license match production build bytes.
+
+
+## Larger scoreboard values, same footprint — 2026-09-29
+
+- Source `a336630`; Pages `7fc70ae9a70ec3bc09f35fb89c68f016167c8c05`.
+- Increased featured score/initials and surrounding-game values while retaining prior line-box heights. Headers unchanged; abandoned header edit was removed before commit.
+- Check/build passed. Portrait browser inspection confirmed readable double-row dots and no horizontal overflow in score, initials, surrounding rows or footer. Public HTML/CSS match build bytes.
