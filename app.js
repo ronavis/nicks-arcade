@@ -118,7 +118,7 @@ async function signIn(token) {
   if (!state.initials && state.account?.initials) { state.initials = state.account.initials; renderInitials(); }
 }
 function signOut(announce = true) {
-  state.user = null; state.token = ''; state.account = null; $('account-dialog').close(); $('unread-count').hidden = true; $('activity-list').replaceChildren(); $('my-scores-list').replaceChildren();
+  state.user = null; state.token = ''; state.account = null; $('account-dialog').close(); $('unread-count').hidden = true; $('tv-unread-count').hidden = true; $('activity-list').replaceChildren(); $('my-scores-list').replaceChildren();
   try { sessionStorage.removeItem('arcade_session'); } catch (_) { /* Optional storage. */ }
   window.google?.accounts.id.disableAutoSelect(); renderSession();
   if (announce) setMessage('Signed out. Your unfinished entry stays on this screen.');
@@ -325,9 +325,11 @@ async function refreshAccount() {
     const result = await api('/account');
     if (state.token !== token) return;
     state.account = result;
-    $('unread-count').textContent = result.unread > 99 ? '99+' : String(result.unread);
-    $('unread-count').hidden = !result.unread;
-    $('account-button').setAttribute('aria-label', result.unread ? `My account, ${result.unread} unread notifications` : 'My account');
+    for (const [button, badge] of [['account-button', 'unread-count'], ['tv-account-button', 'tv-unread-count']]) {
+      $(badge).textContent = result.unread > 99 ? '99+' : String(result.unread);
+      $(badge).hidden = !result.unread;
+      $(button).setAttribute('aria-label', result.unread ? `My account, ${result.unread} unread notifications` : 'My account');
+    }
   } catch (_) { /* Keep entry usable during temporary notification outages. */ }
 }
 function accountSection(view) {
@@ -360,15 +362,22 @@ async function loadAccount(view = state.accountView) {
       const account = await api('/account'); if (token !== state.token) return; state.account = account;
       if (view === 'settings') { $('default-initials').value = account.initials; $('display-settings-form').hidden = !state.user.admin; $('rotation-seconds').value = account.displaySettings.rotationSeconds; $('display-settings-message').textContent = ''; }
       else {
-        $('my-scores-list').replaceChildren(...account.scores.map(score => {
-          const card = node('article','activity-card');
+        const visibleScores = account.scores.filter(score => !score.deleted);
+        $('my-scores-list').replaceChildren(...visibleScores.map(score => {
+          const card = node('article','activity-card my-score-card');
+          const game = state.games.find(game => game.title === score.gameTitle);
+          const artwork = node('img', 'my-score-artwork');
+          artwork.src = game ? artworkUrl(game) : 'images/new-game.svg';
+          artwork.alt = `${score.gameTitle} marquee`; artwork.loading = 'lazy';
+          artwork.addEventListener('error', () => { artwork.hidden = true; }, { once: true });
+          card.append(artwork);
           card.append(node('h4','',score.gameTitle), node('p','',`${score.initials} · ${score.score}`), node('strong','small',score.deleted ? 'Removed by admin' : score.isRecord ? 'Current record holder' : 'Saved in game history'));
           card.append(node('p', 'small', score.createdAt ? 'Submitted using your Google account' : 'Imported arcade record · linked to your account'));
           if (score.taunt) card.append(node('blockquote','',score.taunt));
           if (score.hasPhoto && !score.deleted) { const button=node('button','text-button','View my photo'); button.addEventListener('click',()=>showPhoto(score.photoId)); card.append(button); }
           return card;
         }));
-        if (!account.scores.length) $('my-scores-list').append(node('p','','Your first score is waiting. Go claim a spot!'));
+        if (!visibleScores.length) $('my-scores-list').append(node('p','','Your first score is waiting. Go claim a spot!'));
       }
     }
     $('account-message').textContent = ''; await refreshAccount();
