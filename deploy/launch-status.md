@@ -52,3 +52,14 @@ Local outputs/launch-receipts holds installation logs, public API checks, Pages 
 ## Display initials follow-up — 2026-09-29
 
 Featured record initials are approximately 17% larger, with positive letter spacing and centered alignment. Portrait checks at 540×960 and 1080×1920 found no score/control overlap. Source commits 2dc7c18 and c177b42 are published through Pages commit 07a171590d16068afae01078bc2ef848f848e153. Public HTML/CSS matched the build; live browser inspection confirmed the new typography after versioning the stylesheet to avoid a cached older copy. No backend or score changes were needed.
+
+## Accounts, notifications and taunts — 2026-09-29
+
+- Added a top-of-entry Account button with an unread badge, Notifications, My scores, saved default initials, sign out and an admin-only Manage scores shortcut.
+- Added authenticated activity for new submissions and record breaks. A prior Google-account record holder receives a personalized record-break message; imported records have no linked Google identity. Activity starts at deployment and shows the latest 100 entries. Read status and initials persist per account. No email or push delivery.
+- Optional 140-character taunts are displayed using text nodes. Admin score correction can edit/clear a taunt; removal hides the submission from activity. Duplicate submission retries do not duplicate events. Same-second equal scores now retain insertion order rather than ordering by random IDs.
+- 55 backend tests passed, covering ownership, auth, personal record-break targeting, taunts, time records, ties, self-improvements, event atomicity, read cursors, moderation and account/activity backup restoration. Syntax/build checks passed.
+- Two separate local browser player sessions exercised a first record, a rival's higher score with a taunt, personalized notification, My scores, saved initials, unread clearing and the admin shortcut at phone width. Example screenshot saved in outputs/screenshots/record-broken-notification.png; no test rivalry was inserted into production.
+- Private backup /var/backups/nicks-arcade/before-account-5e65067 created before deployment. Migration passed on a copy first. Backend release 5e65067 installed; all 34 preexisting score rows preserved exactly, comparing original columns. Public health passed and unsigned /account and /activity returned 401. Mission Control process remained unchanged.
+- Pages release 02322b86a9afba582a6cd42bdc6428ceb5561c21 published; public HTML, JavaScript and CSS matched the tested build. CSS/JS references are versioned to refresh browser caches.
+- Live multi-account Google notification delivery has not yet been exercised; the two-player flow was validated locally with explicit preview identities. Existing physical TV, original iPhone photo retry and source naming questions remain pending.
