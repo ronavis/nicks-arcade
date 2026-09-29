@@ -93,3 +93,10 @@
 .catalog-browser{margin:16px 0;padding:14px;background:#e7f4f0;border-radius:8px}#catalog-results{max-height:320px;overflow:auto}#catalog-results .game-option{width:100%;text-align:left}#catalog-results .game-option:disabled{opacity:.6}#catalog-results img{width:110px;height:52px;object-fit:contain;background:var(--ink)}#games-dialog summary{cursor:pointer;padding:12px 0}#games-dialog .arcade-game-card .text-button{display:block}
 
 .display-menu-items .menu-enter-score{font-weight:800;background:var(--cyan);border:2px solid var(--ink);margin-bottom:6px}.display-menu-items .menu-enter-score:hover{background:var(--ink);color:var(--cream)}
+
+/* Keep scoreboard repaint/rotation layers below the menu, including native details content. */
+.display-panel{isolation:isolate}
+.board{z-index:0;isolation:isolate}
+.display-tools,.tv .display-tools,.preview .display-tools,.rotated .display-tools,.display-panel:fullscreen .display-tools{overflow:visible;isolation:isolate;transition:none}
+.display-tools::details-content{overflow:visible}
+.display-menu-items{z-index:1}
