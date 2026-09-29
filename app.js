@@ -135,12 +135,13 @@ function applySavedTaunt() {
   $('taunt-input').value = state.automaticTaunt ? state.account.defaultTaunt : '';
   state.requestId = crypto.randomUUID();
 }
-async function signIn(token) {
+async function signIn(token, { goToBoard = true } = {}) {
   state.token = token;
   state.user = await api('/session');
   try { sessionStorage.setItem('arcade_session', token); } catch (_) { /* Private browsing can disable browser storage. */ }
   renderSession(); setMessage(); await refreshAccount(); applySavedTaunt();
   if (!state.initials && state.account?.initials) { state.initials = state.account.initials; renderInitials(); }
+  if (goToBoard) { $('account-dialog').close(); location.hash = '#tv'; route(); }
 }
 function signOut(announce = true) {
   $('taunt-input').value = ''; state.automaticTaunt = false;
@@ -175,7 +176,7 @@ $('signout').addEventListener('click', () => signOut());
 function route() {
   $('display-menu').open = false;
   const preview = state.config?.demo && new URLSearchParams(location.search).get('view') === 'preview' && location.hash !== '#admin';
-  const mode = location.hash === '#admin' ? 'admin' : location.hash === '#tv' ? 'tv' : location.hash === '#play' ? 'play' : innerWidth < 700 ? 'play' : 'tv';
+  const mode = location.hash === '#admin' ? 'admin' : location.hash === '#tv' ? 'tv' : location.hash === '#play' ? 'play' : 'tv';
   $('experience').className = `experience ${preview ? 'preview' : mode}`;
   $('display-panel').hidden = !preview && mode !== 'tv';
   $('phone-panel').hidden = !preview && mode !== 'play';
@@ -538,16 +539,16 @@ async function init() {
     state.config = await api('/config');
     $('preview-note').hidden = !state.config.demo;
     new ResizeObserver(() => document.documentElement.style.setProperty('--preview-height', `${$('preview-note').getBoundingClientRect().height}px`)).observe($('preview-note'));
-    const submitUrl = new URL(state.config.publicUrl); submitUrl.hash = 'play';
+    const submitUrl = new URL(state.config.publicUrl); submitUrl.hash = 'tv';
     $('qr-link').href = submitUrl.toString();
-    // Internal click opens entry here; scanning uses the configured public origin.
-    $('qr-link').addEventListener('click', event => { event.preventDefault(); location.hash = '#play'; });
+    // Both clicking and scanning the QR open the main scoreboard.
+    $('qr-link').addEventListener('click', event => { event.preventDefault(); location.hash = '#tv'; });
     await ArcadeQR.toCanvas($('qr-code'), submitUrl.toString(), { width: 240, margin: 1, errorCorrectionLevel: 'M', color: { dark: '#071418', light: '#ffffff' } });
     await refreshBoard();
     $('admin-game').replaceChildren(...state.allGames.map(game => { const option = node('option', '', game.title); option.value = game.id; return option; }));
     $('admin-game').value = state.selected;
     loadGoogle();
-    try { const token = sessionStorage.getItem('arcade_session'); if (token) await signIn(token); } catch (_) { signOut(false); }
+    try { const token = sessionStorage.getItem('arcade_session'); if (token) await signIn(token, { goToBoard: false }); } catch (_) { signOut(false); }
     renderSession(); route();
   } catch (error) { $('connection').hidden = false; $('connection').textContent = error.message; $('login-help').textContent = 'The score service must be connected before sign-in is available.'; }
 }
