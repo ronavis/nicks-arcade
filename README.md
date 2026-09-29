@@ -151,3 +151,5 @@ An open TV display checks the public leaderboard every five seconds. A newly sub
 This uses current winner snapshots: multiple games can queue, but intermediate records beaten between polls are not replayed. Events older than sixty seconds are skipped after a disconnection. No account is required on the TV.
 
 Run `npm test` for celebration detection regression checks.
+
+The featured record and celebration show a compact green dot-matrix improvement badge when the original previous record is known. Points use ↑ +2,400; timed records use ↓ 1.10s. Tap the badge for an explanation. Imported/first records and corrected submissions omit uncertain comparisons. Around the arcade rows remain unchanged.
