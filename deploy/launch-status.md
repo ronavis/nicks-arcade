@@ -2,6 +2,14 @@
 
 Software deployed and live core flow validated. Ron confirmed the live QR scan and Google sign-in on his phone on 2026-09-29. Phone score entry also passed. Retrying the original iPhone photo, TV and second-account acceptance remain pending.
 
+## Latest release snapshot — September 29, 2026
+
+- Pages build verified successful at `3b6567fa478144186b8ca061600349ec1fd3e702`; menu-layering source `17c7d8b`. Backend last deployed at `cc2b075`; subsequent changes were frontend-only.
+- QR/default landing and interactive sign-in return to the shared scoreboard. Enter a score leads the left-aligned menu for every role; admin actions remain role-restricted. The Manage scores label has no shield icon.
+- Latest menu fix keeps leaderboard repaint layers beneath the menu. Mobile and rotated hit checks passed; the reported intermittent overlap still needs user confirmation, and fullscreen capture was inconclusive.
+- The implementation remains in draft PR #1 on `codex/arcade-record-spotlight`. Default `master` retains the original implementation with an updated README; `gh-pages` serves the rebuilt site.
+- The sections below are historical receipts. Older release IDs, test counts and temporary test-score states describe their respective checkpoints, not the current release.
+
 ## Initial deployment checks (historical) — completed with receipts
 
 - Original source branch and dirty original main.css preserved. Source rebuilt in isolated codex/arcade-record-spotlight branch.

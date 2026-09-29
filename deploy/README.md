@@ -50,7 +50,7 @@ Save the previous Pages artifact and nginx configuration before publication. To 
 
 ## Remaining physical acceptance
 
-Ron confirmed QR scanning and Google sign-in on his phone. His Bubble Bobble 254,258 / TST submission is saved. The updated iPhone photo flow still needs his original photo retried; actual TV behavior and second-account acceptance remain pending. See launch-status.md.
+Ron confirmed QR scanning and Google sign-in on his phone. His Bubble Bobble 254,258 / TST submission validated phone entry and was later removed at his request; the removed row remains in admin audit/history. The updated iPhone photo flow still needs his original photo retried; actual TV behavior and second-account acceptance remain pending. See launch-status.md.
 
 ## Linking imported scores to accounts
 
