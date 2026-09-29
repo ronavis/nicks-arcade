@@ -124,3 +124,12 @@ Source 02b7ee7 / Pages 21f6d14 adds a generated transparent pixel-art three-fing
 ## Nick admin access — September 29, 2026
 
 User-authorized private configuration update preserves Ron and adds Nick's previously confirmed Google account as administrator. Private environment backup saved before change; restarted only nicks-arcade. Running service environment readback confirms exactly those two admin accounts; public health passes. Isolated tests verify Ron/Nick admin session and moderation/export/display-settings access, and Martin player access with HTTP 403 for those admin routes. Nick's real Google sign-in still needs his next visit; no impersonated live auth was used. Mission Control PID remains 2920079. No score records changed.
+
+
+## Admin score-management UX — 2026-09-29
+
+- Source: `790d05d`; Pages: `d4663113c9aa245add26e5034f1c99a8548b1334`; default-branch README: `bd12550726865859b137893f4bf443d06a439983`.
+- Added verified-admin-only Manage scores shortcut to the TV menu; non-admin direct routes redirect to score entry. Server authorization remains enforced independently.
+- Redesigned management with artwork, current-record status, per-game submission search, active/removed filters, clear action buttons, named confirmations, Cancel, and success feedback.
+- Validation: JavaScript checks and production build passed; 65 backend tests passed. Local browser checks covered signed-out/player/admin menus, player route rejection, search, edit, cancel removal, removal, and removed-history filtering. Mobile 390x844 and desktop 1000x950 inspected. Mutations used local preview data only.
+- GitHub Pages reports built; public index.html, app.js, and main.css match production build byte for byte. No production records modified and no backend restart required.
