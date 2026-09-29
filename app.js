@@ -124,7 +124,7 @@ async function signIn(token) {
 }
 function signOut(announce = true) {
   $('taunt-input').value = ''; state.automaticTaunt = false;
-  state.user = null; state.token = ''; state.account = null; $('account-dialog').close(); $('unread-count').hidden = true; $('tv-unread-count').hidden = true; $('activity-list').replaceChildren(); $('my-scores-list').replaceChildren();
+  state.user = null; state.token = ''; state.account = null; $('account-dialog').close(); $('unread-count').hidden = true; $('tv-unread-count').hidden = true; $('menu-unread-count').hidden = true; $('display-menu-toggle').setAttribute('aria-label', 'Scoreboard menu'); $('activity-list').replaceChildren(); $('my-scores-list').replaceChildren();
   try { sessionStorage.removeItem('arcade_session'); } catch (_) { /* Optional storage. */ }
   window.google?.accounts.id.disableAutoSelect(); renderSession();
   if (announce) setMessage('Signed out. Your unfinished entry stays on this screen.');
@@ -153,6 +153,7 @@ for (const role of ['player', 'admin']) $(`demo-${role}`).addEventListener('clic
 $('signout').addEventListener('click', () => signOut());
 
 function route() {
+  $('display-menu').open = false;
   const preview = state.config?.demo && new URLSearchParams(location.search).get('view') === 'preview' && location.hash !== '#admin';
   const mode = location.hash === '#admin' ? 'admin' : location.hash === '#tv' ? 'tv' : location.hash === '#play' ? 'play' : innerWidth < 700 ? 'play' : 'tv';
   $('experience').className = `experience ${preview ? 'preview' : mode}`;
@@ -331,10 +332,11 @@ async function refreshAccount() {
     const result = await api('/account');
     if (state.token !== token) return;
     state.account = result;
-    for (const [button, badge] of [['account-button', 'unread-count'], ['tv-account-button', 'tv-unread-count']]) {
+    for (const [button, badge] of [['account-button', 'unread-count'], ['tv-account-button', 'tv-unread-count'], ['display-menu-toggle', 'menu-unread-count']]) {
       $(badge).textContent = result.unread > 99 ? '99+' : String(result.unread);
       $(badge).hidden = !result.unread;
-      $(button).setAttribute('aria-label', result.unread ? `My account, ${result.unread} unread notifications` : 'My account');
+      const label = button === 'display-menu-toggle' ? 'Scoreboard menu' : 'My account';
+      $(button).setAttribute('aria-label', result.unread ? `${label}, ${result.unread} unread notifications` : label);
     }
   } catch (_) { /* Keep entry usable during temporary notification outages. */ }
 }
@@ -395,7 +397,13 @@ function openAccount() {
   $('account-dialog').showModal(); loadAccount();
 }
 $('account-button').addEventListener('click', openAccount);
-$('tv-account-button').addEventListener('click', openAccount);
+$('tv-account-button').addEventListener('click', async () => {
+  if (document.fullscreenElement) await document.exitFullscreen();
+  openAccount();
+});
+document.querySelector('.display-menu-items a').addEventListener('click', async event => {
+  if (document.fullscreenElement) { event.preventDefault(); await document.exitFullscreen(); location.hash = '#play'; }
+});
 $('close-account').addEventListener('click', () => $('account-dialog').close());
 for (const [id, view] of [['show-activity','activity'],['show-my-scores','my-scores'],['show-settings','settings']]) $(id).addEventListener('click', () => loadAccount(view));
 $('account-admin').addEventListener('click', () => { $('admin-game').value = state.selected; $('account-dialog').close(); });
@@ -449,4 +457,17 @@ $('taunt-settings-form').addEventListener('submit', async event => {
     $('account-message').textContent = state.account.tauntEnabled ? 'Taunt saved and enabled for record breaks.' : 'Taunt saved. Automatic taunts are off.';
   } catch (error) { $('account-message').textContent = error.message; }
   finally { button.disabled = false; }
+});
+
+// Native disclosure keeps the control list keyboard accessible without menu-role shortcuts.
+$('display-menu').addEventListener('click', event => {
+  if (event.target.closest('.display-menu-items button, .display-menu-items a')) $('display-menu').open = false;
+});
+document.addEventListener('click', event => {
+  if (!event.target.closest('#display-menu')) $('display-menu').open = false;
+});
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && $('display-menu').open) {
+    $('display-menu').open = false; $('display-menu-toggle').focus();
+  }
 });
