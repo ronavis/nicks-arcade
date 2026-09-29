@@ -294,7 +294,17 @@ def create_app(config=None, *, allow_demo=False):
         output = []
         for game in catalog().values():
             row = winner(db, game['id'])
-            output.append({k: game[k] for k in ['id', 'title', 'image', 'kind', 'order']} | {'record': public_record(row) if row else None})
+            record = public_record(row) if row else None
+            if record:
+                record['improvement'] = None
+                event = db.execute('SELECT previous_value FROM activity WHERE score_id=? AND is_record=1 ORDER BY id DESC LIMIT 1', (row['id'],)).fetchone()
+                # Corrections may change the original comparison; omit uncertain margins.
+                if row['revision'] == 1 and event and event['previous_value'] is not None:
+                    delta = event['previous_value'] - row['value'] if game['kind'] == 'time' else row['value'] - event['previous_value']
+                    if delta > 0:
+                        amount = f'{delta / 100:.2f}s' if game['kind'] == 'time' else f'{delta:,}'
+                        record['improvement'] = {'amount': amount, 'direction': 'down' if game['kind'] == 'time' else 'up', 'label': f'Beat previous record by {amount}' + (' (faster)' if game['kind'] == 'time' else ' points')}
+            output.append({k: game[k] for k in ['id', 'title', 'image', 'kind', 'order']} | {'record': record})
         return jsonify(games=output, updatedAt=int(time.time()), displaySettings=display_settings())
 
     @app.get('/api/session')

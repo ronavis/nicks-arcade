@@ -576,3 +576,29 @@ def test_saved_taunt_disabled_manual_override_and_first_record(app):
     assert submit(c,'100',game='simpsons',automaticTaunt='true').json['record']['taunt']==''
     assert submit(c,'1:01.00',game='vsexcitebike',automaticTaunt='true').json['record']['taunt']=='Saved'
     assert submit(c,'1:00.00',game='vsexcitebike',taunt='Custom').json['record']['taunt']=='Custom'
+
+
+def test_public_record_improvement_uses_original_record_break(app):
+    c = app.test_client()
+    before = c.get('/api/leaderboard').json
+    assert all(g['record'] is None or g['record']['improvement'] is None for g in before['games'])
+    result = submit(c, '50000').json
+    game = next(g for g in c.get('/api/leaderboard').json['games'] if g['id'] == 'galaga')
+    assert game['record']['improvement']['amount'] == '8,490'
+    assert game['record']['improvement']['direction'] == 'up'
+    c.patch('/api/admin/scores/' + result['record']['id'], json={'revision': 1, 'score': '51000', 'initials': 'RON'}, headers=headers('admin'))
+    game = next(g for g in c.get('/api/leaderboard').json['games'] if g['id'] == 'galaga')
+    assert game['record']['improvement'] is None
+
+
+def test_public_record_time_margin_and_non_winner(app):
+    c = app.test_client()
+    board = c.get('/api/leaderboard').json['games']
+    game = next(g for g in board if g['kind'] == 'time')
+    # Existing seed is 1:02.30; faster time should use hundredths precisely.
+    submit(c, '1:01.20', game=game['id'])
+    record = next(g for g in c.get('/api/leaderboard').json['games'] if g['id'] == game['id'])['record']
+    assert record['improvement']['amount'] == '1.10s'
+    assert record['improvement']['direction'] == 'down'
+    submit(c, '1:10.00', game=game['id'])
+    assert next(g for g in c.get('/api/leaderboard').json['games'] if g['id'] == game['id'])['record']['id'] == record['id']
