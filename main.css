@@ -34,3 +34,6 @@
 .my-score-artwork{display:block;width:100%;height:96px;object-fit:contain;background:#10191b;border-radius:5px;padding:8px;box-sizing:border-box}.my-score-artwork[hidden]{display:none}
 
 #taunt-settings-form{border-top:1px solid var(--line);margin-top:24px;padding-top:16px}.taunt-toggle{display:flex;align-items:flex-start;gap:10px;line-height:1.4;margin:14px 0}.taunt-toggle input{width:22px;height:22px;min-height:22px;flex:0 0 22px;margin:0;accent-color:var(--cyan)}
+
+/* A friendly square companion to the QR code, sized with the portrait board. */
+.board-footer{display:flex;align-items:flex-end;gap:calc(var(--u)*2.5);flex-shrink:0}.board-footer .qr-footer{flex:1;min-width:0}.board-footer .qr-footer>div:last-child{min-width:0}.board-footer .qr-footer strong{font-size:calc(var(--u)*5);white-space:nowrap}.board-footer .qr-footer span{font-size:calc(var(--u)*2.2)}.fair-play-note{width:calc(var(--u)*20);height:calc(var(--u)*20);flex:0 0 calc(var(--u)*20);border-radius:3px;background:var(--cream);border:calc(var(--u)*.3) solid var(--ink);padding:calc(var(--u)*1.2);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}.fair-play-note strong{font:calc(var(--u)*3.8)/1 var(--display);color:var(--red)}.fair-play-note p{font:calc(var(--u)*2.05)/1.35 Arial,sans-serif;margin:calc(var(--u)*1) 0 0}
