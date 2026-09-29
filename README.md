@@ -153,3 +153,5 @@ This uses current winner snapshots: multiple games can queue, but intermediate r
 Run `npm test` for celebration detection regression checks.
 
 The featured record and celebration show a compact green dot-matrix improvement badge when the original previous record is known. Points use ↑ +2,400; timed records use ↓ 1.10s. Tap the badge for an explanation. Imported/first records and corrected submissions omit uncertain comparisons. Around the arcade rows remain unchanged.
+
+Featured records show their submission date and elapsed days (“Set N days ago”). Imported records explicitly say their date is unknown, and corrected records use a submitted-date label. My scores includes submission timestamps. Empty games say “Set the first record”; Manage scores explains that there is no saved submission to edit/delete and offers Enter the first score.
