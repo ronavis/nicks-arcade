@@ -179,3 +179,13 @@ User-authorized private configuration update preserves Ron and adds Nick's previ
 - Source `720a397`; Pages `012c584c05d42fdeb4d4b8eae131d471e1b167ff`.
 - TV arcade title/High Scores subtitle and mobile wordmark now use Bitcount Grid Double. Header line heights retained.
 - Checks/build passed; TV/mobile inspected; live HTML/CSS verified against build. Celebration still dismisses automatically after ten seconds. Pages build explicitly requested after push did not trigger it.
+
+
+## Featured record improvement badges — 2026-09-29
+
+- Source/backend `850bed6`; Pages `6c5654533b304d41edbb627ce227453002195cca`.
+- Public winner records include a margin from their original activity previous_value, only for uncorrected record-breaking submissions. Imports, first records, nonpositive margins and corrected scores omit the badge. Times use exact hundredths.
+- Badge appears only beside featured initials and celebration initials, with tap-to-explain text. Around-the-arcade rows unchanged.
+- 67 backend tests, seven celebration tests, JS/build checks pass. Local browser verified featured +8,800 badge, its detail toggle, and automatic celebration +5,000. No production scores submitted or modified.
+- Backup completed at /var/backups/nicks-arcade/pre-record-margin-20260929. Backend changed only leaderboard readback; no schema migration. Current release points to 850bed6, health reports production/ok, live 33-game response has improvement fields. Mission Control PID remained 2920079.
+- Initial oversized archive transfer canceled before release creation; scoped service package deployed instead. Existing service resources retained. Pages build requested explicitly; public HTML/CSS/JS match production build.
