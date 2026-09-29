@@ -120,3 +120,7 @@ Live HTML and CSS match the tested build after publication.
 ## Scout's-honor badge — September 29, 2026
 
 Source 02b7ee7 / Pages 21f6d14 adds a generated transparent pixel-art three-finger salute alongside stacked PLAY FAIR lettering. Message reads “Earn it at Nick’s arcade. Brag honestly.” Square footprint preserved. Local portrait browser confirms image decode and no overflow; JS/build checks pass. Public HTML/CSS/image bytes match tested production build. No backend or score changes.
+
+## Nick admin access — September 29, 2026
+
+User-authorized private configuration update preserves Ron and adds Nick's previously confirmed Google account as administrator. Private environment backup saved before change; restarted only nicks-arcade. Running service environment readback confirms exactly those two admin accounts; public health passes. Isolated tests verify Ron/Nick admin session and moderation/export/display-settings access, and Martin player access with HTTP 403 for those admin routes. Nick's real Google sign-in still needs his next visit; no impersonated live auth was used. Mission Control PID remains 2920079. No score records changed.
