@@ -51,16 +51,18 @@ function renderBoard() {
   $('hero-title').textContent = game.title;
   $('record-label').textContent = !game.record ? 'SET THE FIRST RECORD' : game.kind === 'time' ? 'TIME TO BEAT' : 'RECORD TO BEAT';
   $('record-age').textContent = ArcadeCelebrations.recordAge(game.record);
-  $('hero-score').textContent = scoreText(game);
+  $('hero-score').textContent = game.record ? scoreText(game) : 'BE THE FIRST';
   $('hero-score').className = `hero-score${scoreText(game).length > 10 ? ' very-long' : scoreText(game).length > 7 ? ' long' : ''}`;
-  $('hero-initials').textContent = game.record ? initialsText(game) : '—'; renderImprovement('hero-improvement', game.record);
+  $('hero-score').classList.toggle('empty-record', !game.record);
+  $('hero-initials').classList.toggle('empty-record', !game.record);
+  $('hero-initials').textContent = game.record ? initialsText(game) : 'YOUR INITIALS HERE'; renderImprovement('hero-improvement', game.record);
   const index = state.games.indexOf(game);
   const around = game.id === 'galaga' ? ['donkeykong', 'mspacman', 'tetris'].map(gameById) : [1, 2, 3].map(offset => state.games[(index + offset) % state.games.length]);
   $('around-list').replaceChildren(...around.filter(Boolean).map(other => {
     const button = node('button', 'around-row');
     button.setAttribute('aria-label', `Feature ${other.title}, ${scoreText(other)}, ${initialsText(other)}`);
     const image = node('img'); image.src = artworkUrl(other); image.alt = other.title;
-    const info = node('div'); info.append(node('strong', scoreText(other).length > 8 ? 'long' : '', scoreText(other)), node('span', '', initialsText(other)));
+    const info = node('div'); info.append(node('strong', scoreText(other).length > 8 ? 'long' : '', other.record ? scoreText(other) : 'OPEN RECORD'), node('span', '', other.record ? initialsText(other) : 'Be the first'));
     button.append(image, info); button.addEventListener('click', () => feature(other.id)); return button;
   }));
   const positions = Array.from({ length: Math.min(5, state.games.length) }, (_, offset) => (index + offset) % state.games.length);
@@ -120,6 +122,8 @@ function renderSession() {
   $('account-admin').hidden = !state.user?.admin;
   $('admin-link').hidden = !state.user?.admin;
   $('tv-admin-button').hidden = !state.user?.admin;
+  $('tv-games-button').hidden = !state.user?.admin; $('account-games').hidden = !state.user?.admin;
+  if (!state.user?.admin) { $('games-dialog').close(); $('arcade-games-list').replaceChildren(); }
   if (!state.user?.admin) { $('admin-list').replaceChildren(); $('admin-feedback').textContent = ''; }
   $('account-label').textContent = signed ? state.config?.demo ? `Preview account · ${state.user.admin ? 'admin' : 'player'}` : 'Signed in with Google' : 'Sign in to join the board';
   if (state.config?.demo && signed) $('account-label').title = 'Local test account. This is not a Google sign-in.';
@@ -307,7 +311,7 @@ async function refreshBoard() {
     const adminSelection = $('admin-game').value;
     $('admin-game').replaceChildren(...state.games.map(game => { const option = node('option', '', game.title); option.value = game.id; return option; }));
     $('admin-game').value = adminSelection || state.selected;
-    $('connection').hidden = true; renderBoard(); renderEntry(); showNextCelebration();
+    $('connection').hidden = true; renderBoard(); renderEntry(); if ($('games-dialog').open) renderArcadeGames(); showNextCelebration();
   } catch (error) {
     state.connected = false; $('connection').hidden = false;
     $('connection').textContent = state.games.length ? 'Connection lost · showing the last received records. Reconnecting…' : 'The scoreboard service is unavailable. Please check the connection.';
@@ -562,4 +566,48 @@ document.addEventListener('keydown', event => {
   if (event.key === 'Escape' && $('display-menu').open) {
     $('display-menu').open = false; $('display-menu-toggle').focus();
   }
+});
+
+
+function renderArcadeGames() {
+  if (!state.user?.admin) return;
+  const query = $('arcade-games-search').value.trim().toLowerCase();
+  const games = state.games.filter(game => game.title.toLowerCase().includes(query) && (!$('games-open-only').checked || !game.record));
+  $('games-count').textContent = `${state.games.length} games · ${state.games.filter(game => !game.record).length} waiting for a first score`;
+  $('arcade-games-list').replaceChildren(...games.map(game => {
+    const card = node('article', 'arcade-game-card');
+    const art = node('img'); art.src = artworkUrl(game); art.alt = `${game.title} artwork`; art.loading = 'lazy';
+    const info = node('div'); info.append(node('h3', '', game.title), node('p', game.record ? 'small' : 'open-record-label', game.record ? `${game.record.score} · ${game.record.initials}` : 'FIRST SCORE WANTED'));
+    const view = node('button', 'secondary', 'Show on TV');
+    view.addEventListener('click', () => { $('games-dialog').close(); feature(game.id); location.hash = '#tv'; });
+    const manage = node('button', 'text-button', game.record ? 'Manage scores' : 'Enter first score');
+    manage.addEventListener('click', () => {
+      $('games-dialog').close();
+      if (game.record) { $('admin-game').value = game.id; if (location.hash === '#admin') loadAdmin(); else location.hash = '#admin'; }
+      else { state.pendingGame = null; state.selected = game.id; state.requestId = crypto.randomUUID(); $('score-input').value = ''; clearPhoto(); applySavedTaunt(); $('score-form').hidden = false; $('record-preview').hidden = false; $('success-panel').hidden = true; renderEntry(); setMessage(); location.hash = '#play'; }
+    });
+    info.append(view, manage); card.append(art, info); return card;
+  }));
+  if (!games.length) $('arcade-games-list').append(node('p', 'admin-empty', 'No games match this filter.'));
+}
+async function openArcadeGames() {
+  if (!state.user?.admin) return;
+  if (document.fullscreenElement) await document.exitFullscreen();
+  $('account-dialog').close(); $('games-feedback').textContent = ''; renderArcadeGames(); $('games-dialog').showModal();
+}
+$('tv-games-button').addEventListener('click', openArcadeGames);
+$('account-games').addEventListener('click', openArcadeGames);
+$('close-games').addEventListener('click', () => $('games-dialog').close());
+$('arcade-games-search').addEventListener('input', renderArcadeGames);
+$('games-open-only').addEventListener('change', renderArcadeGames);
+$('admin-add-game').addEventListener('submit', async event => {
+  event.preventDefault(); if (!state.user?.admin) return;
+  $('save-arcade-game').disabled = true;
+  try {
+    const result = await api('/admin/games', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({title:$('admin-game-title-input').value,kind:$('admin-game-kind').value})});
+    await refreshBoard();
+    $('games-feedback').textContent = result.alreadyExists ? `${result.game.title} is already in your arcade.` : `${result.game.title} added. It is on the TV rotation and ready for its first score.`;
+    $('admin-game-title-input').value = ''; $('arcade-games-search').value = ''; renderArcadeGames();
+  } catch (error) { $('games-feedback').textContent = error.message; }
+  finally { $('save-arcade-game').disabled = false; }
 });
