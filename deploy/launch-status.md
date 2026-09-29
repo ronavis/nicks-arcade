@@ -37,3 +37,14 @@ Draft PR: https://github.com/ronavis/nicks-arcade/pull/1. Source branch update i
 ## Receipts
 
 Local outputs/launch-receipts holds installation logs, public API checks, Pages verification, restart evidence and backup timer evidence. Private raw backup copies remain in work/launch/private-backups, not in the public project. Update this file only from new evidence.
+
+## Phone feedback fixes — 2026-09-29
+
+- Ron's phone submitted Bubble Bobble 254,258 / TST successfully without a photo. Read-only production database verification confirmed the entry; it remains in history beneath the original 1,734,150 record.
+- The old search was limited to the 32 seeded games. The Simpsons is now included with no invented starting score. Signed-in players can add missing games with their first score, choosing points or fastest time. Game and score are saved atomically; names differing only in punctuation/spacing reuse the existing game. Added games persist in SQLite, appear in search/TV/admin, and are included in database backups.
+- Photo support now includes HEIC/HEIF, JPG, PNG and WebP up to 40 MB / 64 megapixels. The server resizes to a 1600-pixel maximum edge and saves JPEG without EXIF. Browser previews gracefully tolerate unsupported HEIC rendering; upload waits allow slower phone connections.
+- 47 backend tests passed, including new-game persistence/concurrency/admin correction, legacy score preservation, all 33 game submissions, HEIC, 48-megapixel JPEG and an upload above the former 8 MB limit. Build and syntax checks passed. Browser search tested all 33 games without punctuation/spaces; a local first-record submission passed. Phone-width dialog visually checked.
+- Backend release ac00a64 installed after a private database/photo backup at /var/backups/nicks-arcade/before-photo-catalog-ac00a64. Nginx changed only the Arcade request size to 41 MB including form overhead; config test passed. Mission Control PID and activation time unchanged, existing /app/ HTTP 200.
+- Production score rows matched the pre-release backup exactly. HEIC and 8064x6048 JPEG conversion passed in an isolated test instance on the VPS. Public production health passed.
+- Pages release de78c62bbcf9ef410905057a42eab5853bb67a69 published; HTML, JS, CSS, config, Simpsons art and fallback art verified byte-for-byte. Live browser found and opened The Simpsons.
+- Still pending: retry Ron's original iPhone photo, physical TV acceptance, a second real non-admin account and source game/time naming questions. No claim that the original photo has already been successfully retried.
