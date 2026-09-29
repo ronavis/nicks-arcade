@@ -106,6 +106,8 @@ function renderSession() {
   $('account-button').setAttribute('aria-label', signed ? 'My account' : 'My account · sign in');
   $('account-admin').hidden = !state.user?.admin;
   $('admin-link').hidden = !state.user?.admin;
+  $('tv-admin-button').hidden = !state.user?.admin;
+  if (!state.user?.admin) { $('admin-list').replaceChildren(); $('admin-feedback').textContent = ''; }
   $('account-label').textContent = signed ? state.config?.demo ? `Preview account · ${state.user.admin ? 'admin' : 'player'}` : 'Signed in with Google' : 'Sign in to join the board';
   if (state.config?.demo && signed) $('account-label').title = 'Local test account. This is not a Google sign-in.';
   if (!signed && location.hash === '#admin') location.hash = '#play';
@@ -270,43 +272,74 @@ window.addEventListener('online', refreshBoard);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshBoard(); });
 
 $('admin-link').addEventListener('click', () => { $('admin-game').value = state.selected; location.hash = '#admin'; });
-$('admin-game').addEventListener('change', loadAdmin);
-async function loadAdmin() {
-  $('admin-message').textContent = 'Loading submissions…';
-  try {
-    const { scores } = await api(`/admin/scores?gameId=${encodeURIComponent($('admin-game').value || state.selected)}`);
-    $('admin-list').replaceChildren(...scores.map(score => {
-      const row = node('article', `admin-score${score.deleted ? ' removed' : ''}`);
-      row.append(node('div', 'record', `${score.score} · ${score.initials}`));
-      row.append(node('p', '', `${score.email} · ${score.createdAt ? new Date(score.createdAt * 1000).toLocaleString() : 'Starting record'}${score.deleted ? ' · Removed' : ''}`));
-      if (!score.deleted) {
-        const actions = node('div', 'admin-actions');
-        for (const [label, action] of [['Correct', 'edit'], ['Remove', 'delete']]) {
-          const button = node('button', `text-button${action === 'delete' ? ' danger' : ''}`, label);
-          button.addEventListener('click', () => openEdit(score, action)); actions.append(button);
-        }
-        if (score.hasPhoto) { const proof = node('button', 'text-button', 'View photo'); proof.addEventListener('click', () => showPhoto(score.photoId)); actions.append(proof); }
-        row.append(actions);
+$('tv-admin-button').addEventListener('click', async () => {
+  if (!state.user?.admin) return;
+  if (document.fullscreenElement) await document.exitFullscreen();
+  $('admin-game').value = state.featured; location.hash = '#admin';
+});
+$('admin-game').addEventListener('change', () => { $('admin-search').value = ''; $('admin-feedback').textContent = ''; loadAdmin(); });
+$('admin-search').addEventListener('input', renderAdminScores);
+$('admin-show-removed').addEventListener('change', renderAdminScores);
+let adminScores = [];
+let adminLoad = 0;
+function renderAdminScores() {
+  if (!state.user?.admin) { $('admin-list').replaceChildren(); return; }
+  const query = $('admin-search').value.trim().toLowerCase();
+  const scores = adminScores.filter(score => ($('admin-show-removed').checked || !score.deleted) && `${score.initials} ${score.email} ${score.score}`.toLowerCase().includes(query));
+  const game = gameById($('admin-game').value);
+  $('admin-list').replaceChildren(...scores.map(score => {
+    const row = node('article', `admin-score${score.deleted ? ' removed' : ''}`);
+    const status = score.deleted ? 'Removed' : score.id === game?.record?.id ? 'Current record' : 'Score history';
+    row.append(node('span','admin-score-status',status), node('div','record',`${score.score} · ${score.initials}`));
+    row.append(node('p','',score.email),node('p','small',score.createdAt ? new Date(score.createdAt*1000).toLocaleString() : 'Imported arcade record'));
+    if (score.taunt) row.append(node('blockquote','',score.taunt));
+    if (!score.deleted) {
+      const actions = node('div','admin-actions');
+      for (const [label, action] of [['Edit score','edit'],['Remove score','delete']]) {
+        const button = node('button', action === 'delete' ? 'secondary danger' : 'secondary',label);
+        button.setAttribute('aria-label', `${label}: ${score.initials}, ${score.score}`);
+        button.addEventListener('click',()=>openEdit(score,action));actions.append(button);
       }
-      return row;
-    }));
-    $('admin-message').textContent = scores.length ? `${scores.length} submissions shown (up to 200).` : 'No submissions for this game.';
-  } catch (error) { $('admin-message').textContent = error.message; }
+      if(score.hasPhoto){const proof=node('button','text-button','View proof photo');proof.addEventListener('click',()=>showPhoto(score.photoId));actions.append(proof);}
+      row.append(actions);
+    }
+    return row;
+  }));
+  $('admin-message').textContent = `${scores.length} shown · ${adminScores.filter(s=>!s.deleted).length} active · ${adminScores.filter(s=>s.deleted).length} removed (latest 200)`;
+  if (!scores.length) $('admin-list').append(node('p','admin-empty',query ? 'No matching submissions. Try different initials, an email or a score.' : 'No active submissions to manage. You can include removed entries above.'));
+}
+
+async function loadAdmin() {
+  if (!state.user?.admin) return;
+  const requestNumber = ++adminLoad, token = state.token;
+  const gameId = $('admin-game').value || state.selected, game = gameById(gameId);
+  adminScores = []; $('admin-list').replaceChildren();
+  $('admin-message').textContent = 'Loading submissions…';
+  $('admin-game-title').textContent = game?.title || 'Choose a game';
+  $('admin-marquee').src = game ? artworkUrl(game) : 'images/new-game.svg';
+  $('admin-marquee').alt = game ? `${game.title} marquee` : '';
+  $('admin-current-record').textContent = game?.record ? `Record to beat: ${game.record.score} · ${game.record.initials}` : 'No current record';
+  try {
+    const {scores} = await api(`/admin/scores?gameId=${encodeURIComponent(gameId)}`);
+    if (requestNumber !== adminLoad || token !== state.token || !state.user?.admin) return;
+    adminScores = scores; renderAdminScores();
+  } catch (error) { if (requestNumber === adminLoad && token === state.token) $('admin-message').textContent = error.message; }
 }
 function openEdit(score, action) {
   state.editing = { score, action }; $('edit-heading').textContent = action === 'delete' ? 'REMOVE SCORE?' : 'CORRECT SCORE';
-  $('edit-summary').textContent = action === 'delete' ? `Remove ${score.score} by ${score.initials}? The best remaining score will appear on the board. The removal is kept in the admin history.` : 'Save a correction to this submission. The change is recorded in the admin history.';
+  $('edit-summary').textContent = action === 'delete' ? `Remove ${score.score} by ${score.initials} from ${gameById($('admin-game').value)?.title}? The best remaining score will appear on the board. The removal is kept in the admin history.` : `Editing ${score.initials} · ${score.score} on ${gameById($('admin-game').value)?.title}. Changes are recorded in admin history.`;
   $('edit-taunt').hidden = action === 'delete'; $('edit-taunt-label').hidden = action === 'delete'; $('edit-taunt').value = score.taunt || '';
   $('edit-fields').hidden = action === 'delete'; $('edit-score').disabled = action === 'delete'; $('edit-initials').disabled = action === 'delete';
   $('edit-score').value = score.score; $('edit-initials').value = score.initials; $('edit-message').textContent = '';
   $('save-edit').textContent = action === 'delete' ? 'Remove score' : 'Save correction'; $('edit-dialog').showModal();
 }
+$('cancel-edit').addEventListener('click', () => $('edit-dialog').close());
 $('close-edit').addEventListener('click', () => $('edit-dialog').close());
 $('edit-form').addEventListener('submit', async event => {
   event.preventDefault(); const { score, action } = state.editing; $('save-edit').disabled = true;
   try {
     await api(`/admin/scores/${score.id}`, { method: action === 'delete' ? 'DELETE' : 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ revision: score.revision, score: $('edit-score').value, initials: $('edit-initials').value, taunt: $('edit-taunt').value }) });
-    $('edit-dialog').close(); await loadAdmin(); await refreshBoard();
+    $('edit-dialog').close(); await refreshBoard(); await loadAdmin(); $('admin-feedback').textContent = action === 'delete' ? 'Score removed. The scoreboard has been updated.' : 'Correction saved. The scoreboard is up to date.';
   } catch (error) { $('edit-message').textContent = error.message; }
   finally { $('save-edit').disabled = false; }
 });
