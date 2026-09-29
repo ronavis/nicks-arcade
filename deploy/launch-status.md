@@ -204,3 +204,12 @@ User-authorized private configuration update preserves Ron and adds Nick's previ
 - Source `cb84bd3`; Pages `332bac530d8d6593178d0036f40a03733b5ff9a0`.
 - Phone-only spacing adjustment (max-width 500px): less score line-height and date/carousel padding, same font sizes. Desktop rules unchanged.
 - Reproduced overflow before fix; checked 320px and 390px afterward with carousel bottom at divider boundary and controls visually above it. Checks/build pass; live HTML/CSS match build.
+
+
+## Admin cabinet catalog before first scores — 2026-09-29
+
+- Source/backend `1611963`; Pages `b5d441ba10ac39bd8e996aab2244ad488a929161`.
+- Admin-only POST /admin/games adds title/type without score, reuses normalized titles, and validates conflicting types. Uses existing games table; no migration.
+- Manage games in TV menu and account is admin-only. Search, first-score filter, Show on TV and enter/manage score shortcuts. Empty games display Be the first / Your initials here and join rotation/search. Neutral artwork for new titles.
+- 69 backend tests and eight frontend tests passed, checks/build passed. Local browser added NBA Jam with no score, filtered it and displayed it on TV; phone dialog inspected. No test games added to live catalog (still 33 games).
+- Backup /var/backups/nicks-arcade/pre-manage-games-20260929 completed. Current service 1611963 active; public health production/ok; unauthenticated creation rejected 401. Mission Control PID 2920079 unchanged. Live frontend bytes verified.
