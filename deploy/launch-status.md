@@ -133,3 +133,11 @@ User-authorized private configuration update preserves Ron and adds Nick's previ
 - Redesigned management with artwork, current-record status, per-game submission search, active/removed filters, clear action buttons, named confirmations, Cancel, and success feedback.
 - Validation: JavaScript checks and production build passed; 65 backend tests passed. Local browser checks covered signed-out/player/admin menus, player route rejection, search, edit, cancel removal, removal, and removed-history filtering. Mobile 390x844 and desktop 1000x950 inspected. Mutations used local preview data only.
 - GitHub Pages reports built; public index.html, app.js, and main.css match production build byte for byte. No production records modified and no backend restart required.
+
+
+## Round dot-matrix scores — 2026-09-29
+
+- Source `9522474`; Pages `a87580e5f80ae04595740cf678722f142371d25d`.
+- Locally hosted Doto variable font, weight 800 and round dots, for TV scores/initials, record preview, score entry, initial slots, My scores values, and admin score values. Headings retain Jersey 10. Font license bundled.
+- JavaScript check, production build, and whitespace checks passed. Browser inspection covered portrait TV and mobile; seven-digit record, twelve-digit entry, and RON keypad entry fit with no page overflow. No score submitted.
+- Published HTML, JS, CSS, font, and font license match build bytes. Backend unchanged.
