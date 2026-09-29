@@ -13,6 +13,7 @@ if (process.env.ARCADE_API_BASE) {
 }
 await mkdir(new URL('images/', out), { recursive: true });
 await copyFile(new URL('../images/new-game.svg', import.meta.url), new URL('images/new-game.svg', out));
+await copyFile(new URL('../images/scouts-honor.png', import.meta.url), new URL('images/scouts-honor.png', out));
 const games = JSON.parse(await readFile(new URL('../data/games.json', import.meta.url)));
 for (const game of games) {
   await mkdir(new URL('./', new URL(game.image, out)), { recursive: true });
