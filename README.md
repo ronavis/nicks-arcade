@@ -35,6 +35,19 @@ Submissions do not wait for approval. A game’s first score becomes its record 
 
 Ron is the initial administrator. Admin controls allow score corrections, removal, proof-photo viewing and a JSON export. Removing a winning score promotes the best remaining entry, and changes are retained in the audit history.
 
+## Your account, notifications and friendly rivalry
+
+After Google sign-in, **Account** appears near the top of score entry. It provides:
+
+- **Notifications:** recent score submissions, first records and record breaks, with an unread badge and **Mark all read**. A player whose account held the previous record sees **Your record was broken**, the new score, previous record and challenger’s optional taunt.
+- **My scores:** your latest 100 submissions, current-record status, removed-entry status and attached proof photos.
+- **Settings:** save three default initials for fresh entries. Preferences and notification read status follow your Google account across devices.
+- **Manage scores:** a prominent shortcut for admins. Corrections can also edit or clear a taunt.
+
+The optional **Victory taunt** is limited to 140 characters. Keep it friendly. Text is displayed as text, never interpreted as HTML. Removing a submission also removes it from the activity feed.
+
+Notifications are inside the app; no email or phone push alerts are sent. The badge refreshes every 15 seconds while the page is visible, and the feed shows the latest 100 updates. Activity starts with submissions made after this feature was deployed. Imported starting records have initials but no linked Google account, so they cannot receive a personal record-break notice; everyone can still see the new-record activity. Ties and improvements to your own record do not create a personal “your record was broken” notice.
+
 ## The display and game collection
 
 - Portrait 9:16 Record Spotlight design with turquoise and cream, game artwork, a prominent score and larger, spaced initials.
@@ -94,7 +107,7 @@ npm run build
 .venv/bin/python -m pytest -q
 ```
 
-The latest backend test run passed **47 tests**, covering persistence, new-game creation, concurrent submissions, duplicate retries, scoring/time rules, Google token validation, admin permissions, photo processing/privacy, origin restrictions, rate limits and backup/restore. All 33 supplied game entries were exercised in submission tests and browser search checks.
+The latest backend test run passed **55 tests**, covering persistence, new-game creation, concurrent submissions, duplicate retries, scoring/time rules, Google token validation, admin permissions, photo processing/privacy, origin restrictions, rate limits and backup/restore. All 33 supplied game entries were exercised in submission tests and browser search checks.
 
 For a production frontend build:
 
