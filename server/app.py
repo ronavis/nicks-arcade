@@ -131,6 +131,11 @@ def create_app(config=None, *, allow_demo=False):
         ''')
         if 'taunt' not in {row[1] for row in db.execute('PRAGMA table_info(scores)')}:
             db.execute("ALTER TABLE scores ADD COLUMN taunt TEXT NOT NULL DEFAULT ''")
+        for name, definition in [('default_taunt', "TEXT NOT NULL DEFAULT ''"), ('taunt_enabled', 'INTEGER NOT NULL DEFAULT 0')]:
+            if name not in {row[1] for row in db.execute('PRAGMA table_info(profiles)')}:
+                db.execute(f'ALTER TABLE profiles ADD COLUMN {name} {definition}')
+        if 'taunt_request' not in {row[1] for row in db.execute('PRAGMA table_info(scores)')}:
+            db.execute('ALTER TABLE scores ADD COLUMN taunt_request TEXT')
         db.execute("BEGIN IMMEDIATE")
         for game in games:
             db.execute('INSERT OR IGNORE INTO games VALUES (?,?,?,?,?,?)',
@@ -359,6 +364,8 @@ def create_app(config=None, *, allow_demo=False):
             raise ValueError('Enter exactly three letters for your initials.')
         value = score_value(request.form.get('score', ''), kind)
         taunt = clean_taunt(request.form.get('taunt', ''))
+        automatic_taunt = request.form.get('automaticTaunt') == 'true'
+        taunt_request = json.dumps([taunt, automatic_taunt])
         request_id = request.form.get('requestId', '')
         try:
             uuid.UUID(request_id)
@@ -378,7 +385,7 @@ def create_app(config=None, *, allow_demo=False):
                     raise ValueError('That game already exists with a different score type. Choose it from search.')
             previous = db.execute('SELECT * FROM scores WHERE user_sub=? AND request_id=?', (g.user['sub'], request_id)).fetchone()
             if previous:
-                if (previous['game_id'], previous['value'], previous['initials'], previous['taunt']) != (game_id, value, initials, taunt):
+                if (previous['game_id'], previous['value'], previous['initials'], previous['taunt_request'] or json.dumps([previous['taunt'], False])) != (game_id, value, initials, taunt_request):
                     abort(409, 'This submission was already saved with different details. Start a new entry.')
                 return jsonify(record=public_record(previous), game=catalog()[game_id], isRecord=winner(db, game_id)['id'] == previous['id'], duplicate=True), 200
             now = int(time.time())
@@ -389,11 +396,15 @@ def create_app(config=None, *, allow_demo=False):
             if daily >= 100:
                 abort(429, 'The daily submission limit has been reached for this account.')
             previous_winner = winner(db, game_id)
+            if automatic_taunt:
+                profile = db.execute('SELECT default_taunt,taunt_enabled FROM profiles WHERE user_sub=?', (g.user['sub'],)).fetchone()
+                beats = previous_winner and (value < previous_winner['value'] if kind == 'time' else value > previous_winner['value'])
+                taunt = profile['default_taunt'] if profile and profile['taunt_enabled'] and beats and previous_winner['user_sub'] != g.user['sub'] else ''
             photo_id = save_photo(request.files.get('photo'))
             score_id = str(uuid.uuid4())
             db.execute('INSERT INTO scores (id,game_id,value,initials,user_sub,user_email,photo_id,created_at,request_id) VALUES (?,?,?,?,?,?,?,?,?)',
                        (score_id, game_id, value, initials, g.user['sub'], g.user['email'], photo_id, now, request_id))
-            db.execute('UPDATE scores SET taunt=? WHERE id=?', (taunt, score_id))
+            db.execute('UPDATE scores SET taunt=?,taunt_request=? WHERE id=?', (taunt, taunt_request, score_id))
             row = db.execute('SELECT * FROM scores WHERE id=?', (score_id,)).fetchone()
             best = winner(db, game_id)
             db.execute('INSERT INTO activity (score_id,previous_sub,previous_initials,previous_value,is_record) VALUES (?,?,?,?,?)', (score_id, previous_winner['user_sub'] if previous_winner else None, previous_winner['initials'] if previous_winner else None, previous_winner['value'] if previous_winner else None, int(best['id'] == score_id)))
@@ -416,16 +427,30 @@ def create_app(config=None, *, allow_demo=False):
         cursor = profile['read_event'] if profile else 0
         unread = db.execute('SELECT COUNT(*) FROM activity a JOIN scores s ON s.id=a.score_id WHERE a.id>? AND s.user_sub!=? AND s.deleted_at IS NULL', (cursor, g.user['sub'])).fetchone()[0]
         rows = db.execute('SELECT * FROM scores WHERE user_sub=? ORDER BY created_at DESC,rowid DESC LIMIT 100', (g.user['sub'],)).fetchall()
-        return jsonify(displaySettings=display_settings(), initials=profile['initials'] if profile else '', unread=unread, scores=[public_record(row) | {'gameTitle': catalog()[row['game_id']]['title'], 'deleted': row['deleted_at'] is not None, 'isRecord': row['deleted_at'] is None and winner(db,row['game_id'])['id']==row['id']} for row in rows])
+        return jsonify(defaultTaunt=profile['default_taunt'] if profile else '', tauntEnabled=bool(profile['taunt_enabled']) if profile else False, displaySettings=display_settings(), initials=profile['initials'] if profile else '', unread=unread, scores=[public_record(row) | {'gameTitle': catalog()[row['game_id']]['title'], 'deleted': row['deleted_at'] is not None, 'isRecord': row['deleted_at'] is None and winner(db,row['game_id'])['id']==row['id']} for row in rows])
 
     @app.patch('/api/account')
     @authenticated()
     def save_account():
-        initials = str((request.get_json(silent=True) or {}).get('initials','')).strip().upper()
-        if initials and not re.fullmatch('[A-Z]{3}', initials):
-            raise ValueError('Enter three letters or leave default initials blank.')
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict):
+            raise ValueError('Send an object containing your settings.')
+        updates = {}
+        if 'initials' in payload:
+            initials = str(payload['initials']).strip().upper()
+            if initials and not re.fullmatch('[A-Z]{3}', initials):
+                raise ValueError('Enter three letters or leave default initials blank.')
+            updates['initials'] = initials
+        if 'defaultTaunt' in payload:
+            updates['default_taunt'] = clean_taunt(payload['defaultTaunt'])
+        if 'tauntEnabled' in payload:
+            if type(payload['tauntEnabled']) is not bool:
+                raise ValueError('Choose whether your automatic taunt is enabled.')
+            updates['taunt_enabled'] = int(payload['tauntEnabled'])
         with get_db() as db:
-            db.execute("INSERT INTO profiles(user_sub,initials) VALUES (?,?) ON CONFLICT(user_sub) DO UPDATE SET initials=excluded.initials", (g.user['sub'],initials))
+            db.execute('INSERT OR IGNORE INTO profiles(user_sub) VALUES (?)', (g.user['sub'],))
+            for column, value in updates.items():
+                db.execute(f'UPDATE profiles SET {column}=? WHERE user_sub=?', (value,g.user['sub']))
         return jsonify(ok=True)
 
     @app.get('/api/activity')

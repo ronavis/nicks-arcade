@@ -536,3 +536,43 @@ def test_legacy_pending_link_and_removed_record(tmp_path):
     assert len(rows) == 3 and all(s['deleted'] and s['initials'] == 'MAR' for s in rows)
     # Removing the mapping does not lose existing ownership.
     assert len(create_app(base).test_client().get('/api/account', headers=headers()).json['scores']) == 3
+
+
+def test_saved_taunt_settings_persist_and_are_private(app):
+    c=app.test_client()
+    assert c.get('/api/account',headers=headers()).json['tauntEnabled'] is False
+    assert c.patch('/api/account',json={'initials':'ABC'},headers=headers()).status_code==200
+    assert c.patch('/api/account',json={'defaultTaunt':'Catch me!', 'tauntEnabled':True},headers=headers()).status_code==200
+    account=create_app(dict(app.config)).test_client().get('/api/account',headers=headers()).json
+    assert account['initials']=='ABC' and account['defaultTaunt']=='Catch me!' and account['tauntEnabled'] is True
+    assert c.get('/api/account',headers=headers('admin')).json['defaultTaunt']==''
+    c.patch('/api/account',json={'tauntEnabled':False},headers=headers())
+    assert c.get('/api/account',headers=headers()).json['defaultTaunt']=='Catch me!'
+    assert c.patch('/api/account',json={'tauntEnabled':'false'},headers=headers()).status_code==400
+    assert c.patch('/api/account',json={'defaultTaunt':'a'*141},headers=headers()).status_code==400
+
+
+def test_automatic_taunt_requires_other_players_record_and_retries(app):
+    c=app.test_client()
+    c.patch('/api/account',json={'defaultTaunt':'Your turn!', 'tauntEnabled':True},headers=headers())
+    for score in ['100','41510']:
+        result=submit(c,score,automaticTaunt='true')
+        assert result.json['record']['taunt']==''
+    rid=str(uuid.uuid4())
+    result=submit(c,'50000',automaticTaunt='true',requestId=rid)
+    assert result.json['record']['taunt']=='Your turn!'
+    c.patch('/api/account',json={'defaultTaunt':'Changed!', 'tauntEnabled':False},headers=headers())
+    retry=submit(c,'50000',automaticTaunt='true',requestId=rid)
+    assert retry.status_code==200 and retry.json['record']['taunt']=='Your turn!'
+    c.patch('/api/account',json={'tauntEnabled':True},headers=headers())
+    assert submit(c,'51000',automaticTaunt='true').json['record']['taunt']==''
+
+
+def test_saved_taunt_disabled_manual_override_and_first_record(app):
+    c=app.test_client()
+    c.patch('/api/account',json={'defaultTaunt':'Saved', 'tauntEnabled':False},headers=headers())
+    assert submit(c,'50000',automaticTaunt='true').json['record']['taunt']==''
+    c.patch('/api/account',json={'tauntEnabled':True},headers=headers())
+    assert submit(c,'100',game='simpsons',automaticTaunt='true').json['record']['taunt']==''
+    assert submit(c,'1:01.00',game='vsexcitebike',automaticTaunt='true').json['record']['taunt']=='Saved'
+    assert submit(c,'1:00.00',game='vsexcitebike',taunt='Custom').json['record']['taunt']=='Custom'

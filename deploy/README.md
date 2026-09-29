@@ -59,3 +59,7 @@ Set `ARCADE_LEGACY_OWNERS` in the private service environment to a JSON object m
 On an authenticated request, Google-authoritative Gmail or Workspace email can claim only matching unowned imported starting rows (`user_sub=imported`, `created_at=0`, `request_id=game_id`). The account email binds once to its stable Google subject in `legacy_accounts`; a different subject cannot take over that binding. Each score link increments its revision and writes a before/after audit entry. Repeated requests are idempotent. Scores submitted through the app are never matched by initials. Removed imported rows retain their removed state. Account profile initials do not affect ownership.
 
 Existing links are durable: removing/changing the environment mapping does not transfer or unlink claimed records. Correcting an erroneous link requires a separately reviewed, backed-up administrative data correction. Full database backups include bindings and audit history. Future record-break notices work after linking; historical activity is not backfilled.
+
+## Saved taunt settings
+
+The taunt-settings release adds default_taunt and taunt_enabled (off by default) to profiles, plus taunt_request to scores for retry-safe submissions. Migrations preserve existing profiles and score data. Settings PATCH updates only supplied fields. Automatic taunts are resolved inside the score transaction against the current record and current profile; retries return the originally saved taunt even if settings change. Manual per-score taunts retain their existing behavior.
