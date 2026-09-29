@@ -1,10 +1,15 @@
-import { mkdir, copyFile, readFile, rm, cp } from 'node:fs/promises';
+import { mkdir, copyFile, readFile, writeFile, rm, cp } from 'node:fs/promises';
 import { build } from 'esbuild';
 const out = new URL('../dist/', import.meta.url);
 await rm(out, { recursive: true, force: true });
 await mkdir(new URL('vendor/', out), { recursive: true });
 for (const name of ['index.html', 'main.css', 'app.js', 'config.js', 'favicon.ico']) {
   await copyFile(new URL('../' + name, import.meta.url), new URL(name, out));
+}
+if (process.env.ARCADE_API_BASE) {
+  const endpoint = new URL(process.env.ARCADE_API_BASE);
+  if (endpoint.protocol !== 'https:') throw new Error('Production API must use HTTPS.');
+  await writeFile(new URL('config.js', out), `window.ARCADE_CONFIG = ${JSON.stringify({ apiBase: endpoint.href.replace(/\/$/, '') })};\n`);
 }
 await mkdir(new URL('images/', out), { recursive: true });
 const games = JSON.parse(await readFile(new URL('../data/games.json', import.meta.url)));

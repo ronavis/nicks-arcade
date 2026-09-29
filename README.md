@@ -30,7 +30,7 @@ Do not scan the local preview QR from a phone: localhost refers to the phone its
 
 GitHub Pages hosts the built `dist/` frontend. An isolated Python service on the VPS owns scores, authentication verification, and photos. GitHub Pages itself does not save submissions or run the database.
 
-Set `config.js` to the deployed API prefix before building. Proposed prefix: `https://midconversation.com/arcade-api`. The API verifies Google's signed ID tokens; a typed email or browser flag cannot grant administrator rights. Existing public Google client ID is retained, and Ron is the initial administrator.
+Build for production with `ARCADE_API_BASE=https://midconversation.com/arcade-api npm run build`. The build writes the endpoint into the published config while leaving the local preview configuration unchanged. The API verifies Google's signed ID tokens; a typed email or browser flag cannot grant administrator rights. Existing public Google client ID is retained, and Ron is the initial administrator.
 
 Keep `ARCADE_DATA_DIR` outside releases. Rebuilding or replacing frontend files must never replace that directory. See [deployment plan](deploy/README.md) for the staged setup, production acceptance, backup and rollback steps. No server or live Pages change is included in this working copy.
 
