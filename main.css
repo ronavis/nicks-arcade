@@ -57,3 +57,11 @@
 #entry-record{font-size:28px;line-height:1.4;letter-spacing:1px}#entry-record.small-record{font-size:22px}
 #score-input{font-size:28px;letter-spacing:1px}.initials-slots span{font-size:40px}
 .admin-score .record{font-size:30px;line-height:1.5}.my-score-value{font-size:25px;line-height:1.5;overflow-wrap:anywhere}
+
+/* Larger score glyphs within the original line boxes; headings stay unchanged. */
+.hero-score{font-size:calc(var(--u)*18);line-height:calc(var(--u)*20)}
+.hero-score.long{font-size:calc(var(--u)*12.5);line-height:calc(var(--u)*13.75)}
+.hero-score.very-long{font-size:calc(var(--u)*9);line-height:calc(var(--u)*10)}
+.hero-initials{font-size:calc(var(--u)*11.5);line-height:calc(var(--u)*12.5)}
+.around-row strong{font-size:calc(var(--u)*4.3);line-height:calc(var(--u)*4.9)}
+.around-row span{font-size:calc(var(--u)*3.8);line-height:calc(var(--u)*4.5)}
