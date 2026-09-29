@@ -602,3 +602,31 @@ def test_public_record_time_margin_and_non_winner(app):
     assert record['improvement']['direction'] == 'down'
     submit(c, '1:10.00', game=game['id'])
     assert next(g for g in c.get('/api/leaderboard').json['games'] if g['id'] == game['id'])['record']['id'] == record['id']
+
+
+def test_admin_adds_empty_game_without_score_and_deduplicates(app):
+    c=app.test_client()
+    payload={'title':'  NBA Jam  ', 'kind':'points'}
+    assert c.post('/api/admin/games',json=payload).status_code == 401
+    assert c.post('/api/admin/games',json=payload,headers=headers()).status_code == 403
+    r=c.post('/api/admin/games',json=payload,headers=headers('admin'))
+    assert r.status_code == 201
+    game_id=r.json['game']['id']
+    game=next(g for g in c.get('/api/leaderboard').json['games'] if g['id']==game_id)
+    assert game['title']=='NBA Jam' and game['record'] is None
+    assert c.get('/api/admin/scores?gameId='+game_id,headers=headers('admin')).json['scores']==[]
+    repeat=c.post('/api/admin/games',json={'title':'NBA-Jam','kind':'points'},headers=headers('admin'))
+    assert repeat.status_code==200 and repeat.json['alreadyExists']
+    assert repeat.json['game']['id']==game_id
+    assert c.post('/api/admin/games',json={'title':'NBA Jam','kind':'time'},headers=headers('admin')).status_code==400
+    assert submit(c,'200',game=game_id).status_code==201
+    assert next(g for g in c.get('/api/leaderboard').json['games'] if g['id']==game_id)['record']['score']=='200'
+
+
+def test_admin_add_game_validates_title_and_type(app):
+    c=app.test_client()
+    for payload in [None,[],{'title':''},{'title':'x'},{'title':'x'*81},{'title':'Good Game','kind':'invalid'}]:
+        assert c.post('/api/admin/games',json=payload,headers=headers('admin')).status_code==400
+    r=c.post('/api/admin/games',json={'title':'Fast Racer','kind':'time'},headers=headers('admin'))
+    assert r.status_code==201
+    assert submit(c,'1:02.30',game=r.json['game']['id']).status_code==201

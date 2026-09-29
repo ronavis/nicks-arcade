@@ -500,6 +500,33 @@ def create_app(config=None, *, allow_demo=False):
             abort(404)
         return send_from_directory(photos, photo_id + '.jpg', mimetype='image/jpeg')
 
+    @app.post('/api/admin/games')
+    @authenticated(admin=True)
+    def add_arcade_game():
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict):
+            raise ValueError('Enter a game title and score type.')
+        title = ' '.join(str(payload.get('title', '')).split())
+        key = game_key(title)
+        kind = payload.get('kind', 'points')
+        if not 2 <= len(title) <= 80 or not key or any(unicodedata.category(c).startswith('C') for c in title):
+            raise ValueError('Enter a game name between 2 and 80 characters.')
+        if kind not in {'points', 'time'}:
+            raise ValueError('Choose points or fastest time.')
+        db = get_db()
+        with db:
+            db.execute('BEGIN IMMEDIATE')
+            existing = db.execute('SELECT * FROM games WHERE search_key=?', (key,)).fetchone()
+            if existing:
+                if existing['kind'] != kind:
+                    raise ValueError('This game already exists with a different score type.')
+                game_id = existing['id']
+            else:
+                game_id = 'custom-' + hashlib.sha256(key.encode()).hexdigest()[:24]
+                db.execute('INSERT INTO games VALUES (?,?,?,?,?,?)', (game_id, title, key, 'images/new-game.svg', kind, 1000))
+        g.pop('catalog', None)
+        return jsonify(game=catalog()[game_id], alreadyExists=bool(existing)), 200 if existing else 201
+
     @app.get('/api/admin/scores')
     @authenticated(admin=True)
     def admin_scores():
