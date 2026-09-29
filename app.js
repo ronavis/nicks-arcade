@@ -30,6 +30,18 @@ async function api(path, options = {}) {
   } finally { clearTimeout(timer); }
 }
 
+function renderImprovement(id, record) {
+  const badge = $(id), margin = record?.improvement;
+  badge.hidden = !margin; badge.replaceChildren();
+  if (!margin) return;
+  badge.setAttribute('aria-label', margin.label); badge.setAttribute('aria-expanded', 'false');
+  badge.append(document.createTextNode(`${margin.direction === 'down' ? '↓ ' : '↑ +'}${margin.amount}`));
+  const detail = node('span', 'improvement-detail', margin.label); detail.hidden = true;
+  badge.append(detail);
+  badge.onclick = () => { detail.hidden = !detail.hidden; badge.setAttribute('aria-expanded', String(!detail.hidden)); };
+  badge.onblur = () => { detail.hidden = true; badge.setAttribute('aria-expanded', 'false'); };
+  badge.onkeydown = event => { if (event.key === 'Escape') { detail.hidden = true; badge.setAttribute('aria-expanded', 'false'); } };
+}
 function renderBoard() {
   const game = gameById(state.featured) || state.games[0];
   if (!game) return;
@@ -40,7 +52,7 @@ function renderBoard() {
   $('record-label').textContent = game.kind === 'time' ? 'TIME TO BEAT' : 'RECORD TO BEAT';
   $('hero-score').textContent = scoreText(game);
   $('hero-score').className = `hero-score${scoreText(game).length > 10 ? ' very-long' : scoreText(game).length > 7 ? ' long' : ''}`;
-  $('hero-initials').textContent = initialsText(game);
+  $('hero-initials').textContent = initialsText(game); renderImprovement('hero-improvement', game.record);
   const index = state.games.indexOf(game);
   const around = game.id === 'galaga' ? ['donkeykong', 'mspacman', 'tetris'].map(gameById) : [1, 2, 3].map(offset => state.games[(index + offset) % state.games.length]);
   $('around-list').replaceChildren(...around.filter(Boolean).map(other => {
@@ -274,7 +286,7 @@ function showNextCelebration() {
   $('celebration-game').textContent = game.title;
   $('celebration-score').textContent = record.score;
   $('celebration-score').classList.toggle('long', record.score.length > 9);
-  $('celebration-initials').textContent = record.initials;
+  $('celebration-initials').textContent = record.initials; renderImprovement('celebration-improvement', record);
   $('celebration-taunt').textContent = record.taunt || ''; $('celebration-taunt').hidden = !record.taunt;
   $('record-celebration').hidden = false;
   celebrationTimer = setTimeout(() => closeCelebration(), 10000);
