@@ -51,3 +51,11 @@ Save the previous Pages artifact and nginx configuration before publication. To 
 ## Remaining physical acceptance
 
 Ron confirmed QR scanning and Google sign-in on his phone. His Bubble Bobble 254,258 / TST submission is saved. The updated iPhone photo flow still needs his original photo retried; actual TV behavior and second-account acceptance remain pending. See launch-status.md.
+
+## Linking imported scores to accounts
+
+Set `ARCADE_LEGACY_OWNERS` in the private service environment to a JSON object mapping three uppercase initials to verified Google email addresses, for example `{"ABC":"player@example.com","XYZ":"player@example.com"}`. Keep real addresses out of public source and static assets. Restart the arcade service after configuration changes.
+
+On an authenticated request, Google-authoritative Gmail or Workspace email can claim only matching unowned imported starting rows (`user_sub=imported`, `created_at=0`, `request_id=game_id`). The account email binds once to its stable Google subject in `legacy_accounts`; a different subject cannot take over that binding. Each score link increments its revision and writes a before/after audit entry. Repeated requests are idempotent. Scores submitted through the app are never matched by initials. Removed imported rows retain their removed state. Account profile initials do not affect ownership.
+
+Existing links are durable: removing/changing the environment mapping does not transfer or unlink claimed records. Correcting an erroneous link requires a separately reviewed, backed-up administrative data correction. Full database backups include bindings and audit history. Future record-break notices work after linking; historical activity is not backfilled.

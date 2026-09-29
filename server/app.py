@@ -72,11 +72,19 @@ def create_app(config=None, *, allow_demo=False):
         ALLOWED_ORIGINS={x.strip().rstrip('/') for x in os.environ.get('ARCADE_ALLOWED_ORIGINS', 'https://ronavis.github.io').split(',') if x.strip()},
         PUBLIC_URL=os.environ.get('ARCADE_PUBLIC_URL', 'https://ronavis.github.io/nicks-arcade/'),
         MAX_CONTENT_LENGTH=41 * 1024 * 1024,
+        LEGACY_OWNERS=json.loads(os.environ.get('ARCADE_LEGACY_OWNERS', '{}')),
         DEMO=demo,
         TESTING=False,
     )
     if config:
         app.config.update(config)
+    legacy_owners = app.config['LEGACY_OWNERS']
+    if not isinstance(legacy_owners, dict) or any(
+            not re.fullmatch('[A-Z]{3}', initials) or not isinstance(email, str)
+            or not re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+', email)
+            for initials, email in legacy_owners.items()):
+        raise RuntimeError('ARCADE_LEGACY_OWNERS must map three uppercase initials to account emails.')
+    legacy_owners = {initials: email.lower() for initials, email in legacy_owners.items()}
     if app.config['DEMO'] and not allow_demo:
         raise RuntimeError('Demo mode is only available through the loopback-only local preview command.')
     if not app.config['DATA_DIR']:
@@ -116,6 +124,7 @@ def create_app(config=None, *, allow_demo=False):
             actor TEXT NOT NULL, action TEXT NOT NULL, before_json TEXT NOT NULL,
             after_json TEXT NOT NULL, created_at INTEGER NOT NULL
           );
+          CREATE TABLE IF NOT EXISTS legacy_accounts (email TEXT PRIMARY KEY, user_sub TEXT NOT NULL);
           CREATE TABLE IF NOT EXISTS profiles (user_sub TEXT PRIMARY KEY, initials TEXT NOT NULL DEFAULT '', read_event INTEGER NOT NULL DEFAULT 0);
           CREATE TABLE IF NOT EXISTS activity (id INTEGER PRIMARY KEY AUTOINCREMENT, score_id TEXT NOT NULL UNIQUE REFERENCES scores(id), previous_sub TEXT, previous_initials TEXT, previous_value INTEGER, is_record INTEGER NOT NULL);
           CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -213,9 +222,33 @@ def create_app(config=None, *, allow_demo=False):
                 g.user = {'sub': who['sub'], 'email': who['email'].lower(), 'admin': authoritative_email and who['email'].lower() in app.config['ADMIN_EMAILS']}
                 if admin and not g.user['admin']:
                     abort(403, 'Only the arcade administrator can change or remove scores.')
+                if authoritative_email:
+                    link_legacy_records(g.user)
                 return fn(*args, **kwargs)
             return wrapped
         return decorate
+
+    def link_legacy_records(user):
+        # Only the private server configuration grants legacy ownership. Submitted
+        # initials and profile preferences never grant ownership of another score.
+        aliases = [initials for initials, email in legacy_owners.items() if email == user['email']]
+        if not aliases:
+            return
+        with get_db() as db:
+            db.execute('BEGIN IMMEDIATE')
+            db.execute('INSERT OR IGNORE INTO legacy_accounts(email,user_sub) VALUES (?,?)',
+                       (user['email'], user['sub']))
+            bound = db.execute('SELECT user_sub FROM legacy_accounts WHERE email=?', (user['email'],)).fetchone()
+            if bound['user_sub'] != user['sub']:
+                return  # An email alone cannot move records from an already bound Google identity.
+            placeholders = ','.join('?' for _ in aliases)
+            rows = db.execute(f"SELECT * FROM scores WHERE user_sub='imported' AND created_at=0 AND request_id=game_id AND initials IN ({placeholders})", aliases).fetchall()
+            for row in rows:
+                db.execute('UPDATE scores SET user_sub=?,user_email=?,revision=revision+1 WHERE id=?',
+                           (user['sub'], user['email'], row['id']))
+                after = db.execute('SELECT * FROM scores WHERE id=?', (row['id'],)).fetchone()
+                db.execute('INSERT INTO audit(score_id,actor,action,before_json,after_json,created_at) VALUES (?,?,?,?,?,?)',
+                           (row['id'], user['sub'], 'link_legacy_account', json.dumps(dict(row)), json.dumps(dict(after)), int(time.time())))
 
     def public_record(row):
         return {'id': row['id'], 'score': display_score(row['value'], catalog()[row['game_id']]['kind']),

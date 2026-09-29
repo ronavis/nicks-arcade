@@ -476,3 +476,63 @@ def test_display_timing_admin_only_and_validation(app):
         assert c.patch(url,headers=headers('admin'),json={'rotationSeconds':value}).status_code==400
     for value in [5,120]:
         assert c.patch(url,headers=headers('admin'),json={'rotationSeconds':value}).status_code==200
+
+
+def test_legacy_claim_preserves_records_and_is_durable(tmp_path):
+    config = {'TESTING': True, 'DATA_DIR': str(tmp_path), 'DEMO': False,
+              'TEST_TOKEN_VERIFIER': identity, 'LEGACY_OWNERS': {'RON': 'ronavis@gmail.com', 'RCA': 'ronavis@gmail.com'}}
+    app = create_app(config)
+    c = app.test_client()
+    before = c.get('/api/leaderboard').json['games']
+    assert submit(c, initials='RON').status_code == 201
+    assert submit(c, initials='TST', token='admin').status_code == 201
+    account = c.get('/api/account', headers=headers('admin')).json
+    imported = [s for s in account['scores'] if s['createdAt'] is None]
+    assert len(imported) == 7 and {s['initials'] for s in imported} == {'RON'}
+    assert any(s['initials'] == 'TST' for s in account['scores'])
+    assert len(account['scores']) == 8
+    # Another player entering RON still owns their own submission.
+    own = c.get('/api/account', headers=headers()).json['scores']
+    assert len(own) == 1 and own[0]['initials'] == 'RON'
+    reopened = create_app(config).test_client()
+    assert reopened.get('/api/account', headers=headers('admin')).json['scores'] == account['scores']
+    with sqlite3.connect(tmp_path / 'arcade.sqlite3') as db:
+        assert db.execute("SELECT count(*) FROM audit WHERE action='link_legacy_account'").fetchone()[0] == 7
+        assert db.execute('SELECT count(*) FROM legacy_accounts').fetchone()[0] == 1
+    after = c.get('/api/leaderboard').json['games']
+    for old, new in zip(before, after):
+        if old['id'] != 'galaga':
+            assert (old['record']['score'], old['record']['initials']) == (new['record']['score'], new['record']['initials']) if old['record'] else new['record'] is None
+
+
+def test_legacy_binding_cannot_be_taken_by_different_subject(tmp_path):
+    app = create_app({'TESTING': True, 'DATA_DIR': str(tmp_path), 'DEMO': False,
+                      'TEST_TOKEN_VERIFIER': identity, 'LEGACY_OWNERS': {'NIC': 'player@gmail.com'}})
+    c = app.test_client()
+    assert len(c.get('/api/account', headers=headers()).json['scores']) == 13
+    assert c.get('/api/account', headers=headers('outsider')).json['scores'] == []
+
+
+@pytest.mark.parametrize('claims', [
+    {'sub': 'someone', 'email': 'person@example.com', 'email_verified': True},
+    {'sub': 'someone', 'email': 'person@gmail.com', 'email_verified': False},
+])
+def test_legacy_claim_requires_google_authoritative_verified_email(tmp_path, claims):
+    app = create_app({'TESTING': True, 'DATA_DIR': str(tmp_path), 'DEMO': False,
+                      'TEST_TOKEN_VERIFIER': lambda _: claims, 'LEGACY_OWNERS': {'MAR': claims['email']}})
+    app.test_client().get('/api/account', headers=headers())
+    with sqlite3.connect(tmp_path / 'arcade.sqlite3') as db:
+        assert db.execute("SELECT count(*) FROM scores WHERE user_sub!='imported'").fetchone()[0] == 0
+
+
+def test_legacy_pending_link_and_removed_record(tmp_path):
+    base = {'TESTING': True, 'DATA_DIR': str(tmp_path), 'DEMO': False, 'TEST_TOKEN_VERIFIER': identity}
+    create_app(base)
+    with sqlite3.connect(tmp_path / 'arcade.sqlite3') as db:
+        db.execute("UPDATE scores SET deleted_at=123 WHERE initials='MAR'")
+    app = create_app(base | {'LEGACY_OWNERS': {'MAR': 'player@gmail.com'}})
+    assert app.test_client().get('/api/account', headers=headers('admin')).json['scores'] == []
+    rows = app.test_client().get('/api/account', headers=headers()).json['scores']
+    assert len(rows) == 3 and all(s['deleted'] and s['initials'] == 'MAR' for s in rows)
+    # Removing the mapping does not lose existing ownership.
+    assert len(create_app(base).test_client().get('/api/account', headers=headers()).json['scores']) == 3
