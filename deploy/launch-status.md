@@ -63,3 +63,10 @@ Featured record initials are approximately 17% larger, with positive letter spac
 - Private backup /var/backups/nicks-arcade/before-account-5e65067 created before deployment. Migration passed on a copy first. Backend release 5e65067 installed; all 34 preexisting score rows preserved exactly, comparing original columns. Public health passed and unsigned /account and /activity returned 401. Mission Control process remained unchanged.
 - Pages release 02322b86a9afba582a6cd42bdc6428ceb5561c21 published; public HTML, JavaScript and CSS matched the tested build. CSS/JS references are versioned to refresh browser caches.
 - Live multi-account Google notification delivery has not yet been exercised; the two-player flow was validated locally with explicit preview identities. Existing physical TV, original iPhone photo retry and source naming questions remain pending.
+
+## Shared TV rotation timing — 2026-09-29
+
+- Admin Account → Settings now includes TV Display / Seconds per game, accepting whole numbers from 5 to 120. Default remains 15. The value is stored in SQLite metadata and included with public leaderboard polling; connected visible boards pick up a change within five seconds and restart their rotation interval. Pause and reduced-motion behavior remain respected.
+- 57 backend tests passed, including independent-client readback, application restart persistence, admin-only writes and range/type validation. Build/syntax checks passed. Browser settings saved 5 seconds; the board advanced automatically and remained unchanged when paused across another interval.
+- Backend b17f912 deployed after backup before-timing-b17f912. Scores, profiles, activity and metadata compared unchanged with the backup. Public API returns rotationSeconds=15 and rejects unsigned timing updates with 401. Mission Control PID remained unchanged.
+- Pages 70cfe892059a463fe1cd860e9d32cf7d8d295a98 built successfully; published HTML/JS match the tested release. README updated on the default branch. Saved settings screenshot uses the explicitly labeled local preview; the live default was not changed for the test.
