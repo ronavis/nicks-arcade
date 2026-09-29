@@ -219,3 +219,12 @@ User-authorized private configuration update preserves Ron and adds Nick's previ
 - Source: `969a420`; Pages: `4a3674d3f2d08d930992a871dd227e11501f92b0`; default-branch README: `725ba7f6f099c70186e54b6426e7e5d868594b4d`.
 - Approved title/alias matching uses the 33 existing curated images plus the genuine NBA Jam cabinet marquee. Unknown titles and distinct unmatched editions retain the neutral fallback. Assigned artwork is preserved.
 - Ten frontend tests passed, build/check passed; NBA Jam with no score visually verified locally at 540 × 960. All five changed published files matched the local production build byte-for-byte. No backend changes or production game/score writes.
+
+## Searchable collection and eligibility — September 29, 2026
+
+- Backend source/release `cc2b075`; frontend source `3fd3f98`; Pages `c1318ddee996aed906d000de6b83ea5e6256095b`; default README `6fa000c64dab54e889a9a80b969cb7deb17a88b6`.
+- Search indexes 9,543 marquee entries, including ROM variants. Existing curated art takes priority; 1,685 exact matches prefer supplementary cabinet artwork. Some remaining pack artwork is stylized; previews show the selected image.
+- Existing 33 games remain eligible; shared bypass defaults off. Server checks approval within the score transaction. Bypass-created games stay outside the approved collection; disabling bypass blocks new scores and hides them from player choices/TV while preserving history. Admins can add/remove eligibility.
+- Admin configuration readback confirms Ron and Nick. Isolated tests verify equal permissions and regular-player rejection. Nick’s own interactive Google sign-in has not been performed by the agent.
+- Backup `/var/backups/nicks-arcade/pre-collection-rules-20260929/COMPLETE` verified before migration. Restarted only nicks-arcade; Mission Control PID stayed 2920079. Live service is production/healthy, with 33 eligible games, 34 retained score rows, bypass off, and working catalog lookup. No live test scores or games were added.
+- 72 backend tests and 10 frontend tests pass. Local browser confirmed visual search, adding a cabinet without a score, successful first-score submission, toggling bypass on/off, player control restrictions, and 390px catalog fit. Live 390px scoreboard confirms blank undated row retains height and carousel remains above divider. Four changed published frontend files match the production build byte-for-byte.
