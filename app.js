@@ -1,6 +1,6 @@
 'use strict';
 const $ = (id) => document.getElementById(id);
-const state = { games: [], account: null, accountView: 'activity', latestEvent: 0, pendingGame: null, selected: 'galaga', featured: 'galaga', initials: '', user: null, token: '', config: null, paused: false, posting: false, requestId: crypto.randomUUID(), editing: null, objectUrl: null, pickerFor: 'entry', connected: false };
+const state = { games: [], account: null, accountView: 'activity', automaticTaunt: false, latestEvent: 0, pendingGame: null, selected: 'galaga', featured: 'galaga', initials: '', user: null, token: '', config: null, paused: false, posting: false, requestId: crypto.randomUUID(), editing: null, objectUrl: null, pickerFor: 'entry', connected: false };
 const apiBase = (window.ARCADE_CONFIG?.apiBase || '/api').replace(/\/$/, '');
 const display = new Intl.NumberFormat('en-US');
 const node = (tag, className, text) => { const el = document.createElement(tag); if (className) el.className = className; if (text !== undefined) el.textContent = text; return el; };
@@ -110,14 +110,20 @@ function renderSession() {
   if (state.config?.demo && signed) $('account-label').title = 'Local test account. This is not a Google sign-in.';
   if (!signed && location.hash === '#admin') location.hash = '#play';
 }
+function applySavedTaunt() {
+  state.automaticTaunt = Boolean(state.account?.tauntEnabled);
+  $('taunt-input').value = state.automaticTaunt ? state.account.defaultTaunt : '';
+  state.requestId = crypto.randomUUID();
+}
 async function signIn(token) {
   state.token = token;
   state.user = await api('/session');
   try { sessionStorage.setItem('arcade_session', token); } catch (_) { /* Private browsing can disable browser storage. */ }
-  renderSession(); setMessage(); await refreshAccount();
+  renderSession(); setMessage(); await refreshAccount(); applySavedTaunt();
   if (!state.initials && state.account?.initials) { state.initials = state.account.initials; renderInitials(); }
 }
 function signOut(announce = true) {
+  $('taunt-input').value = ''; state.automaticTaunt = false;
   state.user = null; state.token = ''; state.account = null; $('account-dialog').close(); $('unread-count').hidden = true; $('tv-unread-count').hidden = true; $('activity-list').replaceChildren(); $('my-scores-list').replaceChildren();
   try { sessionStorage.removeItem('arcade_session'); } catch (_) { /* Optional storage. */ }
   window.google?.accounts.id.disableAutoSelect(); renderSession();
@@ -209,7 +215,7 @@ $('add-game').addEventListener('click', () => {
   renderEntry(); setMessage('Your first score will add this game to the arcade.'); $('game-picker').close(); $('score-input').focus();
 });
 $('close-picker').addEventListener('click', () => $('game-picker').close());
-$('taunt-input').addEventListener('input', () => { state.requestId = crypto.randomUUID(); });
+$('taunt-input').addEventListener('input', () => { state.automaticTaunt = false; state.requestId = crypto.randomUUID(); });
 $('score-input').addEventListener('input', () => { state.requestId = crypto.randomUUID(); setMessage(); });
 
 function clearPhoto() {
@@ -230,7 +236,7 @@ $('score-form').addEventListener('submit', async event => {
   event.preventDefault();
   if (state.posting || !state.user) return;
   if (state.initials.length !== 3) { setMessage('Tap three letters to enter your initials.', true); $('alphabet').querySelector('button').focus(); return; }
-  const form = new FormData(); form.set('gameId', state.selected); form.set('score', $('score-input').value.trim()); form.set('initials', state.initials); form.set('taunt', $('taunt-input').value.trim()); form.set('requestId', state.requestId);
+  const form = new FormData(); form.set('gameId', state.selected); form.set('score', $('score-input').value.trim()); form.set('initials', state.initials); form.set('taunt', $('taunt-input').value.trim()); form.set('requestId', state.requestId); form.set('automaticTaunt', String(state.automaticTaunt));
   if (state.pendingGame && state.selected === 'new-game') { form.set('gameTitle', state.pendingGame.title); form.set('gameKind', state.pendingGame.kind); }
   if ($('proof').files[0]) form.set('photo', $('proof').files[0]);
   state.posting = true; renderSession(); $('submit-score').textContent = 'Posting…'; setMessage();
@@ -244,7 +250,7 @@ $('score-form').addEventListener('submit', async event => {
   } catch (error) { setMessage(error.message, true); }
   finally { state.posting = false; renderSession(); $('submit-score').textContent = 'Post score'; }
 });
-$('play-again').addEventListener('click', () => { $('success-panel').hidden = true; $('score-form').hidden = false; $('record-preview').hidden = false; $('score-input').value = ''; state.initials = state.account?.initials || ''; $('taunt-input').value = ''; renderInitials(); clearPhoto(); setMessage(); $('score-input').focus(); });
+$('play-again').addEventListener('click', () => { $('success-panel').hidden = true; $('score-form').hidden = false; $('record-preview').hidden = false; $('score-input').value = ''; state.initials = state.account?.initials || ''; applySavedTaunt(); renderInitials(); clearPhoto(); setMessage(); $('score-input').focus(); });
 
 async function refreshBoard() {
   try {
@@ -360,7 +366,7 @@ async function loadAccount(view = state.accountView) {
       $('mark-read').disabled = !result.events.length;
     } else {
       const account = await api('/account'); if (token !== state.token) return; state.account = account;
-      if (view === 'settings') { $('default-initials').value = account.initials; $('display-settings-form').hidden = !state.user.admin; $('rotation-seconds').value = account.displaySettings.rotationSeconds; $('display-settings-message').textContent = ''; }
+      if (view === 'settings') { $('default-initials').value = account.initials; $('default-taunt').value = account.defaultTaunt || ''; $('taunt-enabled').checked = Boolean(account.tauntEnabled); $('display-settings-form').hidden = !state.user.admin; $('rotation-seconds').value = account.displaySettings.rotationSeconds; $('display-settings-message').textContent = ''; }
       else {
         const visibleScores = account.scores.filter(score => !score.deleted);
         $('my-scores-list').replaceChildren(...visibleScores.map(score => {
@@ -433,3 +439,14 @@ async function init() {
   } catch (error) { $('connection').hidden = false; $('connection').textContent = error.message; $('login-help').textContent = 'The score service must be connected before sign-in is available.'; }
 }
 init();
+
+$('taunt-settings-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const button = $('save-taunt-settings'); button.disabled = true;
+  try {
+    await api('/account', {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({defaultTaunt:$('default-taunt').value, tauntEnabled:$('taunt-enabled').checked})});
+    await refreshAccount(); applySavedTaunt();
+    $('account-message').textContent = state.account.tauntEnabled ? 'Taunt saved and enabled for record breaks.' : 'Taunt saved. Automatic taunts are off.';
+  } catch (error) { $('account-message').textContent = error.message; }
+  finally { button.disabled = false; }
+});
