@@ -27,7 +27,7 @@ Click a screenshot to open the full-resolution PNG. The TV image is captured fro
 
 1. Scan the QR code on the scoreboard, or open the score-entry link.
 2. Sign in with Google. Your email does not appear on the public scoreboard.
-3. Search for your game. If it is missing, enter its name and choose **Add**. Select whether the highest score or fastest time wins.
+3. Choose one of Nick’s approved arcade games. If a cabinet is missing, ask Nick or Ron to add it through **Manage games**. Admins can enable **Bypass my games restriction** to allow submissions for other games.
 4. Enter your score and tap three letters on the arcade alphabet keypad. Use **DEL** to correct an initial.
 5. Optionally attach a photo, then choose **Post score**.
 
@@ -107,7 +107,7 @@ npm run build
 .venv/bin/python -m pytest -q
 ```
 
-The latest backend test run passed **57 tests**, covering persistence, new-game creation, concurrent submissions, duplicate retries, scoring/time rules, Google token validation, admin permissions, photo processing/privacy, origin restrictions, rate limits and backup/restore. All 33 supplied game entries were exercised in submission tests and browser search checks.
+The latest backend test run passed **72 tests**, covering persistence, new-game creation, concurrent submissions, duplicate retries, scoring/time rules, Google token validation, admin permissions, photo processing/privacy, origin restrictions, rate limits and backup/restore. All 33 supplied game entries were exercised in submission tests and browser search checks.
 
 For a production frontend build:
 
@@ -158,4 +158,12 @@ Featured records show their submission date and elapsed days (“Set N days ago�
 
 ### Manage games (admins)
 
-Open My account → Manage games, or use Manage games in the TV menu. Add a title and choose highest score or fastest time; no score is required. New cabinets persist in the shared catalog, immediately join TV rotation and score-entry search, and display “Be the first / Your initials here” until a score is posted. New titles automatically use matching approved marquee artwork when available (including NBA Jam); unmatched titles keep the neutral arcade graphic. Matching ignores capitalization, spaces and punctuation, but does not guess between different game editions. Existing normalized titles are reused rather than duplicated. Search/filter games waiting for their first score, show any game on the TV, or enter/manage its scores. The creation API independently requires an admin account.
+Open **My account → Manage games**, or **Menu → Manage games** on the TV. Search a visual catalog of 9,543 entries, including game variants, and select a marquee to add a game. The existing 32 legacy-record games and The Simpsons are already in the shared collection. Both Ron and Nick manage the same arcade; adding games requires no score. New cabinets join rotation with “Be the first.” A manual entry option remains for missing cabinets and fastest-time scoring.
+
+**Remove from arcade** removes eligibility and hides the game from the restricted scoreboard and player picker; scores remain in history. Admins can add it back. At least one game must remain eligible.
+
+Under **My account → Settings → Arcade rules**, admins can enable **Bypass my games restriction**. It defaults to off. Off permits scores only for the approved collection, including for admins. On lets signed-in players browse the wider catalog or enter another title. Outside games are not automatically approved: turning bypass off hides them and blocks further scores while retaining their history. The server enforces this independently of the UI, and the setting persists across restarts.
+
+Ron (`ronavis@gmail.com`) and Nick (`njwright@gmail.com`) have the same admin permissions. Personal scores, notifications, and preferences still belong to each signed-in account. Nick must use his own Google account.
+
+Undated legacy records leave the date row blank while preserving its layout space.
