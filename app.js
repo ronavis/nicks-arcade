@@ -101,7 +101,8 @@ function renderSession() {
   const signed = Boolean(state.user);
   $('login-panel').hidden = signed;
   $('entry-fields').disabled = !signed || state.posting;
-  $('account-button').hidden = !signed;
+  $('account-button').hidden = false;
+  $('account-button').setAttribute('aria-label', signed ? 'My account' : 'My account · sign in');
   $('account-admin').hidden = !state.user?.admin;
   $('admin-link').hidden = !state.user?.admin;
   $('account-label').textContent = signed ? state.config?.demo ? `Preview account · ${state.user.admin ? 'admin' : 'player'}` : 'Signed in with Google' : 'Sign in to join the board';
@@ -325,7 +326,7 @@ async function refreshAccount() {
     state.account = result;
     $('unread-count').textContent = result.unread > 99 ? '99+' : String(result.unread);
     $('unread-count').hidden = !result.unread;
-    $('account-button').setAttribute('aria-label', result.unread ? `Account, ${result.unread} unread notifications` : 'Account');
+    $('account-button').setAttribute('aria-label', result.unread ? `My account, ${result.unread} unread notifications` : 'My account');
   } catch (_) { /* Keep entry usable during temporary notification outages. */ }
 }
 function accountSection(view) {
@@ -371,10 +372,13 @@ async function loadAccount(view = state.accountView) {
     $('account-message').textContent = ''; await refreshAccount();
   } catch (error) { $('account-message').textContent = error.message; }
 }
-$('account-button').addEventListener('click', () => {
+function openAccount() {
+  if (!state.user) { location.hash = '#play'; route(); $('login-panel').scrollIntoView({ block: 'start' }); setMessage('Sign in with Google to open your account, scores and settings.'); return; }
   $('account-identity').textContent = `${state.user.email} · ${state.user.admin ? 'Arcade admin' : 'Player'}`;
   $('account-dialog').showModal(); loadAccount();
-});
+}
+$('account-button').addEventListener('click', openAccount);
+$('tv-account-button').addEventListener('click', openAccount);
 $('close-account').addEventListener('click', () => $('account-dialog').close());
 for (const [id, view] of [['show-activity','activity'],['show-my-scores','my-scores'],['show-settings','settings']]) $(id).addEventListener('click', () => loadAccount(view));
 $('account-admin').addEventListener('click', () => { $('admin-game').value = state.selected; $('account-dialog').close(); });
