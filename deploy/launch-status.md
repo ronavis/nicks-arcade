@@ -106,3 +106,7 @@ Source a7c1c75 / Pages 4deee86 adds a cream square to the right of Scan. Play. P
 Source 3b2e35f / Pages 79d2e62 replaces the faint lower TV control strip with an always-visible upper-right hamburger disclosure. Includes account, pause/play, full screen, rotate and score entry, plus unread count on the closed menu button. Native keyboard disclosure, outside click, Escape and action selection close behavior. Account/score navigation exits element fullscreen first. Local portrait browser verified expanded/collapsed appearance, Pause changing to Play, rotate/unrotate, full-screen toggle UI, signed-out account navigation, score-entry navigation and dismissals. JavaScript checks and production build pass. No backend or score changes.
 
 Public HTML, CSS and JavaScript match the production menu artifact.
+
+## Correct Simpsons artwork — September 29, 2026
+
+Source 28db784 / Pages c6d8cd0 replaces the previously recovered space-themed pack graphic with the 3840x1132 cabinet marquee documented in docs/artwork-sources.md. Existing catalog path preserved; Simpsons-specific image cache version and script version updated. JavaScript checks/build pass. Pages reports built; public HTML, script and image bytes match the production artifact. Live browser selected The Simpsons and confirmed the correct image loads at 3840x1132. No backend or score changes.
