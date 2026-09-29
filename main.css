@@ -17,7 +17,7 @@
 .board-header h1{font-size:calc(var(--u)*12)}
 .hero-marquee{height:calc(var(--u)*23);flex-shrink:0}
 .hero-score{font-size:calc(var(--u)*22);padding-top:calc(var(--u)*1);margin-top:auto}
-.hero-initials{font-size:calc(var(--u)*9)}
+.hero-initials{font-size:calc(var(--u)*10.5);letter-spacing:calc(var(--u)*.6);text-indent:calc(var(--u)*.6)}
 .around-row{padding:calc(var(--u)*1) 0}
 .around-row img{height:calc(var(--u)*11.5)}
 .spotlight>*{flex-shrink:0}
