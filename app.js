@@ -187,7 +187,7 @@ function applyDisplaySettings(settings) {
   rotationSeconds = seconds;
   clearInterval(rotationTimer);
   rotationTimer = setInterval(() => {
-    if (!state.paused && !document.hidden && !matchMedia('(prefers-reduced-motion: reduce)').matches && !document.querySelector('dialog[open]')) advance();
+    if (!state.paused && !celebrationActive && !document.hidden && !matchMedia('(prefers-reduced-motion: reduce)').matches && !document.querySelector('dialog[open]')) advance();
   }, seconds * 1000);
 }
 applyDisplaySettings({ rotationSeconds: 15 });
@@ -255,17 +255,50 @@ $('score-form').addEventListener('submit', async event => {
 });
 $('play-again').addEventListener('click', () => { $('success-panel').hidden = true; $('score-form').hidden = false; $('record-preview').hidden = false; $('score-input').value = ''; state.initials = state.account?.initials || ''; applySavedTaunt(); renderInitials(); clearPhoto(); setMessage(); $('score-input').focus(); });
 
+const observeRecords = ArcadeCelebrations.createObserver();
+const celebrationQueue = [];
+let celebrationTimer, celebrationActive = false, boardRefreshing = false;
+function closeCelebration(clearQueue = false) {
+  clearTimeout(celebrationTimer); celebrationActive = false;
+  $('record-celebration').hidden = true;
+  if (clearQueue) celebrationQueue.length = 0;
+  else showNextCelebration();
+}
+function showNextCelebration() {
+  if (celebrationActive || !celebrationQueue.length) return;
+  if ($('display-panel').hidden || document.hidden || document.querySelector('dialog[open]')) { celebrationQueue.length = 0; return; }
+  const game = celebrationQueue.shift(), record = game.record;
+  celebrationActive = true;
+  $('celebration-heading').textContent = game.kind === 'time' ? 'NEW RECORD TIME!' : 'NEW HIGH SCORE!';
+  $('celebration-art').src = artworkUrl(game); $('celebration-art').alt = `${game.title} marquee`;
+  $('celebration-game').textContent = game.title;
+  $('celebration-score').textContent = record.score;
+  $('celebration-score').classList.toggle('long', record.score.length > 9);
+  $('celebration-initials').textContent = record.initials;
+  $('celebration-taunt').textContent = record.taunt || ''; $('celebration-taunt').hidden = !record.taunt;
+  $('record-celebration').hidden = false;
+  celebrationTimer = setTimeout(() => closeCelebration(), 10000);
+}
+$('dismiss-celebration').addEventListener('click', () => closeCelebration());
+window.addEventListener('hashchange', () => closeCelebration(true));
+document.addEventListener('visibilitychange', () => { if (document.hidden) closeCelebration(true); });
+
 async function refreshBoard() {
+  if (boardRefreshing) return;
+  boardRefreshing = true;
   try {
-    const result = await api('/leaderboard'); state.games = result.games; state.connected = true; applyDisplaySettings(result.displaySettings);
+    const result = await api('/leaderboard');
+    const celebrations = observeRecords(result);
+    if (!$('display-panel').hidden && !document.hidden && !document.querySelector('dialog[open]')) celebrationQueue.push(...celebrations.slice(0, 5 - celebrationQueue.length));
+    state.games = result.games; state.connected = true; applyDisplaySettings(result.displaySettings);
     const adminSelection = $('admin-game').value;
     $('admin-game').replaceChildren(...state.games.map(game => { const option = node('option', '', game.title); option.value = game.id; return option; }));
     $('admin-game').value = adminSelection || state.selected;
-    $('connection').hidden = true; renderBoard(); renderEntry();
+    $('connection').hidden = true; renderBoard(); renderEntry(); showNextCelebration();
   } catch (error) {
     state.connected = false; $('connection').hidden = false;
     $('connection').textContent = state.games.length ? 'Connection lost · showing the last received records. Reconnecting…' : 'The scoreboard service is unavailable. Please check the connection.';
-  }
+  } finally { boardRefreshing = false; }
 }
 setInterval(() => { if (!document.hidden) refreshBoard(); }, 5000);
 window.addEventListener('online', refreshBoard);
