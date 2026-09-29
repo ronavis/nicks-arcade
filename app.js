@@ -412,7 +412,7 @@ async function loadAccount(view = state.accountView) {
           artwork.alt = `${score.gameTitle} marquee`; artwork.loading = 'lazy';
           artwork.addEventListener('error', () => { artwork.hidden = true; }, { once: true });
           card.append(artwork);
-          card.append(node('h4','',score.gameTitle), node('p','',`${score.initials} · ${score.score}`), node('strong','small',score.deleted ? 'Removed by admin' : score.isRecord ? 'Current record holder' : 'Saved in game history'));
+          card.append(node('h4','',score.gameTitle), node('p','my-score-value',`${score.initials} · ${score.score}`), node('strong','small',score.deleted ? 'Removed by admin' : score.isRecord ? 'Current record holder' : 'Saved in game history'));
           card.append(node('p', 'small', score.createdAt ? 'Submitted using your Google account' : 'Imported arcade record · linked to your account'));
           if (score.taunt) card.append(node('blockquote','',score.taunt));
           if (score.hasPhoto && !score.deleted) { const button=node('button','text-button','View my photo'); button.addEventListener('click',()=>showPhoto(score.photoId)); card.append(button); }

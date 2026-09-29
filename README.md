@@ -141,3 +141,5 @@ These links point to the current source branch while the PR remains open:
 ## Artwork and packages
 
 The favicon is a custom transparent pixel-art interpretation of Pitfall Harry. Existing game artwork comes from the repository; four marquees were recovered from Nick’s shared presentation. Game marks belong to their owners. The UI bundles Jersey 10 (OFL), Phosphor icons (MIT) and QRCode (MIT), with notices in `dist/vendor/licenses/`. Backend dependencies, including Pillow and the HEIF decoder, are pinned in `server/requirements.txt`.
+
+Score and initials typography uses locally hosted Doto with round dots; headings retain Jersey 10. Font licenses are included in the published vendor/licenses directory.
