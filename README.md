@@ -37,7 +37,7 @@ Ron is the initial administrator. Admin controls allow score corrections, remova
 
 ## Your account, notifications and friendly rivalry
 
-After Google sign-in, **Account** appears near the top of score entry. It provides:
+**My account** is visible near the top of score entry and in the TV controls. When signed out, it takes you to Google sign-in; when signed in, it opens your account. It provides:
 
 - **Notifications:** recent score submissions, first records and record breaks, with an unread badge and **Mark all read**. A player whose account held the previous record sees **Your record was broken**, the new score, previous record and challenger’s optional taunt.
 - **My scores:** your latest 100 submissions, current-record status, removed-entry status and attached proof photos.
@@ -140,4 +140,4 @@ These links point to the current source branch while the PR remains open:
 
 ## Artwork and packages
 
-Existing game artwork comes from the repository; four marquees were recovered from Nick’s shared presentation. Game marks belong to their owners. The UI bundles Jersey 10 (OFL), Phosphor icons (MIT) and QRCode (MIT), with notices in `dist/vendor/licenses/`. Backend dependencies, including Pillow and the HEIF decoder, are pinned in `server/requirements.txt`.
+The favicon is a custom transparent pixel-art interpretation of Pitfall Harry. Existing game artwork comes from the repository; four marquees were recovered from Nick’s shared presentation. Game marks belong to their owners. The UI bundles Jersey 10 (OFL), Phosphor icons (MIT) and QRCode (MIT), with notices in `dist/vendor/licenses/`. Backend dependencies, including Pillow and the HEIF decoder, are pinned in `server/requirements.txt`.
