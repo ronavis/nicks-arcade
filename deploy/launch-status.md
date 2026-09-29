@@ -236,3 +236,7 @@ Source `1aab8de`, Pages `f71bd676ea0223e62fe4c4d369fb09b2efc676ea`, default READ
 ## Primary score menu action — September 29, 2026
 
 Source `ceefafb`; Pages `d902b1385fdde30f9e98e37736bcedbd4cae726f`. Enter a score is the first menu action for every role, with bold text and a turquoise bordered background. Local browser verified signed-out and admin order, working score-entry navigation, and 390px fit. Syntax/build and diff checks passed; both published files matched the production build. Backend and records unchanged.
+
+## Left-aligned menu — September 29, 2026
+
+Source `00689bf`; Pages `dda0a08e50efba93122c4008c44e2a936b67bc46`. Menu row contents now align left rather than inheriting centered button justification. Shared rule includes admin actions; prominent Enter a score remains first. Build/diff checks and 390px visual review passed. Both changed live assets matched the production build.
