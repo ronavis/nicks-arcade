@@ -1,122 +1,65 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nick's Arcade High Scores</title>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <link rel="stylesheet" href="main.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#13d5df">
+  <meta name="description" content="Nick’s Arcade high scores. Play, scan, and put your initials on the board.">
+  <title>Nick’s Arcade · High Scores</title>
+  <link rel="icon" href="favicon.ico">
+  <link rel="preload" href="vendor/jersey10.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="vendor/icons/style.css">
+  <link rel="stylesheet" href="main.css">
+  <script src="config.js" defer></script>
+  <script src="vendor/qr.js" defer></script>
+  <script src="app.js" defer></script>
 </head>
 <body>
-    <div class="crt-overlay"></div>
-    
-    <!-- Header stays fixed on top -->
-    <header class="neon-header">
-        <h1 class="flicker">NICK'S ARCADE</h1>
-        <h2>HIGH SCORES</h2>
-        <div class="header-controls">
-            <div class="settings-btn" id="settingsBtn" title="Admin Settings">⚙️</div>
+  <div id="preview-note" class="preview-note" hidden>LOCAL PREVIEW <span>Test scores stay here. Google sign-in is not being simulated.</span></div>
+  <div id="connection" class="connection" role="status" hidden></div>
+  <main id="experience" class="experience">
+    <section id="display-panel" class="display-panel" aria-label="Arcade high score display">
+      <div id="board" class="board">
+        <header class="board-header"><h1>NICK’S ARCADE</h1><p>HIGH SCORES</p></header>
+        <div class="board-paper">
+          <section class="spotlight" aria-label="Featured game">
+            <img id="hero-marquee" class="hero-marquee" alt="" width="700" height="210">
+            <h2 id="hero-title" class="game-name">GALAGA</h2>
+            <p id="record-label" class="rule-title red">RECORD TO BEAT</p>
+            <div id="hero-score" class="hero-score">—</div>
+            <div id="hero-initials" class="hero-initials">—</div>
+            <div class="rotation"><button id="previous-game" class="plain icon-button" aria-label="Previous featured game"><i class="ph-bold ph-caret-left" aria-hidden="true"></i></button><div id="page-dots" class="page-dots"></div><button id="next-game" class="plain icon-button" aria-label="Next featured game"><i class="ph-bold ph-caret-right" aria-hidden="true"></i></button></div>
+          </section>
+          <section class="around"><h2 class="rule-title">AROUND THE ARCADE</h2><div id="around-list" class="around-list"></div></section>
         </div>
-    </header>
-
-
-    <!-- Main crawl area -->
-    <div class="crawl-container">
-        <main id="arcade-list" class="list">
-            <!-- Game rows injected here -->
-        </main>
-    </div>
-
-    <!-- Login Modal (Admin) -->
-    <div id="admin-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn">&times;</span>
-            <div id="login-view">
-                <h2>Google Sign-In</h2>
-                <p>Please log in with your Google account.</p>
-                <div id="g_id_onload"
-                     data-client_id="569822322277-ng39tk1vcecgjfes85bs16umb5k47mc7.apps.googleusercontent.com"
-                     data-context="signin"
-                     data-ux_mode="popup"
-                     data-callback="handleCredentialResponse"
-                     data-auto_prompt="false">
-                </div>
-                <div class="g_id_signin"
-                     data-type="standard"
-                     data-shape="rectangular"
-                     data-theme="outline"
-                     data-text="signin_with"
-                     data-size="large"
-                     data-logo_alignment="left">
-                </div>
-            </div>
-            <div id="admin-view" style="display: none;">
-                <div class="dashboard-tabs">
-                    <button class="tab-btn active" id="tabScores">Update Scores</button>
-                    <button class="tab-btn" id="tabAdmins">Manage Admins</button>
-                    <button class="tab-btn" id="tabSettings">UI Settings</button>
-                </div>
-                
-                <div id="scoresPanel" class="tab-panel active">
-                    <h2>ENTER NEW SCORE</h2>
-                    <input type="text" id="game-search" placeholder="Search Game...">
-                    <div id="search-results"></div>
-                    <input type="number" id="new-score" placeholder="Score">
-                    
-                    <div style="margin-top: 1rem; color: #0ff;">Enter Initials</div>
-                    <div id="arcade-initials-display">
-                        <span class="initial-char active" id="char1">_</span>
-                        <span class="initial-char" id="char2">_</span>
-                        <span class="initial-char" id="char3">_</span>
-                    </div>
-                    <div id="arcade-keyboard"></div>
-                    <input type="hidden" id="new-initials">
-                    <label class="custom-file-upload">
-                        <input type="file" id="new-proof" accept="image/*" capture="environment">
-                        📸 Upload Photo Evidence (Auto-Detects Game & Score)
-                    </label>
-                    <div id="ocr-status" style="color: var(--neon-yellow); margin-top: 10px; font-size: 0.8rem; display: none;"></div>
-                    <button id="submit-score" class="neon-btn">SUBMIT</button>
-                    <p id="adminMessage"></p>
-                </div>
-
-                <div id="adminsPanel" class="tab-panel" style="display: none;">
-                    <h2>MANAGE ADMINS</h2>
-                    <ul id="adminList"></ul>
-                    <input type="email" id="newAdminEmail" placeholder="admin@gmail.com">
-                    <button id="submitAdmin" class="neon-btn" style="margin-top: 10px;">ADD ADMIN</button>
-                    <p id="adminManageMessage"></p>
-                </div>
-
-                <div id="settingsPanel" class="tab-panel" style="display: none; text-align: left;">
-                    <h2>CUSTOMIZE UI</h2>
-                    <div style="margin-bottom: 20px;">
-                        <label style="color:#0ff; font-size:1.2rem;">Marquee Width (<span id="marqueeSizeDisplay">700</span>px):</label><br>
-                        <input type="range" id="marqueeSizeSlider" min="300" max="1000" value="700" style="width: 100%;">
-                    </div>
-                    <div style="margin-bottom: 20px;">
-                        <label class="custom-file-upload" style="border-color: var(--neon-pink); color: var(--neon-pink);">
-                            <input type="file" id="fontUpload" accept=".ttf,.woff,.woff2">
-                            🅰️ Upload Custom Font (.ttf, .woff)
-                        </label>
-                        <br>
-                        <button id="resetFontBtn" class="neon-btn" style="padding: 0.5rem 1rem; font-size:0.8rem; margin-top:15px; border-color:var(--neon-pink); color:var(--neon-pink);">Reset Font</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Photo Viewer Modal -->
-    <div id="photo-modal" class="modal">
-        <div class="modal-content" style="max-width: 90%; max-height: 90%; display:flex; justify-content:center; align-items:center; padding: 10px;">
-            <span class="close-btn" id="closePhotoBtn">&times;</span>
-            <img id="photo-viewer-img" src="" style="max-width:100%; max-height:80vh; object-fit:contain; border:2px solid #0ff; border-radius:5px;">
-        </div>
-    </div>
-
-    <script src="app.js"></script>
+        <a id="qr-link" class="qr-footer" href="#play"><div class="qr-box"><canvas id="qr-code" aria-label="QR code for entering a score"></canvas></div><div><strong>Scan. Play. Post.</strong><span>Sign in with Google to enter a score.</span></div></a>
+      </div>
+      <div class="display-tools"><button id="pause" class="text-button"><i class="ph-bold ph-pause" aria-hidden="true"></i> Pause</button><button id="fullscreen" class="text-button"><i class="ph-bold ph-corners-out" aria-hidden="true"></i> Full screen</button><button id="rotate" class="text-button"><i class="ph-bold ph-arrows-clockwise" aria-hidden="true"></i> Rotate</button><a href="#play" class="text-button">Enter a score <i class="ph-bold ph-arrow-up-right" aria-hidden="true"></i></a></div>
+    </section>
+    <section id="phone-panel" class="phone-panel" aria-label="Enter a high score" hidden>
+      <header class="phone-header"><a href="#tv" class="wordmark">NICK’S ARCADE</a><div class="account-line"><span id="account-label">Sign in to join the board</span><button id="signout" class="text-button" hidden>Sign out</button></div></header>
+      <div id="login-panel" class="login-panel"><h1>YOUR TURN.</h1><p>Beat the record. Put your initials on the board.</p><div id="google-button"></div><p id="login-help" class="small">Loading Google sign-in…</p><div id="demo-login" class="demo-login" hidden><p>Try the local preview with a test account.</p><button id="demo-player" class="secondary">Try score entry</button><button id="demo-admin" class="text-button">Try admin controls</button></div></div>
+      <div id="entry-content">
+        <div class="selected-game"><img id="entry-marquee" alt="" width="700" height="210"><h1 id="entry-title" class="game-name">GALAGA</h1><button id="change-game" class="change-game">Change game <i class="ph-bold ph-caret-right" aria-hidden="true"></i></button></div>
+        <div id="record-preview" class="record-preview"><h2 class="rule-title">YOUR NEXT RECORD</h2><p id="entry-record">—</p></div>
+        <form id="score-form">
+          <fieldset id="entry-fields" disabled>
+            <label id="score-label" for="score-input">Your score</label><input id="score-input" name="score" type="text" inputmode="numeric" autocomplete="off" maxlength="16" placeholder="0" required aria-describedby="score-hint"><span id="score-hint" class="small"></span>
+            <fieldset class="initials-field"><legend>ENTER YOUR INITIALS</legend><div id="initials-slots" class="initials-slots" aria-label="Three initials" aria-live="polite"><span class="active">_</span><span>_</span><span>_</span></div><div id="alphabet" class="alphabet" aria-label="Arcade alphabet keypad"></div></fieldset>
+            <label for="proof" id="photo-label" class="photo-label"><i class="ph-bold ph-camera" aria-hidden="true"></i><span id="photo-copy">Add photo <small>(optional)</small></span></label><input id="proof" class="visually-hidden" type="file" accept="image/jpeg,image/png,image/webp"><div id="photo-preview" class="photo-preview" hidden><img id="proof-preview" alt="Selected score proof"><button id="remove-photo" type="button" class="text-button">Remove photo</button></div>
+            <button id="submit-score" type="submit" class="primary">Post score</button>
+          </fieldset>
+          <p id="form-message" class="form-message" role="status" aria-live="polite"></p>
+        </form>
+        <div id="success-panel" class="success-panel" hidden><i class="ph-bold ph-trophy" aria-hidden="true"></i><h2 id="success-title">SCORE POSTED!</h2><p id="success-detail"></p><button id="play-again" class="primary">Enter another score</button><a href="#tv" class="text-button">See the board <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a></div>
+      </div>
+      <footer class="phone-footer"><a href="#tv">View scoreboard</a><button id="admin-link" class="text-button" hidden>Manage scores</button><span id="privacy-note">Photos are only visible to signed-in players.</span></footer>
+    </section>
+    <section id="admin-panel" class="admin-panel" hidden><header><a href="#play" class="text-button"><i class="ph-bold ph-arrow-left" aria-hidden="true"></i> Back to arcade</a><h1>Manage scores</h1><p>Correct a record or remove a submission. The board updates automatically.</p></header><label for="admin-game">Game</label><select id="admin-game"></select><p id="admin-message" role="status"></p><div id="admin-list"></div><button id="export-records" class="secondary"><i class="ph-bold ph-download-simple" aria-hidden="true"></i> Export score history</button></section>
+  </main>
+  <dialog id="game-picker"><div class="dialog-heading"><h2>CHOOSE YOUR GAME</h2><button class="plain icon-button" id="close-picker" aria-label="Close game picker"><i class="ph-bold ph-x" aria-hidden="true"></i></button></div><label class="visually-hidden" for="game-search">Search arcade games</label><input id="game-search" type="search" placeholder="Search the arcade…" autocomplete="off"><div id="game-options" class="game-options"></div></dialog>
+  <dialog id="photo-dialog"><div class="dialog-heading"><h2>SCORE PROOF</h2><button class="plain icon-button" id="close-photo" aria-label="Close proof photo"><i class="ph-bold ph-x" aria-hidden="true"></i></button></div><img id="view-proof" alt="Photo submitted as score proof"></dialog>
+  <dialog id="edit-dialog"><form id="edit-form"><div class="dialog-heading"><h2 id="edit-heading">CORRECT SCORE</h2><button type="button" id="close-edit" class="plain icon-button" aria-label="Cancel"><i class="ph-bold ph-x" aria-hidden="true"></i></button></div><p id="edit-summary"></p><div id="edit-fields"><label for="edit-score">Score</label><input id="edit-score" required><label for="edit-initials">Initials</label><input id="edit-initials" maxlength="3" pattern="[A-Za-z]{3}" required></div><p id="edit-message" role="status"></p><button id="save-edit" class="primary" type="submit">Save correction</button></form></dialog>
+  <noscript>This arcade needs JavaScript to show records and enter scores.</noscript>
 </body>
 </html>
