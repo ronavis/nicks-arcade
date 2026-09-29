@@ -197,3 +197,10 @@ User-authorized private configuration update preserves Ron and adds Nick's previ
 - Featured submission age/date, honest unknown-date labels for legacy records, and My scores timestamps. Empty games explicitly say no saved score and offer admin Enter the first score.
 - Live read-only investigation: 32 imported current winners and Simpsons with no record. Only two non-imported submissions exist, both earlier TST entries already removed. Zero invalid active submissions. User's game identification remains pending, so the phone report is not conclusively explained. No live data mutations.
 - Eight frontend tests/check/build pass; local browser verified dated record and empty Simpsons admin action selecting score entry. Public frontend bytes verified after Pages build.
+
+
+## Mobile date/carousel spacing — 2026-09-29
+
+- Source `cb84bd3`; Pages `332bac530d8d6593178d0036f40a03733b5ff9a0`.
+- Phone-only spacing adjustment (max-width 500px): less score line-height and date/carousel padding, same font sizes. Desktop rules unchanged.
+- Reproduced overflow before fix; checked 320px and 390px afterward with carousel bottom at divider boundary and controls visually above it. Checks/build pass; live HTML/CSS match build.
