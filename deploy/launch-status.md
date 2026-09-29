@@ -70,3 +70,11 @@ Featured record initials are approximately 17% larger, with positive letter spac
 - 57 backend tests passed, including independent-client readback, application restart persistence, admin-only writes and range/type validation. Build/syntax checks passed. Browser settings saved 5 seconds; the board advanced automatically and remained unchanged when paused across another interval.
 - Backend b17f912 deployed after backup before-timing-b17f912. Scores, profiles, activity and metadata compared unchanged with the backup. Public API returns rotationSeconds=15 and rejects unsigned timing updates with 401. Mission Control PID remained unchanged.
 - Pages 70cfe892059a463fe1cd860e9d32cf7d8d295a98 built successfully; published HTML/JS match the tested release. README updated on the default branch. Saved settings screenshot uses the explicitly labeled local preview; the live default was not changed for the test.
+
+## Legacy ownership — September 29, 2026
+
+Source 368cc46 adds a private server-configured initials crosswalk, one-time binding to verified Google subjects, audited imported-score links and clear My scores origin labels. Backend release /opt/nicks-arcade/releases/368cc46 is active. Backup /var/backups/nicks-arcade/before-legacy-368cc46 includes the database, referenced photos and prior private service environment.
+
+62 backend tests pass; JavaScript checks and production build pass. Live readback confirms seven RON records linked through an authenticated request. Every pre-existing score value, initials, photo reference, timestamp and removed state matches the backup; database integrity is okay. Nick's 13 NIC records and Martin's three MAR records await their sign-in; aliases NJW and RCA have no imported rows currently. Their identity mappings are kept only in the private service environment, not in this repository. Mission Control PID 2920079 remained unchanged. Historical activity is not reassigned.
+
+Pages 064d6f8 reports built, and public app.js/index.html bytes match the tested production build. Default-branch README updated separately in 59169ae.
