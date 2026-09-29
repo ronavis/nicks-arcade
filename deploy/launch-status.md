@@ -88,3 +88,11 @@ Production cleanup: backed up SQLite and photos at /var/backups/nicks-arcade/bef
 Pages commit c6462ac; default-branch README 6eee784.
 
 Public app.js, main.css and index.html match the tested production artifact after Pages publication.
+
+## Saved taunt settings — September 29, 2026
+
+Source/backend 93fbb63 adds per-account saved taunt text and an enable/disable switch. Automatic taunts default off and are applied transactionally only when beating another player's existing record; ties, lower scores, first records and own-record improvements do not trigger them. Manual edits/clears remain supported. Retry fingerprints preserve idempotence even if preferences change after submission.
+
+65 backend tests pass; JavaScript check/build pass. Normal-player mobile UI validation confirmed saving enabled text and retaining disabled status/text after reload. Backup before-taunt-93fbb63 completed before backend activation; live API is healthy, database integrity passes, pre-existing score/profile columns exactly match the backup. Mission Control PID 2920079 unchanged. Pages c1e2518; default README 4853382.
+
+Published app.js, main.css and index.html match the tested production artifact.
