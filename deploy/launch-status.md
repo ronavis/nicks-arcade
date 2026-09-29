@@ -116,3 +116,7 @@ Source 28db784 / Pages c6d8cd0 replaces the previously recovered space-themed pa
 Source 169ba29 / Pages c4be7e6 increases fair-play contrast with a dark panel, cream border and bold body text, larger turquoise heading and red divider. Shortened middle copy to “Earn it at Nick’s arcade.” QR footprint retained; local portrait browser confirms no text overflow. Build and diff checks pass. No service or score changes.
 
 Live HTML and CSS match the tested build after publication.
+
+## Scout's-honor badge — September 29, 2026
+
+Source 02b7ee7 / Pages 21f6d14 adds a generated transparent pixel-art three-finger salute alongside stacked PLAY FAIR lettering. Message reads “Earn it at Nick’s arcade. Brag honestly.” Square footprint preserved. Local portrait browser confirms image decode and no overflow; JS/build checks pass. Public HTML/CSS/image bytes match tested production build. No backend or score changes.
