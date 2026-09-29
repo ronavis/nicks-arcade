@@ -7,3 +7,11 @@ Replaced the space-themed pack image on September 29, 2026 with the cabinet marq
 Source image: https://images.launchbox-app.com/ac673f59-67e8-4271-9cd5-a41e74b2e17e.jpg
 
 Converted to PNG for the existing catalog path without changing dimensions or artwork. Game marks/artwork belong to their respective owners.
+
+## NBA Jam and unclaimed games
+
+NBA Jam uses the original 3840 × 1138 cabinet marquee from [LaunchBox Games Database](https://gamesdb.launchbox-app.com/games/images/10554-nba-jam).
+
+Source image: https://images.launchbox-app.com/f33928fb-9b67-4285-9cf6-8e17d609c6b4.jpg
+
+Stored unchanged as `images/cabinet-marquees/nbajam.jpg`. Artwork belongs to its respective owners. The build combines the existing curated game images with `data/artwork.json`; `artwork.js` matches titles and explicit aliases only for games that lack assigned artwork. This applies to unclaimed games and scored games alike. Unmatched editions retain the neutral fallback; the old space-themed packs are not used as automatic matches.
