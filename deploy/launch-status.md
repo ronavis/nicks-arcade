@@ -240,3 +240,7 @@ Source `ceefafb`; Pages `d902b1385fdde30f9e98e37736bcedbd4cae726f`. Enter a scor
 ## Left-aligned menu — September 29, 2026
 
 Source `00689bf`; Pages `dda0a08e50efba93122c4008c44e2a936b67bc46`. Menu row contents now align left rather than inheriting centered button justification. Shared rule includes admin actions; prominent Enter a score remains first. Build/diff checks and 390px visual review passed. Both changed live assets matched the production build.
+
+## Menu layering — September 29, 2026
+
+Source `17c7d8b`; Pages `3b6567fa478144186b8ca061600349ec1fd3e702`. Isolated the board at z-index 0 beneath the menu, isolated the menu, made native details content overflow explicit, and removed inherited opacity transition. Mobile and rotated browser checks found every visible menu action uncovered at its center after leaderboard updates. Intermittent user report was not reproduced exactly; fullscreen automation capture was inconclusive. Build/diff checks pass and published HTML/CSS match. No backend/record changes.
