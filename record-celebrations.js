@@ -24,7 +24,7 @@ const ArcadeCelebrations = (() => {
   }
   function recordAge(record, now = Date.now()) {
     if (!record) return 'No score posted yet';
-    if (!record.createdAt) return 'Legacy record · date unknown';
+    if (!record.createdAt) return '';
     const days = Math.max(0, Math.floor((now - record.createdAt * 1000) / 86400000));
     const date = new Date(record.createdAt * 1000).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'});
     if (record.revision > 1) return `Submitted ${date} · corrected`;
