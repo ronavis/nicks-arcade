@@ -141,3 +141,10 @@ User-authorized private configuration update preserves Ron and adds Nick's previ
 - Locally hosted Doto variable font, weight 800 and round dots, for TV scores/initials, record preview, score entry, initial slots, My scores values, and admin score values. Headings retain Jersey 10. Font license bundled.
 - JavaScript check, production build, and whitespace checks passed. Browser inspection covered portrait TV and mobile; seven-digit record, twelve-digit entry, and RON keypad entry fit with no page overflow. No score submitted.
 - Published HTML, JS, CSS, font, and font license match build bytes. Backend unchanged.
+
+
+## Thicker round dots — 2026-09-29
+
+- Source `8cbc838`; Pages `e68d03271668a403179760bb9682a5571c1939f3`.
+- Increased score font weight to 900 and added a proportional 0.016em outline, preserving round dots. CSS cache version updated.
+- Build/check passed; TV and mobile inspected with local preview records. Published HTML and CSS match the build. No production data changed.
