@@ -189,3 +189,11 @@ User-authorized private configuration update preserves Ron and adds Nick's previ
 - 67 backend tests, seven celebration tests, JS/build checks pass. Local browser verified featured +8,800 badge, its detail toggle, and automatic celebration +5,000. No production scores submitted or modified.
 - Backup completed at /var/backups/nicks-arcade/pre-record-margin-20260929. Backend changed only leaderboard readback; no schema migration. Current release points to 850bed6, health reports production/ok, live 33-game response has improvement fields. Mission Control PID remained 2920079.
 - Initial oversized archive transfer canceled before release creation; scoped service package deployed instead. Existing service resources retained. Pages build requested explicitly; public HTML/CSS/JS match production build.
+
+
+## Record dates and empty-game guidance — 2026-09-29
+
+- Source `e64f66b`; Pages `a9239c6ac6efee513a561fcacf3418c379af2fb0`.
+- Featured submission age/date, honest unknown-date labels for legacy records, and My scores timestamps. Empty games explicitly say no saved score and offer admin Enter the first score.
+- Live read-only investigation: 32 imported current winners and Simpsons with no record. Only two non-imported submissions exist, both earlier TST entries already removed. Zero invalid active submissions. User's game identification remains pending, so the phone report is not conclusively explained. No live data mutations.
+- Eight frontend tests/check/build pass; local browser verified dated record and empty Simpsons admin action selecting score entry. Public frontend bytes verified after Pages build.
