@@ -39,8 +39,8 @@ Ron is the initial administrator. Admin controls allow score corrections, remova
 
 **My account** is visible near the top of score entry and in the TV controls. When signed out, it takes you to Google sign-in; when signed in, it opens your account. It provides:
 
-- **Notifications:** recent score submissions, first records and record breaks, with an unread badge and **Mark all read**. A player whose account held the previous record sees **Your record was broken**, the new score, previous record and challenger’s optional taunt.
-- **My scores:** your latest 100 submissions and linked imported records, current-record status, removed-entry status and attached proof photos.
+- **Notifications:** recent score submissions, first records and record breaks, with a red unread badge on both phone and TV **My account** buttons, and **Mark all read**. A player whose account held the previous record sees **Your record was broken**, the new score, previous record and challenger’s optional taunt.
+- **My scores:** your recent submissions and linked imported records with game artwork, current-record status and attached proof photos. Removed entries are hidden here and retained in admin history.
 - **Settings:** save three default initials for fresh entries. Admins can also save the shared TV rotation interval (5–120 seconds). Open displays receive timing changes within five seconds, and the setting survives restarts. Preferences and notification read status follow your Google account across devices.
 - **Manage scores:** a prominent shortcut for admins. Corrections can also edit or clear a taunt.
 
