@@ -6,13 +6,15 @@
   <meta name="theme-color" content="#13d5df">
   <meta name="description" content="Nick’s Arcade high scores. Play, scan, and put your initials on the board.">
   <title>Nick’s Arcade · High Scores</title>
-  <link rel="icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-harry.png?v=1">
+  <link rel="shortcut icon" href="favicon.ico?v=harry-1">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=harry-1">
   <link rel="preload" href="vendor/jersey10.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="vendor/icons/style.css">
-  <link rel="stylesheet" href="main.css?v=rotation-1">
+  <link rel="stylesheet" href="main.css?v=harry-account-1">
   <script src="config.js" defer></script>
   <script src="vendor/qr.js" defer></script>
-  <script src="app.js?v=rotation-1" defer></script>
+  <script src="app.js?v=harry-account-1" defer></script>
 </head>
 <body>
   <div id="preview-note" class="preview-note" hidden>LOCAL PREVIEW <span>Test scores stay here. Google sign-in is not being simulated.</span></div>
@@ -34,10 +36,10 @@
         </div>
         <a id="qr-link" class="qr-footer" href="#play"><div class="qr-box"><canvas id="qr-code" aria-label="QR code for entering a score"></canvas></div><div><strong>Scan. Play. Post.</strong><span>Sign in with Google to enter a score.</span></div></a>
       </div>
-      <div class="display-tools"><button id="pause" class="text-button"><i class="ph-bold ph-pause" aria-hidden="true"></i> Pause</button><button id="fullscreen" class="text-button"><i class="ph-bold ph-corners-out" aria-hidden="true"></i> Full screen</button><button id="rotate" class="text-button"><i class="ph-bold ph-arrows-clockwise" aria-hidden="true"></i> Rotate</button><a href="#play" class="text-button">Enter a score <i class="ph-bold ph-arrow-up-right" aria-hidden="true"></i></a></div>
+      <div class="display-tools"><button id="tv-account-button" class="text-button">My account</button><button id="pause" class="text-button"><i class="ph-bold ph-pause" aria-hidden="true"></i> Pause</button><button id="fullscreen" class="text-button"><i class="ph-bold ph-corners-out" aria-hidden="true"></i> Full screen</button><button id="rotate" class="text-button"><i class="ph-bold ph-arrows-clockwise" aria-hidden="true"></i> Rotate</button><a href="#play" class="text-button">Enter a score <i class="ph-bold ph-arrow-up-right" aria-hidden="true"></i></a></div>
     </section>
     <section id="phone-panel" class="phone-panel" aria-label="Enter a high score" hidden>
-      <header class="phone-header"><a href="#tv" class="wordmark">NICK’S ARCADE</a><div class="account-line"><span id="account-label">Sign in to join the board</span><button id="account-button" class="secondary" type="button" hidden>Account <span id="unread-count" hidden></span></button></div></header>
+      <header class="phone-header"><a href="#tv" class="wordmark">NICK’S ARCADE</a><div class="account-line"><span id="account-label">Sign in to join the board</span><button id="account-button" class="secondary" type="button">My account <span id="unread-count" hidden></span></button></div></header>
       <div id="login-panel" class="login-panel"><h1>YOUR TURN.</h1><p>Beat the record. Put your initials on the board.</p><div id="google-button"></div><p id="login-help" class="small">Loading Google sign-in…</p><div id="demo-login" class="demo-login" hidden><p>Try the local preview with a test account.</p><button id="demo-player" class="secondary">Try score entry</button><button id="demo-admin" class="text-button">Try admin controls</button></div></div>
       <div id="entry-content">
         <div class="selected-game"><img id="entry-marquee" alt="" width="700" height="210"><h1 id="entry-title" class="game-name">GALAGA</h1><button id="change-game" class="change-game">Change game <i class="ph-bold ph-caret-right" aria-hidden="true"></i></button></div>

@@ -3,7 +3,7 @@ import { build } from 'esbuild';
 const out = new URL('../dist/', import.meta.url);
 await rm(out, { recursive: true, force: true });
 await mkdir(new URL('vendor/', out), { recursive: true });
-for (const name of ['index.html', 'main.css', 'app.js', 'config.js', 'favicon.ico']) {
+for (const name of ['index.html', 'main.css', 'app.js', 'config.js', 'favicon.ico', 'favicon-harry.png', 'apple-touch-icon.png']) {
   await copyFile(new URL('../' + name, import.meta.url), new URL(name, out));
 }
 if (process.env.ARCADE_API_BASE) {
