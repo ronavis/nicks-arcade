@@ -49,10 +49,11 @@ function renderBoard() {
   $('hero-marquee').src = artworkUrl(game);
   $('hero-marquee').alt = `${game.title} marquee`;
   $('hero-title').textContent = game.title;
-  $('record-label').textContent = game.kind === 'time' ? 'TIME TO BEAT' : 'RECORD TO BEAT';
+  $('record-label').textContent = !game.record ? 'SET THE FIRST RECORD' : game.kind === 'time' ? 'TIME TO BEAT' : 'RECORD TO BEAT';
+  $('record-age').textContent = ArcadeCelebrations.recordAge(game.record);
   $('hero-score').textContent = scoreText(game);
   $('hero-score').className = `hero-score${scoreText(game).length > 10 ? ' very-long' : scoreText(game).length > 7 ? ' long' : ''}`;
-  $('hero-initials').textContent = initialsText(game); renderImprovement('hero-improvement', game.record);
+  $('hero-initials').textContent = game.record ? initialsText(game) : '—'; renderImprovement('hero-improvement', game.record);
   const index = state.games.indexOf(game);
   const around = game.id === 'galaga' ? ['donkeykong', 'mspacman', 'tetris'].map(gameById) : [1, 2, 3].map(offset => state.games[(index + offset) % state.games.length]);
   $('around-list').replaceChildren(...around.filter(Boolean).map(other => {
@@ -351,7 +352,20 @@ function renderAdminScores() {
     return row;
   }));
   $('admin-message').textContent = `${scores.length} shown · ${adminScores.filter(s=>!s.deleted).length} active · ${adminScores.filter(s=>s.deleted).length} removed (latest 200)`;
-  if (!scores.length) $('admin-list').append(node('p','admin-empty',query ? 'No matching submissions. Try different initials, an email or a score.' : 'No active submissions to manage. You can include removed entries above.'));
+  if (!scores.length) {
+    const empty = node('div', 'admin-empty');
+    empty.append(node('p', '', query ? 'No matching submissions. Try different initials, an email or a score.' : adminScores.length ? 'No active scores. Tick Show removed entries to view previously removed submissions.' : 'This game has no saved score yet. The blank scoreboard is an empty game, not an incomplete submission. There is no score to edit or remove.'));
+    if (!query && !game?.record) {
+      const add = node('button', 'primary', 'Enter the first score');
+      add.addEventListener('click', () => {
+        state.pendingGame = null; state.selected = game.id; state.requestId = crypto.randomUUID();
+        $('score-input').value = ''; $('score-form').hidden = false; $('record-preview').hidden = false; $('success-panel').hidden = true;
+        clearPhoto(); applySavedTaunt(); renderEntry(); setMessage('Enter the score and three initials, then choose Post score to save it.'); location.hash = '#play';
+      });
+      empty.append(add);
+    }
+    $('admin-list').append(empty);
+  }
 }
 
 async function loadAdmin() {
@@ -458,7 +472,7 @@ async function loadAccount(view = state.accountView) {
           artwork.addEventListener('error', () => { artwork.hidden = true; }, { once: true });
           card.append(artwork);
           card.append(node('h4','',score.gameTitle), node('p','my-score-value',`${score.initials} · ${score.score}`), node('strong','small',score.deleted ? 'Removed by admin' : score.isRecord ? 'Current record holder' : 'Saved in game history'));
-          card.append(node('p', 'small', score.createdAt ? 'Submitted using your Google account' : 'Imported arcade record · linked to your account'));
+          card.append(node('p', 'small', score.createdAt ? `Submitted ${new Date(score.createdAt * 1000).toLocaleString()}` : 'Imported arcade record · date unknown'));
           if (score.taunt) card.append(node('blockquote','',score.taunt));
           if (score.hasPhoto && !score.deleted) { const button=node('button','text-button','View my photo'); button.addEventListener('click',()=>showPhoto(score.photoId)); card.append(button); }
           return card;

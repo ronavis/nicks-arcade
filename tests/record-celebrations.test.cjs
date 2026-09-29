@@ -10,3 +10,12 @@ test('admin correction, old fallback, tie and removed winner do not celebrate',(
 test('first record after baseline celebrates',()=>{const o=createObserver();o(snapshot({id:'galaga',record:null}));assert.equal(o(snapshot(game('a','100'),101)).length,1)});
 test('reconnection does not celebrate stale wins',()=>{const o=createObserver();o(snapshot(game('a','100')));assert.equal(o(snapshot(game('b','200',{createdAt:101}),200)).length,0)});
 test('numeric comparison handles commas',()=>{const o=createObserver();o(snapshot(game('a','900')));assert.equal(o(snapshot(game('b','1,000'),101)).length,1)});
+const {recordAge} = require('../record-celebrations.js');
+test('record dates distinguish missing dates, today, elapsed days and corrections',()=>{
+ assert.equal(recordAge(null),'No score posted yet');
+ assert.equal(recordAge({createdAt:null}),'Legacy record · date unknown');
+ assert.match(recordAge({createdAt:100,revision:1},100000),/^Set today/);
+ assert.match(recordAge({createdAt:100,revision:1},100000+86400000),/^Set 1 day ago/);
+ assert.match(recordAge({createdAt:100,revision:1},100000+3*86400000),/^Set 3 days ago/);
+ assert.match(recordAge({createdAt:100,revision:2},100000),/^Submitted .*corrected$/);
+});
