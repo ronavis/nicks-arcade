@@ -15,10 +15,15 @@ Deployment in progress. Do not equate published files with complete opening-nigh
 - Existing Google project and client inspected through the signed-in owner's Console. Authorized JavaScript origin already `https://ronavis.github.io`; no client credentials or origins changed. Consent audience is Testing. Google's basic Sign in with Google exception means a Testing label alone does not establish an allowlist blocker: https://support.google.com/cloud/answer/15549945?hl=en
 - Local build/syntax checks and all 37 backend tests passed before publication.
 
+- Real Google sign-in as Ron succeeded with no OAuth setting changes. The browser showed signed-in state and admin controls.
+- Submitted disposable 41,511 / TST through the public website with an 800×500 test photo. The public scoreboard loaded it; the admin retrieved the saved photo.
+- Restarted the production service with the submission present: score and proof reference survived. A second off-host backup restored both the real submission and readable photo.
+- Corrected the test to 41,512 using the live admin UI, then removed it. The independent public TV view automatically reverted to 41,510 / JJH without a reload. Test removal is retained in audit history.
+- Fixed optional rotation scaling: measure the unrotated board width and rotate within a stable viewport. At 960×540, the rotated board bounds are exactly 960×540 and its layout width remains 540; screenshot inspected without overlap.
+
 ## Still pending
 
-- Browser validation of real Google sign-in (Chrome temporarily blocked automation by an open extension UI).
-- Real authenticated public submission with photo, cross-client update, admin correction/removal and non-admin denial.
+- A second real Google account for live non-admin verification (automated permission-denial tests pass).
 - Actual phone QR scan and Nick's TV/browser/fullscreen/rotation test.
 - Confirm source game naming ambiguities and interpretation of VS. Excitebike's time; identify any real scores entered only in the old site's local browser storage.
 

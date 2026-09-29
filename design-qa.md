@@ -35,3 +35,7 @@ Retained turquoise/cream, solid black arcade typography, red record accent, one 
 ## Remaining production/device checks
 
 Real Google sign-in/authorized origin/consent, public API through nginx, physical QR scan, live multi-device submission and restart, Nick's physical TV browser/fullscreen/rotation, off-host scheduled backups and ambiguous source game mappings. Fullscreen and rotation controls are implemented but not certified on the target hardware. No live deploy was performed.
+
+## Production follow-up
+
+Real Google sign-in, public score/photo submission, admin proof retrieval, correction/removal and automatic fallback passed on 2026-09-29. Production score and photo were included in a restored off-host backup. A rotation sizing bug discovered during launch was corrected and visually verified at 960×540. Physical phone/TV acceptance remains pending; see deploy/launch-status.md.

@@ -155,7 +155,7 @@ function route() {
   }
   resizeBoard();
 }
-function resizeBoard() { const width = $('board').getBoundingClientRect().width; if (width > 0) $('board').style.setProperty('--u', `${width / 100}px`); }
+function resizeBoard() { const width = $('board').clientWidth; if (width > 0) $('board').style.setProperty('--u', `${width / 100}px`); }
 new ResizeObserver(resizeBoard).observe($('board'));
 window.addEventListener('hashchange', route);
 window.addEventListener('resize', resizeBoard);
