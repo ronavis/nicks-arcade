@@ -172,3 +172,10 @@ User-authorized private configuration update preserves Ron and adds Nick's previ
 - Public winner snapshots skip first load, repeated winners, corrected/old/fallback records, and stale reconnection events. Same-game intermediate wins between polls are not replayed. Up to five queued winners.
 - Seven detection regression tests, JS checks, and build pass. Local API submission triggered the real browser takeover; screenshot captured; automatic dismissal and no replay on refresh verified. No live records changed.
 - GitHub Pages built; four published frontend files match build bytes. Backend unchanged.
+
+
+## Matching dot-font headings — 2026-09-29
+
+- Source `720a397`; Pages `012c584c05d42fdeb4d4b8eae131d471e1b167ff`.
+- TV arcade title/High Scores subtitle and mobile wordmark now use Bitcount Grid Double. Header line heights retained.
+- Checks/build passed; TV/mobile inspected; live HTML/CSS verified against build. Celebration still dismisses automatically after ten seconds. Pages build explicitly requested after push did not trigger it.
