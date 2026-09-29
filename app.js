@@ -5,6 +5,7 @@ const apiBase = (window.ARCADE_CONFIG?.apiBase || '/api').replace(/\/$/, '');
 const display = new Intl.NumberFormat('en-US');
 const node = (tag, className, text) => { const el = document.createElement(tag); if (className) el.className = className; if (text !== undefined) el.textContent = text; return el; };
 const gameById = (id) => state.games.find(game => game.id === id) || (state.pendingGame?.id === id ? state.pendingGame : undefined);
+const artworkUrl = game => `${game.image}?v=marquee-2`;
 const scoreText = (game) => game?.record?.score || '—';
 const initialsText = (game) => game?.record?.initials || '___';
 const icon = (name) => { const el = node('i', `ph-bold ph-${name}`); el.setAttribute('aria-hidden', 'true'); return el; };
@@ -33,7 +34,7 @@ function renderBoard() {
   const game = gameById(state.featured) || state.games[0];
   if (!game) return;
   state.featured = game.id;
-  $('hero-marquee').src = game.image;
+  $('hero-marquee').src = artworkUrl(game);
   $('hero-marquee').alt = `${game.title} marquee`;
   $('hero-title').textContent = game.title;
   $('record-label').textContent = game.kind === 'time' ? 'TIME TO BEAT' : 'RECORD TO BEAT';
@@ -45,7 +46,7 @@ function renderBoard() {
   $('around-list').replaceChildren(...around.filter(Boolean).map(other => {
     const button = node('button', 'around-row');
     button.setAttribute('aria-label', `Feature ${other.title}, ${scoreText(other)}, ${initialsText(other)}`);
-    const image = node('img'); image.src = other.image; image.alt = other.title;
+    const image = node('img'); image.src = artworkUrl(other); image.alt = other.title;
     const info = node('div'); info.append(node('strong', scoreText(other).length > 8 ? 'long' : '', scoreText(other)), node('span', '', initialsText(other)));
     button.append(image, info); button.addEventListener('click', () => feature(other.id)); return button;
   }));
@@ -68,7 +69,7 @@ function renderEntry() {
   if (!game) return;
   state.selected = game.id;
   $('entry-title').textContent = game.title;
-  $('entry-marquee').src = game.image; $('entry-marquee').alt = game.title;
+  $('entry-marquee').src = artworkUrl(game); $('entry-marquee').alt = game.title;
   $('entry-record').textContent = game.record ? `${scoreText(game)} · ${initialsText(game)}` : 'Set the first record';
   $('entry-record').classList.toggle('small-record', $('entry-record').textContent.length > 17);
   $('score-label').textContent = game.kind === 'time' ? 'Your time' : 'Your score';
@@ -187,7 +188,7 @@ function renderPicker() {
   const query = normalize($('game-search').value);
   const matches = state.games.filter(game => normalize(game.title).includes(query) || normalize(game.id).includes(query));
   $('game-options').replaceChildren(...matches.map(game => {
-    const button = node('button', 'game-option'); const image = node('img'); image.src = game.image; image.alt = '';
+    const button = node('button', 'game-option'); const image = node('img'); image.src = artworkUrl(game); image.alt = '';
     const info = node('div'); info.append(node('strong', '', game.title), node('small', '', `${scoreText(game)} · ${initialsText(game)}`));
     button.append(image, info);
     button.addEventListener('click', () => { state.pendingGame = null; state.selected = game.id; $('score-input').value = ''; state.requestId = crypto.randomUUID(); renderEntry(); setMessage(); $('game-picker').close(); $('score-input').focus(); });
