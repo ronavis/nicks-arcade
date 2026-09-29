@@ -1,6 +1,6 @@
 # Launch validation — 2026-09-29
 
-Software deployed and live core flow validated. Physical-device and second-account acceptance remain pending.
+Software deployed and live core flow validated. Ron confirmed the live QR scan and Google sign-in on his phone on 2026-09-29. Phone score/photo entry, TV and second-account acceptance remain pending.
 
 ## Completed with receipts
 
@@ -21,10 +21,13 @@ Software deployed and live core flow validated. Physical-device and second-accou
 - Corrected the test to 41,512 using the live admin UI, then removed it. The independent public TV view automatically reverted to 41,510 / JJH without a reload. Test removal is retained in audit history.
 - Fixed optional rotation scaling: measure the unrotated board width and rotate within a stable viewport. At 960×540, the rotated board bounds are exactly 960×540 and its layout width remains 540; screenshot inspected without overlap.
 
+- Ron confirmed on 2026-09-29 that scanning the live QR code and signing in with Google worked on his physical phone (user-reported validation).
+
 ## Still pending
 
 - A second real Google account for live non-admin verification (automated permission-denial tests pass).
-- Actual phone QR scan and Nick's TV/browser/fullscreen/rotation test.
+- Initials keypad, score submission and photo selection/upload on the physical phone.
+- Nick's actual TV/browser/fullscreen/rotation test.
 - Confirm source game naming ambiguities and interpretation of VS. Excitebike's time. The 32 visible records in Ron's still-open old Chrome tab matched the imported records; other devices' browser-local records have not been inspected.
 
 ## Source history
