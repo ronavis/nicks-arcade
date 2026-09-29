@@ -5,7 +5,7 @@ const apiBase = (window.ARCADE_CONFIG?.apiBase || '/api').replace(/\/$/, '');
 const display = new Intl.NumberFormat('en-US');
 const node = (tag, className, text) => { const el = document.createElement(tag); if (className) el.className = className; if (text !== undefined) el.textContent = text; return el; };
 const gameById = (id) => state.games.find(game => game.id === id) || (state.pendingGame?.id === id ? state.pendingGame : undefined);
-const artworkUrl = game => `${game.image}?v=marquee-2`;
+const artworkUrl = game => `${game.image}?v=${game.id === 'simpsons' ? 'simpsons-cabinet-1' : 'marquee-2'}`;
 const scoreText = (game) => game?.record?.score || '—';
 const initialsText = (game) => game?.record?.initials || '___';
 const icon = (name) => { const el = node('i', `ph-bold ph-${name}`); el.setAttribute('aria-hidden', 'true'); return el; };
