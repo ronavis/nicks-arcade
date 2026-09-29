@@ -232,3 +232,7 @@ User-authorized private configuration update preserves Ron and adds Nick's previ
 ## Scoreboard landing — September 29, 2026
 
 Source `1aab8de`, Pages `f71bd676ea0223e62fe4c4d369fb09b2efc676ea`, default README `f0d85ae97053368f5147e55ed0f1f7f223707c15`. QR scans/clicks and the default phone/desktop route now open the shared scoreboard; interactive sign-in returns there as well. Restoring a saved session preserves an explicitly opened score-entry/admin route. Local browser verified signed-out landing, player sign-in transition, QR target, and score-entry reload with a restored session. Ten frontend tests and syntax/build checks passed; both changed public assets matched the build. No backend or record changes.
+
+## Primary score menu action — September 29, 2026
+
+Source `ceefafb`; Pages `d902b1385fdde30f9e98e37736bcedbd4cae726f`. Enter a score is the first menu action for every role, with bold text and a turquoise bordered background. Local browser verified signed-out and admin order, working score-entry navigation, and 390px fit. Syntax/build and diff checks passed; both published files matched the production build. Backend and records unchanged.
