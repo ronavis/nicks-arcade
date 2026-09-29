@@ -49,7 +49,7 @@
 /* Crisp, bold dot-matrix lettering for player initials and score values. */
 @font-face{font-family:ScoreDots;src:url('vendor/doto.woff2') format('woff2');font-style:normal;font-weight:100 900;font-display:swap}
 :root{--score:ScoreDots,monospace}
-.hero-score,.hero-initials,.around-row strong,.around-row span,#entry-record,#score-input,.initials-slots span,.admin-score .record,.my-score-value{font-family:var(--score);font-weight:800;font-variation-settings:"ROND" 100;text-shadow:none;letter-spacing:0;font-variant-numeric:tabular-nums}
+.hero-score,.hero-initials,.around-row strong,.around-row span,#entry-record,#score-input,.initials-slots span,.admin-score .record,.my-score-value{font-family:var(--score);font-weight:900;font-variation-settings:"ROND" 100;-webkit-text-stroke:.016em currentColor;text-shadow:none;letter-spacing:0;font-variant-numeric:tabular-nums}
 .hero-score{font-size:calc(var(--u)*16);line-height:1.25;letter-spacing:calc(var(--u)*.15)}
 .hero-score.long{font-size:calc(var(--u)*11)}.hero-score.very-long{font-size:calc(var(--u)*8)}
 .hero-initials{font-size:calc(var(--u)*10);letter-spacing:calc(var(--u)*1.1);text-indent:calc(var(--u)*1.1)}
