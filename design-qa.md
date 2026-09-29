@@ -1,6 +1,6 @@
 # Design and interaction QA — 2026-09-29
 
-Status: **Local design/interaction pass**. Production acceptance remains pending.
+Status: **Local design/interaction and live core-flow checks passed**. Physical TV, the original iPhone photo retry and a second real account remain pending. The initial checks below are historical; follow-up results appear at the end.
 
 ## Reference and intentional choices
 
@@ -32,10 +32,17 @@ Retained turquoise/cream, solid black arcade typography, red record accent, one 
 
 `npm run check` and `npm run build` passed. `python -m pytest -q`: **37 passed**, including a complete database/photo backup restored into an independent app instance. Google verification tests use locally signed test tokens with mocked certificate retrieval, exercising signature/audience/issuer/expiry checks; they are not a real Google browser login.
 
-## Remaining production/device checks
+## Checks pending at the initial local review (historical)
 
 Real Google sign-in/authorized origin/consent, public API through nginx, physical QR scan, live multi-device submission and restart, Nick's physical TV browser/fullscreen/rotation, off-host scheduled backups and ambiguous source game mappings. Fullscreen and rotation controls are implemented but not certified on the target hardware. No live deploy was performed.
 
 ## Production follow-up
 
-Real Google sign-in, public score/photo submission, admin proof retrieval, correction/removal and automatic fallback passed on 2026-09-29. Production score and photo were included in a restored off-host backup. A rotation sizing bug discovered during launch was corrected and visually verified at 960×540. Physical phone/TV acceptance remains pending; see deploy/launch-status.md.
+Real Google sign-in, public score/photo submission, admin proof retrieval, correction/removal and automatic fallback passed on 2026-09-29. Production score and photo were included in a restored off-host backup. A rotation sizing bug discovered during launch was corrected and visually verified at 960×540. Ron subsequently confirmed phone QR scan, Google sign-in and score entry. Physical TV acceptance and the original iPhone photo retry remain pending; see deploy/launch-status.md.
+
+## Catalog, photos and initials follow-up
+
+- 47 backend tests passed after the catalog and iPhone photo update. All 33 supplied game names were found in browser search without punctuation/spaces; a missing-game first-record submission succeeded in local preview.
+- The new-game dialog was visually checked at 390×844. The live Simpsons entry page loaded its artwork and first-record prompt.
+- HEIC and 48-megapixel JPEG conversion passed in tests and an isolated instance on the production VPS. This does not substitute for retrying Ron’s original phone photo.
+- Featured initials were enlarged approximately 17% with positive letter spacing. At 540×960 and 1080×1920 they did not overlap the score or rotation controls. Published HTML/CSS matched the build; live browser inspection confirmed the changed font size and spacing.

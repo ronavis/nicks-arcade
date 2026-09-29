@@ -11,17 +11,28 @@ The read-only VPS inspection found nginx, Python 3.12 at `/usr/local/bin/python3
 - Durable data `/var/lib/nicks-arcade`, owned by service user, directory mode 0700. Environment `/etc/nicks-arcade.env`, mode 0600.
 - Bind only `127.0.0.1:8766`. Add the supplied nginx location inside the HTTPS server; it maps `/arcade-api/` to the service's `/api/`.
 
-## Execution sequence
+## First-time installation
+
+The live installation already exists. Do not repeat account/directory creation on the current server; use the update sequence below.
 
 1. Review the exact commit and preserve the current Pages build and nginx configuration. Confirm port 8766 is unused, paths/account do not already exist, and snapshot current service health.
 2. Create the isolated account/directories. Stage only `server/`, `data/`, environment example and dependencies in the release. Set `current`, install the supplied service unit and environment. Do not set `ARCADE_DEMO`.
-3. Start the separate service. Verify loopback `/api/health` reports production and `/api/leaderboard` contains 32 starting games. An unsigned POST must be rejected; `/api/demo-session` must be unavailable.
+3. Start the separate service. Verify loopback `/api/health` reports production and `/api/leaderboard` contains the supplied catalog (33 games at this release, including 32 starting records). An unsigned POST must be rejected; `/api/demo-session` must be unavailable.
 4. Add only `nginx-location.conf`'s location to the existing HTTPS host. Run `nginx -t` before a reload; verify existing Mission Control endpoints still pass their established read-only health checks. If anything is ambiguous, stop and reconcile before retrying.
 5. Verify the public API, exact CORS origin, no unauthenticated photo access and no public data-directory path. Avoid access-log formats containing Authorization headers.
 6. In the existing Google OAuth web client, confirm authorized JavaScript origin `https://ronavis.github.io`. For this basic Sign in with Google flow, Google documents an exception to the Testing allowlist when only name/email/profile are requested. Do not add unrelated scopes or publish consent settings merely to work around a misunderstood Testing label. Verify actual sign-in. This needs Google project-owner access; it is not proven by code tests. Do not request unnecessary Google scopes.
 7. Run `ARCADE_API_BASE=https://midconversation.com/arcade-api npm run build`, and publish **only `dist/`** through the chosen Pages source. Inspect the repo's current Pages settings first; do not change branch/workflow settings blindly. Never publish the backend, tests, databases or photos.
 8. On a real phone, Google sign in, select Galaga, enter a disposable score and initials, attach a proof photo, submit. On the TV, verify it appears within five seconds, survives service restart, and loads without sign-in. Sign in as Ron, view photo, correct/remove the test score and verify record fallback. Verify another signed-in account cannot administer scores. Check signed-out submission is blocked.
 9. Scan the production QR with a different phone. Test portrait fullscreen on Nick's actual display browser; disable device sleep. Confirm source game ambiguities and any previous real localStorage scores before declaring opening-night ready.
+
+## Updating the existing installation
+
+1. Confirm the source commit, current Pages commit, active backend release and live API health. Back up the persistent database/photos before backend changes.
+2. Run the source checks and backend tests. Stage backend changes in a new immutable release, including `server/`, `data/` and `scripts/backup.py`; install its pinned dependencies in the service environment. Keep the existing data directory and environment configuration.
+3. Switch the `current` symlink only after staging succeeds, then restart only `nicks-arcade`. Verify API health, existing score preservation and the behavior changed by the release. Frontend-only updates do not need a service restart.
+4. The Arcade nginx route allows 41 MB of request data to accommodate a 40 MB photo plus form overhead. If changing that route, back up the current configuration, limit edits to the Arcade location, run `nginx -t` and reload only after validation.
+5. Build the frontend with the production API endpoint and publish only `dist/` through a normal update to `gh-pages`. Preserve the prior commit. Wait for Pages to finish building and compare the published assets with the tested build. Version changed assets where necessary so existing browsers load the update on refresh.
+6. Verify the live changed flow and record results in [launch-status.md](launch-status.md). Run a plain `npm run build` afterward if using the same checkout for local preview.
 
 ## Backups and recovery
 

@@ -1,8 +1,8 @@
 # Launch validation — 2026-09-29
 
-Software deployed and live core flow validated. Ron confirmed the live QR scan and Google sign-in on his phone on 2026-09-29. Phone score/photo entry, TV and second-account acceptance remain pending.
+Software deployed and live core flow validated. Ron confirmed the live QR scan and Google sign-in on his phone on 2026-09-29. Phone score entry also passed. Retrying the original iPhone photo, TV and second-account acceptance remain pending.
 
-## Completed with receipts
+## Initial deployment checks (historical) — completed with receipts
 
 - Original source branch and dirty original main.css preserved. Source rebuilt in isolated codex/arcade-record-spotlight branch.
 - Source code pushed to GitHub; Pages published static-only commit `64bf1981dc8f4f19d95cafb33b2df639c3482c63`, parent `2ba50d8f789ad6045f69bb68f6622451dcb406a8`. Rotation follow-up published as `c618d2cd3304df33667b8609318e981fa1dc08a4`; its public HTML, JavaScript, CSS and config hashes match the release. Existing gh-pages branch/source unchanged; no forced push. Old commit retained for rollback.
@@ -26,7 +26,7 @@ Software deployed and live core flow validated. Ron confirmed the live QR scan a
 ## Still pending
 
 - A second real Google account for live non-admin verification (automated permission-denial tests pass).
-- Initials keypad, score submission and photo selection/upload on the physical phone.
+- Retry the original iPhone photo after the HEIC and size-limit update; phone initials and score submission passed.
 - Nick's actual TV/browser/fullscreen/rotation test.
 - Confirm source game naming ambiguities and interpretation of VS. Excitebike's time. The 32 visible records in Ron's still-open old Chrome tab matched the imported records; other devices' browser-local records have not been inspected.
 
@@ -48,3 +48,7 @@ Local outputs/launch-receipts holds installation logs, public API checks, Pages 
 - Production score rows matched the pre-release backup exactly. HEIC and 8064x6048 JPEG conversion passed in an isolated test instance on the VPS. Public production health passed.
 - Pages release de78c62bbcf9ef410905057a42eab5853bb67a69 published; HTML, JS, CSS, config, Simpsons art and fallback art verified byte-for-byte. Live browser found and opened The Simpsons.
 - Still pending: retry Ron's original iPhone photo, physical TV acceptance, a second real non-admin account and source game/time naming questions. No claim that the original photo has already been successfully retried.
+
+## Display initials follow-up — 2026-09-29
+
+Featured record initials are approximately 17% larger, with positive letter spacing and centered alignment. Portrait checks at 540×960 and 1080×1920 found no score/control overlap. Source commits 2dc7c18 and c177b42 are published through Pages commit 07a171590d16068afae01078bc2ef848f848e153. Public HTML/CSS matched the build; live browser inspection confirmed the new typography after versioning the stylesheet to avoid a cached older copy. No backend or score changes were needed.
