@@ -57,7 +57,8 @@ function renderBoard() {
   $('hero-initials').classList.toggle('empty-record', !game.record);
   $('hero-initials').textContent = game.record ? initialsText(game) : 'YOUR INITIALS HERE'; renderImprovement('hero-improvement', game.record);
   const index = state.games.indexOf(game);
-  const around = game.id === 'galaga' ? ['donkeykong', 'mspacman', 'tetris'].map(gameById) : [1, 2, 3].map(offset => state.games[(index + offset) % state.games.length]);
+  const preferred = game.id === 'galaga' ? ['donkeykong', 'mspacman', 'tetris'].map(id => state.games.find(other => other.id === id)).filter(Boolean) : [];
+  const around = [...preferred, ...[1, 2, 3].map(offset => state.games[(index + offset) % state.games.length])].filter((other, i, games) => other && other.id !== game.id && games.findIndex(entry => entry?.id === other.id) === i).slice(0, 3);
   $('around-list').replaceChildren(...around.filter(Boolean).map(other => {
     const button = node('button', 'around-row');
     button.setAttribute('aria-label', `Feature ${other.title}, ${scoreText(other)}, ${initialsText(other)}`);
