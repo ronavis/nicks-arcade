@@ -155,3 +155,7 @@ Run `npm test` for celebration detection regression checks.
 The featured record and celebration show a compact green dot-matrix improvement badge when the original previous record is known. Points use ↑ +2,400; timed records use ↓ 1.10s. Tap the badge for an explanation. Imported/first records and corrected submissions omit uncertain comparisons. Around the arcade rows remain unchanged.
 
 Featured records show their submission date and elapsed days (“Set N days ago”). Imported records explicitly say their date is unknown, and corrected records use a submitted-date label. My scores includes submission timestamps. Empty games say “Set the first record”; Manage scores explains that there is no saved submission to edit/delete and offers Enter the first score.
+
+### Manage games (admins)
+
+Open My account → Manage games, or use Manage games in the TV menu. Add a title and choose highest score or fastest time; no score is required. New cabinets persist in the shared catalog, immediately join TV rotation and score-entry search, and display “Be the first / Your initials here” until a score is posted. New titles use the neutral arcade artwork placeholder. Existing normalized titles are reused rather than duplicated. Search/filter games waiting for their first score, show any game on the TV, or enter/manage its scores. The creation API independently requires an admin account.
