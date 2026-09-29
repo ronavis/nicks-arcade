@@ -54,6 +54,7 @@ Notifications are inside the app; no email or phone push alerts are sent. The ba
 
 - Portrait 9:16 Record Spotlight design with turquoise and cream, game artwork, a prominent score and larger, spaced initials.
 - Featured game changes every 15 seconds by default; admins can choose 5–120 seconds in Account → Settings → TV Display, with three neighboring records and a permanent QR code. Pause, previous/next, fullscreen and rotation controls are available. Automatic rotation respects the browser’s reduced-motion preference.
+- The three-line menu keeps **Enter a score** first and visually emphasized for everyone, with left-aligned actions. Admin-only management actions appear only for verified admins. The menu is layered above the rotating leaderboard and marquees.
 - The collection starts with Nick’s **32 imported records**, not a 32-game limit. **The Simpsons** is also available for its first entry. Admins approve additional cabinets through Manage games. Players can submit other games only while the shared bypass setting is enabled.
 - Search ignores punctuation and spacing. Newly added games are saved in the shared database and become available on other devices, the TV and the admin screen.
 - Catalog selections include their marquee artwork. Manual titles use matching curated artwork when available and a neutral graphic otherwise. Images load on demand; an unavailable image falls back to the neutral graphic. The game name is displayed separately.
@@ -110,7 +111,7 @@ npm run build
 .venv/bin/python -m pytest -q
 ```
 
-The September 29 validation passed **72 backend tests and 10 frontend tests**, covering persistence, new-game creation, concurrent submissions, duplicate retries, scoring/time rules, Google token validation, admin permissions, photo processing/privacy, origin restrictions, rate limits backup/restore, collection eligibility, the bypass switch, catalog selection, celebration detection and date labels. All 33 supplied game entries were exercised in submission tests and browser search checks.
+The September 29 validation passed **72 backend tests and 10 frontend tests**, covering persistence, new-game creation, concurrent submissions, duplicate retries, scoring/time rules, Google token validation, admin permissions, photo processing/privacy, origin restrictions, rate limits, backup/restore, collection eligibility, the bypass switch, catalog selection, celebration detection and date labels. All 33 supplied game entries were exercised in submission tests and browser search checks.
 
 For a production frontend build:
 
