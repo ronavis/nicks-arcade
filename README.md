@@ -33,7 +33,7 @@ Click a screenshot to open the full-resolution PNG. The TV image is captured fro
 
 Submissions do not wait for approval. A game’s first score becomes its record to beat. Later submissions replace the record only when they beat it; lower scores remain in history, and an equal score keeps the earlier entry. The public TV board refreshes every five seconds while its browser tab is visible.
 
-Ron is the initial administrator. Admin controls allow score corrections, removal, proof-photo viewing and a JSON export. Removing a winning score promotes the best remaining entry, and changes are retained in the audit history.
+Ron and Nick are the arcade administrators. Admin controls allow score corrections, removal, proof-photo viewing and a JSON export. Removing a winning score promotes the best remaining entry, and changes are retained in the audit history.
 
 ## Your account, notifications and friendly rivalry
 
