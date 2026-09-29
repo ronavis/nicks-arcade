@@ -32,7 +32,7 @@ GitHub Pages hosts the built `dist/` frontend. An isolated Python service on the
 
 Build for production with `ARCADE_API_BASE=https://midconversation.com/arcade-api npm run build`. The build writes the endpoint into the published config while leaving the local preview configuration unchanged. The API verifies Google's signed ID tokens; a typed email or browser flag cannot grant administrator rights. Existing public Google client ID is retained, and Ron is the initial administrator.
 
-Keep `ARCADE_DATA_DIR` outside releases. Rebuilding or replacing frontend files must never replace that directory. See [deployment plan](deploy/README.md) for the staged setup, production acceptance, backup and rollback steps. No server or live Pages change is included in this working copy.
+Keep `ARCADE_DATA_DIR` outside releases. Rebuilding or replacing frontend files must never replace that directory. See [deployment plan](deploy/README.md) for the staged setup, production acceptance, backup and rollback steps. Production API and GitHub Pages were deployed on 2026-09-29. See deploy/launch-status.md for completed and pending acceptance checks.
 
 ## Validation
 

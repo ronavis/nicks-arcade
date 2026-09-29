@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily Nick's Arcade backup
+
+[Timer]
+OnCalendar=*-*-* 06:00:00 UTC
+Persistent=true
+Unit=nicks-arcade-backup.service
+
+[Install]
+WantedBy=timers.target

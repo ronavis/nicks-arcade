@@ -1,0 +1,13 @@
+[Unit]
+Description=Back up Nick's Arcade database and proof photos
+
+[Service]
+Type=oneshot
+User=nicks-arcade
+Group=nicks-arcade
+UMask=0077
+ExecStart=/bin/sh -c '/opt/nicks-arcade/venv/bin/python /opt/nicks-arcade/current/scripts/backup.py /var/lib/nicks-arcade /var/backups/nicks-arcade/$(date -u +%%Y%%m%%dT%%H%%M%%SZ)'
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full

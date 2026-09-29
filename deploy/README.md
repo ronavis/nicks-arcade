@@ -1,6 +1,6 @@
-# Proposed Friday deployment — prepared, not applied
+# Friday deployment and recovery guide
 
-The read-only VPS inspection found nginx, Python 3.12 at `/usr/local/bin/python3.12`, sufficient disk/memory, and the existing `midconversation.com` HTTPS host. No arcade service has been installed. Port 8766 availability, systemd compatibility and the exact nginx insertion still need fresh verification at deployment.
+The read-only VPS inspection found nginx, Python 3.12 at `/usr/local/bin/python3.12`, sufficient disk/memory, and the existing `midconversation.com` HTTPS host. The isolated service and API route were installed on 2026-09-29; see launch-status.md for current validation evidence. Port 8766 and the systemd units were verified during deployment.
 
 ## Release layout
 
@@ -18,14 +18,14 @@ The read-only VPS inspection found nginx, Python 3.12 at `/usr/local/bin/python3
 3. Start the separate service. Verify loopback `/api/health` reports production and `/api/leaderboard` contains 32 starting games. An unsigned POST must be rejected; `/api/demo-session` must be unavailable.
 4. Add only `nginx-location.conf`'s location to the existing HTTPS host. Run `nginx -t` before a reload; verify existing Mission Control endpoints still pass their established read-only health checks. If anything is ambiguous, stop and reconcile before retrying.
 5. Verify the public API, exact CORS origin, no unauthenticated photo access and no public data-directory path. Avoid access-log formats containing Authorization headers.
-6. In the existing Google OAuth web client, confirm authorized JavaScript origin `https://ronavis.github.io`. If the consent app is in Testing, add Friday's player accounts or move to an appropriate published consent configuration. This needs Google project-owner access; it is not proven by code tests. Do not request unnecessary Google scopes.
-7. Set frontend `config.js` to `window.ARCADE_CONFIG = { apiBase: 'https://midconversation.com/arcade-api' };`, build, and publish **only `dist/`** through the chosen Pages source. Inspect the repo's current Pages settings first; do not change branch/workflow settings blindly. Never publish the backend, tests, databases or photos.
+6. In the existing Google OAuth web client, confirm authorized JavaScript origin `https://ronavis.github.io`. For this basic Sign in with Google flow, Google documents an exception to the Testing allowlist when only name/email/profile are requested. Do not add unrelated scopes or publish consent settings merely to work around a misunderstood Testing label. Verify actual sign-in. This needs Google project-owner access; it is not proven by code tests. Do not request unnecessary Google scopes.
+7. Run `ARCADE_API_BASE=https://midconversation.com/arcade-api npm run build`, and publish **only `dist/`** through the chosen Pages source. Inspect the repo's current Pages settings first; do not change branch/workflow settings blindly. Never publish the backend, tests, databases or photos.
 8. On a real phone, Google sign in, select Galaga, enter a disposable score and initials, attach a proof photo, submit. On the TV, verify it appears within five seconds, survives service restart, and loads without sign-in. Sign in as Ron, view photo, correct/remove the test score and verify record fallback. Verify another signed-in account cannot administer scores. Check signed-out submission is blocked.
 9. Scan the production QR with a different phone. Test portrait fullscreen on Nick's actual display browser; disable device sleep. Confirm source game ambiguities and any previous real localStorage scores before declaring opening-night ready.
 
 ## Backups and recovery
 
-Run `python scripts/backup.py /var/lib/nicks-arcade /secure/backups/arcade-YYYYMMDD-HHMM` as an account that can read the service data. Each destination must be new. The script uses SQLite's online backup API, checks integrity, copies every referenced immutable photo, and writes COMPLETE only after success. Store a private off-host copy; production scheduling/retention is an explicit deployment step, not already configured. JSON admin export is useful for inspection but does not include photos and is not a complete backup.
+Run `python scripts/backup.py /var/lib/nicks-arcade /secure/backups/arcade-YYYYMMDD-HHMM` as an account that can read the service data. Each destination must be new. The script uses SQLite's online backup API, checks integrity, copies every referenced immutable photo, and writes COMPLETE only after success. Store a private off-host copy; the installed timer runs daily at 06:00 UTC, with missed runs caught up at boot. Backups are retained; no automatic deletion is configured. An initial private off-host copy was validated. Automatic off-host transfer is not configured. JSON admin export is useful for inspection but does not include photos and is not a complete backup.
 
 To restore, stop only `nicks-arcade`, preserve the current data directory, copy a COMPLETE backup into a new service-owned data directory, point the environment there and restart only this service. Verify records, photos and health before resuming submissions. Test this with a temporary data directory before relying on it.
 
