@@ -1,11 +1,11 @@
 # Launch validation — 2026-09-29
 
-Deployment in progress. Do not equate published files with complete opening-night acceptance.
+Software deployed and live core flow validated. Physical-device and second-account acceptance remain pending.
 
 ## Completed with receipts
 
 - Original source branch and dirty original main.css preserved. Source rebuilt in isolated codex/arcade-record-spotlight branch.
-- Source code pushed to GitHub; Pages published static-only commit `64bf1981dc8f4f19d95cafb33b2df639c3482c63`, parent `2ba50d8f789ad6045f69bb68f6622451dcb406a8`. Existing gh-pages branch/source unchanged; no forced push. Old commit retained for rollback.
+- Source code pushed to GitHub; Pages published static-only commit `64bf1981dc8f4f19d95cafb33b2df639c3482c63`, parent `2ba50d8f789ad6045f69bb68f6622451dcb406a8`. Rotation follow-up published as `c618d2cd3304df33667b8609318e981fa1dc08a4`; its public HTML, JavaScript, CSS and config hashes match the release. Existing gh-pages branch/source unchanged; no forced push. Old commit retained for rollback.
 - GitHub reports Pages built successfully. Public index.html, app.js, main.css and config.js bytes match the release exactly.
 - Isolated nicks-arcade account, Python 3.12 venv, root-owned code release `/opt/nicks-arcade/releases/0b873b1`, service on loopback 8766, protected persistent data `/var/lib/nicks-arcade`.
 - Public API at `https://midconversation.com/arcade-api`. Health reports production; all 32 records returned; unsigned score/photo requests rejected; no production demo route; expected CORS origin accepted and unrelated origin rejected.
@@ -25,7 +25,11 @@ Deployment in progress. Do not equate published files with complete opening-nigh
 
 - A second real Google account for live non-admin verification (automated permission-denial tests pass).
 - Actual phone QR scan and Nick's TV/browser/fullscreen/rotation test.
-- Confirm source game naming ambiguities and interpretation of VS. Excitebike's time; identify any real scores entered only in the old site's local browser storage.
+- Confirm source game naming ambiguities and interpretation of VS. Excitebike's time. The 32 visible records in Ron's still-open old Chrome tab matched the imported records; other devices' browser-local records have not been inspected.
+
+## Source history
+
+Draft PR: https://github.com/ronavis/nicks-arcade/pull/1. Source branch update initially encountered GitHub internal errors; a normal non-force HTTP/1.1 push succeeded and was independently read back. The original checkout remains untouched. PR remains draft pending external acceptance; master has not been merged.
 
 ## Receipts
 
