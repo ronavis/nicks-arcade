@@ -15,3 +15,9 @@ NBA Jam uses the original 3840 × 1138 cabinet marquee from [LaunchBox Games Dat
 Source image: https://images.launchbox-app.com/f33928fb-9b67-4285-9cf6-8e17d609c6b4.jpg
 
 Stored unchanged as `images/cabinet-marquees/nbajam.jpg`. Artwork belongs to its respective owners. The build combines the existing curated game images with `data/artwork.json`; `artwork.js` matches titles and explicit aliases only for games that lack assigned artwork. This applies to unclaimed games and scored games alike. Unmatched editions retain the neutral fallback; the old space-themed packs are not used as automatic matches.
+
+## Searchable collection catalog
+
+`data/arcade-catalog.json` indexes 9,543 entries from the existing MAME artwork library, with human-readable names from [Libretro MAME metadata](https://github.com/libretro/libretro-database/blob/master/metadat/mame/MAME.dat). Regional/revision variants remain separate. Some entries without matching metadata are searchable by their ROM identifier.
+
+1,685 exact ROM matches prefer the supplementary [Snapouille cabinet-marquee collection](https://github.com/Snapouille/DX_Theme_Arcade_Add-On), pinned to commit `fa59103d8d1ad2f3248874cda9ffc7b15c36c4ea`. Established curated arcade images and the corrected Simpsons/NBA Jam images override pack artwork. Remaining entries use the existing pack, which includes stylized space-background images; previews let admins see the selection before adding it. Images are loaded on demand from pinned public GitHub files, with a neutral graphic on load failure. No entire artwork pack is downloaded to players’ devices. Game artwork belongs to its respective owners.

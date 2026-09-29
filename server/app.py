@@ -95,6 +95,7 @@ def create_app(config=None, *, allow_demo=False):
     photos.mkdir(exist_ok=True, mode=0o700)
     database = data / 'arcade.sqlite3'
     games = json.loads((ROOT / 'data/games.json').read_text())
+    artwork_catalog = {entry['id']: entry for entry in json.loads((ROOT / 'data/arcade-catalog.json').read_text())}
     google_request = GoogleRequest(session=cachecontrol.CacheControl(requests.Session()))
     demo_tokens = {}
 
@@ -136,9 +137,11 @@ def create_app(config=None, *, allow_demo=False):
                 db.execute(f'ALTER TABLE profiles ADD COLUMN {name} {definition}')
         if 'taunt_request' not in {row[1] for row in db.execute('PRAGMA table_info(scores)')}:
             db.execute('ALTER TABLE scores ADD COLUMN taunt_request TEXT')
+        if 'eligible' not in {row[1] for row in db.execute('PRAGMA table_info(games)')}:
+            db.execute('ALTER TABLE games ADD COLUMN eligible INTEGER NOT NULL DEFAULT 1')
         db.execute("BEGIN IMMEDIATE")
         for game in games:
-            db.execute('INSERT OR IGNORE INTO games VALUES (?,?,?,?,?,?)',
+            db.execute('INSERT OR IGNORE INTO games (id,title,search_key,image,kind,sort_order) VALUES (?,?,?,?,?,?)',
                        (game['id'], game['title'], game_key(game['title']), game['image'], game['kind'], game['order']))
         if not db.execute("SELECT 1 FROM metadata WHERE key='seed_v1'").fetchone():
             for game in games:
@@ -155,7 +158,7 @@ def create_app(config=None, *, allow_demo=False):
 
     def catalog():
         if 'catalog' not in g:
-            g.catalog = {row['id']: dict(row) for row in get_db().execute('SELECT id,title,image,kind,sort_order AS \"order\" FROM games ORDER BY sort_order,title')}
+            g.catalog = {row['id']: dict(row) for row in get_db().execute('SELECT id,title,image,kind,eligible,sort_order AS \"order\" FROM games ORDER BY sort_order,title')}
         return g.catalog
 
     @app.teardown_appcontext
@@ -187,7 +190,7 @@ def create_app(config=None, *, allow_demo=False):
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['Referrer-Policy'] = 'no-referrer'
         response.headers['Cross-Origin-Opener-Policy'] = 'same-origin-allow-popups'
-        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://accounts.google.com; img-src 'self' blob: data: https://*.googleusercontent.com; font-src 'self'; connect-src 'self' https://accounts.google.com; frame-src https://accounts.google.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://accounts.google.com; img-src 'self' blob: data: https://*.googleusercontent.com https://raw.githubusercontent.com; font-src 'self'; connect-src 'self' https://accounts.google.com; frame-src https://accounts.google.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
         return response
 
     @app.errorhandler(HTTPException)
@@ -266,17 +269,23 @@ def create_app(config=None, *, allow_demo=False):
 
     def display_settings():
         row = get_db().execute("SELECT value FROM metadata WHERE key='rotation_seconds'").fetchone()
-        return {'rotationSeconds': int(row['value']) if row else 15}
+        bypass = get_db().execute("SELECT value FROM metadata WHERE key='bypass_games_restriction'").fetchone()
+        return {'rotationSeconds': int(row['value']) if row else 15, 'bypassGamesRestriction': bool(bypass and bypass['value'] == '1')}
 
     @app.patch('/api/admin/display-settings')
     @authenticated(admin=True)
     def save_display_settings():
         payload = request.get_json(silent=True)
-        seconds = payload.get('rotationSeconds') if isinstance(payload, dict) else None
+        seconds = payload.get('rotationSeconds', display_settings()['rotationSeconds']) if isinstance(payload, dict) else None
+        if isinstance(payload, dict) and 'bypassGamesRestriction' in payload and type(payload['bypassGamesRestriction']) is not bool:
+            raise ValueError('Choose on or off for the game restriction bypass.')
         if type(seconds) is not int or not 5 <= seconds <= 120:
             raise ValueError('Choose a whole number from 5 to 120 seconds.')
         with get_db() as db:
+            db.execute("BEGIN IMMEDIATE")
             db.execute("INSERT INTO metadata(key,value) VALUES ('rotation_seconds',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", (str(seconds),))
+            if 'bypassGamesRestriction' in payload:
+                db.execute("INSERT INTO metadata(key,value) VALUES ('bypass_games_restriction',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", ('1' if payload['bypassGamesRestriction'] else '0',))
         return jsonify(displaySettings=display_settings())
 
     @app.get('/api/config')
@@ -304,7 +313,7 @@ def create_app(config=None, *, allow_demo=False):
                     if delta > 0:
                         amount = f'{delta / 100:.2f}s' if game['kind'] == 'time' else f'{delta:,}'
                         record['improvement'] = {'amount': amount, 'direction': 'down' if game['kind'] == 'time' else 'up', 'label': f'Beat previous record by {amount}' + (' (faster)' if game['kind'] == 'time' else ' points')}
-            output.append({k: game[k] for k in ['id', 'title', 'image', 'kind', 'order']} | {'record': record})
+            output.append({k: game[k] for k in ['id', 'title', 'image', 'kind', 'order', 'eligible']} | {'record': record})
         return jsonify(games=output, updatedAt=int(time.time()), displaySettings=display_settings())
 
     @app.get('/api/session')
@@ -353,11 +362,14 @@ def create_app(config=None, *, allow_demo=False):
     @authenticated()
     def submit():
         game_id = request.form.get('gameId', '')
-        new_title = ' '.join(request.form.get('gameTitle', '').split())
-        kind = request.form.get('gameKind', 'points')
+        picked = artwork_catalog.get(request.form.get('catalogId', ''))
+        if request.form.get('catalogId') and not picked:
+            raise ValueError('Choose a valid game from the marquee catalog.')
+        new_title = picked['title'] if picked else ' '.join(request.form.get('gameTitle', '').split())
+        kind = picked['kind'] if picked else request.form.get('gameKind', 'points')
         new_key = game_key(new_title)
         if new_title:
-            if not 2 <= len(new_title) <= 80 or not new_key or any(unicodedata.category(c).startswith('C') for c in new_title):
+            if not 2 <= len(new_title) <= (250 if picked else 80) or not new_key or any(unicodedata.category(c).startswith('C') for c in new_title):
                 raise ValueError('Enter a game name between 2 and 80 characters.')
             if kind not in {'points', 'time'}:
                 raise ValueError('Choose points or fastest time for the new game.')
@@ -385,9 +397,14 @@ def create_app(config=None, *, allow_demo=False):
         photo_id = None
         try:
             db.execute('BEGIN IMMEDIATE')
+            approved = db.execute('SELECT eligible FROM games WHERE id=?', (game_id,)).fetchone()
+            if not display_settings()['bypassGamesRestriction'] and (not approved or not approved['eligible']):
+                abort(403, description="This game is not in Nick’s arcade. Ask an admin to add it first.")
             if new_title:
-                db.execute('INSERT OR IGNORE INTO games VALUES (?,?,?,?,?,?)',
+                db.execute('INSERT OR IGNORE INTO games (id,title,search_key,image,kind,sort_order) VALUES (?,?,?,?,?,?)',
                            (game_id, new_title, new_key, 'images/new-game.svg', kind, 1000))
+                if not approved:
+                    db.execute('UPDATE games SET eligible=0,image=? WHERE id=?', (picked['image'] if picked else 'images/new-game.svg', game_id))
                 g.pop('catalog', None)
                 existing = db.execute('SELECT id,kind FROM games WHERE search_key=?', (new_key,)).fetchone()
                 game_id = existing['id']
@@ -500,16 +517,39 @@ def create_app(config=None, *, allow_demo=False):
             abort(404)
         return send_from_directory(photos, photo_id + '.jpg', mimetype='image/jpeg')
 
+    @app.get('/api/game-catalog')
+    def search_game_catalog():
+        query = game_key(request.args.get('q', ''))
+        matches = [entry for entry in artwork_catalog.values() if query in game_key(entry['title']) or query in game_key(entry['id'])]
+        owned = {game_key(game['title']) for game in catalog().values() if game['eligible']}
+        return jsonify(total=len(matches), games=[entry | {'inArcade': game_key(entry['title']) in owned} for entry in matches[:40]])
+
+    @app.patch('/api/admin/games/<game_id>')
+    @authenticated(admin=True)
+    def set_game_eligibility(game_id):
+        payload = request.get_json(silent=True)
+        if game_id not in catalog() or not isinstance(payload, dict) or type(payload.get('eligible')) is not bool:
+            raise ValueError('Choose a game and whether it belongs in the arcade.')
+        with get_db() as db:
+            db.execute('BEGIN IMMEDIATE')
+            if not payload['eligible'] and catalog()[game_id]['eligible'] and db.execute('SELECT COUNT(*) FROM games WHERE eligible=1').fetchone()[0] <= 1:
+                raise ValueError('Keep at least one game in the arcade.')
+            db.execute('UPDATE games SET eligible=? WHERE id=?', (int(payload['eligible']), game_id))
+        return jsonify(ok=True)
+
     @app.post('/api/admin/games')
     @authenticated(admin=True)
     def add_arcade_game():
         payload = request.get_json(silent=True)
         if not isinstance(payload, dict):
             raise ValueError('Enter a game title and score type.')
-        title = ' '.join(str(payload.get('title', '')).split())
+        picked = artwork_catalog.get(payload.get('catalogId'))
+        if payload.get('catalogId') and not picked:
+            raise ValueError('Choose a valid game from the marquee catalog.')
+        title = picked['title'] if picked else ' '.join(str(payload.get('title', '')).split())
         key = game_key(title)
-        kind = payload.get('kind', 'points')
-        if not 2 <= len(title) <= 80 or not key or any(unicodedata.category(c).startswith('C') for c in title):
+        kind = payload.get('kind', picked['kind'] if picked else 'points')
+        if not 2 <= len(title) <= (250 if picked else 80) or not key or any(unicodedata.category(c).startswith('C') for c in title):
             raise ValueError('Enter a game name between 2 and 80 characters.')
         if kind not in {'points', 'time'}:
             raise ValueError('Choose points or fastest time.')
@@ -523,7 +563,10 @@ def create_app(config=None, *, allow_demo=False):
                 game_id = existing['id']
             else:
                 game_id = 'custom-' + hashlib.sha256(key.encode()).hexdigest()[:24]
-                db.execute('INSERT INTO games VALUES (?,?,?,?,?,?)', (game_id, title, key, 'images/new-game.svg', kind, 1000))
+                db.execute('INSERT INTO games (id,title,search_key,image,kind,sort_order) VALUES (?,?,?,?,?,?)', (game_id, title, key, 'images/new-game.svg', kind, 1000))
+            db.execute('UPDATE games SET eligible=1 WHERE id=?', (game_id,))
+            if picked:
+                db.execute('UPDATE games SET image=? WHERE id=?', (picked['image'], game_id))
         g.pop('catalog', None)
         return jsonify(game=catalog()[game_id], alreadyExists=bool(existing)), 200 if existing else 201
 

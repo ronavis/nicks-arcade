@@ -253,6 +253,7 @@ def test_simpsons_first_score_and_all_catalog_games(app):
 
 
 def test_new_game_atomic_persistent_searchable_and_admin(app):
+    app.test_client().patch('/api/admin/display-settings', headers=headers('admin'), json={'bypassGamesRestriction': True})
     c = app.test_client()
     result = submit(c, '123', game='', gameTitle='  New Arcade Game  ', gameKind='points')
     assert result.status_code == 201 and result.json['isRecord']
@@ -269,6 +270,7 @@ def test_new_game_atomic_persistent_searchable_and_admin(app):
 
 
 def test_failed_new_game_does_not_leave_empty_catalog_entry(app):
+    app.test_client().patch('/api/admin/display-settings', headers=headers('admin'), json={'bypassGamesRestriction': True})
     c = app.test_client()
     result = submit(c, game='', gameTitle='Unfinished Game', photo=(io.BytesIO(b'broken'), 'bad.heic'))
     assert result.status_code == 400
@@ -276,6 +278,7 @@ def test_failed_new_game_does_not_leave_empty_catalog_entry(app):
 
 
 def test_new_time_game_and_conflicting_kind(app):
+    app.test_client().patch('/api/admin/display-settings', headers=headers('admin'), json={'bypassGamesRestriction': True})
     c = app.test_client()
     result = submit(c, '1:02.30', game='', gameTitle='New Racing Game', gameKind='time')
     assert result.status_code == 201 and result.json['isRecord']
@@ -339,6 +342,7 @@ def test_upgrade_preserves_existing_scores(app):
 
 
 def test_concurrent_new_game_uses_one_catalog_entry(app):
+    app.test_client().patch('/api/admin/display-settings', headers=headers('admin'), json={'bypassGamesRestriction': True})
     def post(score):
         return submit(app.test_client(), str(score), game='', gameTitle='Concurrent Cabinet')
     with ThreadPoolExecutor(max_workers=2) as pool:
@@ -393,6 +397,7 @@ def test_no_notification_for_self_record_break_or_equal_score(app):
 
 
 def test_new_game_first_record_and_time_record_notifications(app):
+    app.test_client().patch('/api/admin/display-settings', headers=headers('admin'), json={'bypassGamesRestriction': True})
     c=app.test_client()
     first=submit(c,'1:02.30',game='',gameTitle='Notification Racer',gameKind='time')
     game=first.json['game']['id']
@@ -630,3 +635,56 @@ def test_admin_add_game_validates_title_and_type(app):
     r=c.post('/api/admin/games',json={'title':'Fast Racer','kind':'time'},headers=headers('admin'))
     assert r.status_code==201
     assert submit(c,'1:02.30',game=r.json['game']['id']).status_code==201
+
+
+def test_collection_restriction_toggle_and_approval(app):
+    c = app.test_client()
+    assert c.get('/api/leaderboard').json['displaySettings']['bypassGamesRestriction'] is False
+    assert submit(c, game='', gameTitle='Outside Game').status_code == 403
+    assert submit(c, game='', gameTitle='Outside Game', token='admin').status_code == 403
+    url = '/api/admin/display-settings'
+    assert c.patch(url, headers=headers(), json={'bypassGamesRestriction': True}).status_code == 403
+    assert c.patch(url, headers=headers('admin'), json={'bypassGamesRestriction': 'false'}).status_code == 400
+    assert c.patch(url, headers=headers('admin'), json={'bypassGamesRestriction': True}).status_code == 200
+    posted = submit(c, game='', catalogId='nbajam')
+    assert posted.status_code == 201
+    game = posted.json['game']
+    assert game['eligible'] == 0 and game['image'].endswith('nbajam.jpg')
+    assert c.patch(url, headers=headers('admin'), json={'bypassGamesRestriction': False}).status_code == 200
+    assert submit(c, game=game['id']).status_code == 403
+    assert submit(c, game='', gameTitle='NBA Jam').status_code == 403
+    assert record(c, game['id']) is not None
+    assert c.post('/api/admin/games', headers=headers('admin'), json={'catalogId':'nbajam'}).status_code == 200
+    assert submit(c, game=game['id']).status_code == 201
+    assert create_app(dict(app.config)).test_client().get('/api/leaderboard').json['displaySettings']['bypassGamesRestriction'] is False
+
+
+def test_catalog_search_add_remove_and_roles(app):
+    c = app.test_client()
+    results = c.get('/api/game-catalog?q=NBA%20Jam').json
+    assert any(g['id'] == 'nbajam' and not g['inArcade'] for g in results['games'])
+    assert len(c.get('/api/game-catalog').json['games']) == 40
+    assert c.get('/api/game-catalog').json['total'] > 4000
+    for token, status in [('player',403),('admin',201)]:
+        r = c.post('/api/admin/games', headers=headers(token), json={'catalogId':'nbajam'})
+        assert r.status_code == status
+    game = r.json['game']; assert game['eligible'] == 1 and game['image'].endswith('nbajam.jpg')
+    assert record(c, game['id']) is None
+    assert c.post('/api/admin/games', headers=headers('admin'), json={'catalogId':'not-real'}).status_code == 400
+    assert c.patch('/api/admin/games/'+game['id'], headers=headers(), json={'eligible':False}).status_code == 403
+    assert submit(c, game=game['id']).status_code == 201
+    assert c.patch('/api/admin/games/'+game['id'], headers=headers('admin'), json={'eligible':False}).status_code == 200
+    assert submit(c, game=game['id']).status_code == 403
+    assert record(c, game['id']) is not None
+    assert all(g['eligible'] for g in c.get('/api/leaderboard').json['games'] if g['id'] != game['id'])
+
+
+def test_ron_nick_same_admin_access_martin_regular(tmp_path):
+    emails = {'ron':'ronavis@gmail.com','nick':'njwright@gmail.com','martin':'mreimer01@gmail.com'}
+    a = create_app({'TESTING':True,'DATA_DIR':str(tmp_path),'DEMO':False,'ADMIN_EMAILS':set(list(emails.values())[:2]),'TEST_TOKEN_VERIFIER':lambda token: {'sub':token,'email':emails[token],'email_verified':True}})
+    c = a.test_client()
+    for token in emails:
+        admin = token != 'martin'
+        assert c.get('/api/session', headers=headers(token)).json['admin'] == admin
+        response = c.patch('/api/admin/display-settings', headers=headers(token), json={'bypassGamesRestriction':False})
+        assert response.status_code == (200 if admin else 403)

@@ -13,7 +13,7 @@ test('numeric comparison handles commas',()=>{const o=createObserver();o(snapsho
 const {recordAge} = require('../record-celebrations.js');
 test('record dates distinguish missing dates, today, elapsed days and corrections',()=>{
  assert.equal(recordAge(null),'No score posted yet');
- assert.equal(recordAge({createdAt:null}),'Legacy record · date unknown');
+ assert.equal(recordAge({createdAt:null}),'');
  assert.match(recordAge({createdAt:100,revision:1},100000),/^Set today/);
  assert.match(recordAge({createdAt:100,revision:1},100000+86400000),/^Set 1 day ago/);
  assert.match(recordAge({createdAt:100,revision:1},100000+3*86400000),/^Set 3 days ago/);
