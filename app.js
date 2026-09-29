@@ -168,7 +168,18 @@ $('fullscreen').addEventListener('click', async () => {
   try { if (document.fullscreenElement) await document.exitFullscreen(); else await $('display-panel').requestFullscreen(); } catch (_) { $('connection').hidden = false; $('connection').textContent = 'Use your browser’s full-screen control on this device.'; }
 });
 $('rotate').addEventListener('click', () => { document.body.classList.toggle('rotated'); resizeBoard(); });
-setInterval(() => { if (!state.paused && !document.hidden && !matchMedia('(prefers-reduced-motion: reduce)').matches && !document.querySelector('dialog[open]')) advance(); }, 15000);
+let rotationTimer;
+let rotationSeconds;
+function applyDisplaySettings(settings) {
+  const seconds = settings?.rotationSeconds || 15;
+  if (seconds === rotationSeconds) return;
+  rotationSeconds = seconds;
+  clearInterval(rotationTimer);
+  rotationTimer = setInterval(() => {
+    if (!state.paused && !document.hidden && !matchMedia('(prefers-reduced-motion: reduce)').matches && !document.querySelector('dialog[open]')) advance();
+  }, seconds * 1000);
+}
+applyDisplaySettings({ rotationSeconds: 15 });
 
 function renderPicker() {
   const normalize = value => value.normalize('NFKD').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -235,7 +246,7 @@ $('play-again').addEventListener('click', () => { $('success-panel').hidden = tr
 
 async function refreshBoard() {
   try {
-    const result = await api('/leaderboard'); state.games = result.games; state.connected = true;
+    const result = await api('/leaderboard'); state.games = result.games; state.connected = true; applyDisplaySettings(result.displaySettings);
     const adminSelection = $('admin-game').value;
     $('admin-game').replaceChildren(...state.games.map(game => { const option = node('option', '', game.title); option.value = game.id; return option; }));
     $('admin-game').value = adminSelection || state.selected;
@@ -345,7 +356,7 @@ async function loadAccount(view = state.accountView) {
       $('mark-read').disabled = !result.events.length;
     } else {
       const account = await api('/account'); if (token !== state.token) return; state.account = account;
-      if (view === 'settings') $('default-initials').value = account.initials;
+      if (view === 'settings') { $('default-initials').value = account.initials; $('display-settings-form').hidden = !state.user.admin; $('rotation-seconds').value = account.displaySettings.rotationSeconds; $('display-settings-message').textContent = ''; }
       else {
         $('my-scores-list').replaceChildren(...account.scores.map(score => {
           const card = node('article','activity-card');
@@ -370,6 +381,15 @@ $('account-admin').addEventListener('click', () => { $('admin-game').value = sta
 $('mark-read').addEventListener('click', async () => {
   try { await api('/activity/read', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({throughId:state.latestEvent})}); await loadAccount('activity'); }
   catch(error) { $('account-message').textContent=error.message; }
+});
+$('display-settings-form').addEventListener('submit', async event => {
+  event.preventDefault(); $('save-display-settings').disabled = true;
+  try {
+    const result = await api('/admin/display-settings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rotationSeconds: Number($('rotation-seconds').value) }) });
+    applyDisplaySettings(result.displaySettings);
+    $('display-settings-message').textContent = `Saved: ${result.displaySettings.rotationSeconds} seconds per game. Open scoreboards pick this up within five seconds. Paused boards stay paused.`;
+  } catch (error) { $('display-settings-message').textContent = error.message; }
+  finally { $('save-display-settings').disabled = false; }
 });
 $('settings-form').addEventListener('submit', async event => {
   event.preventDefault();

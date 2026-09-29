@@ -41,7 +41,7 @@ After Google sign-in, **Account** appears near the top of score entry. It provid
 
 - **Notifications:** recent score submissions, first records and record breaks, with an unread badge and **Mark all read**. A player whose account held the previous record sees **Your record was broken**, the new score, previous record and challenger’s optional taunt.
 - **My scores:** your latest 100 submissions, current-record status, removed-entry status and attached proof photos.
-- **Settings:** save three default initials for fresh entries. Preferences and notification read status follow your Google account across devices.
+- **Settings:** save three default initials for fresh entries. Admins can also save the shared TV rotation interval (5–120 seconds). Open displays receive timing changes within five seconds, and the setting survives restarts. Preferences and notification read status follow your Google account across devices.
 - **Manage scores:** a prominent shortcut for admins. Corrections can also edit or clear a taunt.
 
 The optional **Victory taunt** is limited to 140 characters. Keep it friendly. Text is displayed as text, never interpreted as HTML. Removing a submission also removes it from the activity feed.
@@ -51,7 +51,7 @@ Notifications are inside the app; no email or phone push alerts are sent. The ba
 ## The display and game collection
 
 - Portrait 9:16 Record Spotlight design with turquoise and cream, game artwork, a prominent score and larger, spaced initials.
-- Featured game changes every 15 seconds, with three neighboring records and a permanent QR code. Pause, previous/next, fullscreen and rotation controls are available. Automatic rotation respects the browser’s reduced-motion preference.
+- Featured game changes every 15 seconds by default; admins can choose 5–120 seconds in Account → Settings → TV Display, with three neighboring records and a permanent QR code. Pause, previous/next, fullscreen and rotation controls are available. Automatic rotation respects the browser’s reduced-motion preference.
 - The collection starts with Nick’s **32 imported records**, not a 32-game limit. **The Simpsons** is also available for its first entry. Signed-in players can add missing games with their first score.
 - Search ignores punctuation and spacing. Newly added games are saved in the shared database and become available on other devices, the TV and the admin screen.
 - New games use a generic Nick’s Arcade marquee until game-specific artwork is supplied. The game name is displayed separately.
@@ -107,7 +107,7 @@ npm run build
 .venv/bin/python -m pytest -q
 ```
 
-The latest backend test run passed **55 tests**, covering persistence, new-game creation, concurrent submissions, duplicate retries, scoring/time rules, Google token validation, admin permissions, photo processing/privacy, origin restrictions, rate limits and backup/restore. All 33 supplied game entries were exercised in submission tests and browser search checks.
+The latest backend test run passed **57 tests**, covering persistence, new-game creation, concurrent submissions, duplicate retries, scoring/time rules, Google token validation, admin permissions, photo processing/privacy, origin restrictions, rate limits and backup/restore. All 33 supplied game entries were exercised in submission tests and browser search checks.
 
 For a production frontend build:
 

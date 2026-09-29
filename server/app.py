@@ -226,6 +226,21 @@ def create_app(config=None, *, allow_demo=False):
         direction = 'ASC' if catalog()[game_id]['kind'] == 'time' else 'DESC'
         return db.execute(f'SELECT * FROM scores WHERE game_id=? AND deleted_at IS NULL ORDER BY value {direction},created_at ASC,rowid ASC LIMIT 1', (game_id,)).fetchone()
 
+    def display_settings():
+        row = get_db().execute("SELECT value FROM metadata WHERE key='rotation_seconds'").fetchone()
+        return {'rotationSeconds': int(row['value']) if row else 15}
+
+    @app.patch('/api/admin/display-settings')
+    @authenticated(admin=True)
+    def save_display_settings():
+        payload = request.get_json(silent=True)
+        seconds = payload.get('rotationSeconds') if isinstance(payload, dict) else None
+        if type(seconds) is not int or not 5 <= seconds <= 120:
+            raise ValueError('Choose a whole number from 5 to 120 seconds.')
+        with get_db() as db:
+            db.execute("INSERT INTO metadata(key,value) VALUES ('rotation_seconds',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", (str(seconds),))
+        return jsonify(displaySettings=display_settings())
+
     @app.get('/api/config')
     def configuration():
         return jsonify(googleClientId=app.config['GOOGLE_CLIENT_ID'], demo=app.config['DEMO'], publicUrl=app.config['PUBLIC_URL'])
@@ -242,7 +257,7 @@ def create_app(config=None, *, allow_demo=False):
         for game in catalog().values():
             row = winner(db, game['id'])
             output.append({k: game[k] for k in ['id', 'title', 'image', 'kind', 'order']} | {'record': public_record(row) if row else None})
-        return jsonify(games=output, updatedAt=int(time.time()))
+        return jsonify(games=output, updatedAt=int(time.time()), displaySettings=display_settings())
 
     @app.get('/api/session')
     @authenticated()
@@ -368,7 +383,7 @@ def create_app(config=None, *, allow_demo=False):
         cursor = profile['read_event'] if profile else 0
         unread = db.execute('SELECT COUNT(*) FROM activity a JOIN scores s ON s.id=a.score_id WHERE a.id>? AND s.user_sub!=? AND s.deleted_at IS NULL', (cursor, g.user['sub'])).fetchone()[0]
         rows = db.execute('SELECT * FROM scores WHERE user_sub=? ORDER BY created_at DESC,rowid DESC LIMIT 100', (g.user['sub'],)).fetchall()
-        return jsonify(initials=profile['initials'] if profile else '', unread=unread, scores=[public_record(row) | {'gameTitle': catalog()[row['game_id']]['title'], 'deleted': row['deleted_at'] is not None, 'isRecord': row['deleted_at'] is None and winner(db,row['game_id'])['id']==row['id']} for row in rows])
+        return jsonify(displaySettings=display_settings(), initials=profile['initials'] if profile else '', unread=unread, scores=[public_record(row) | {'gameTitle': catalog()[row['game_id']]['title'], 'deleted': row['deleted_at'] is not None, 'isRecord': row['deleted_at'] is None and winner(db,row['game_id'])['id']==row['id']} for row in rows])
 
     @app.patch('/api/account')
     @authenticated()

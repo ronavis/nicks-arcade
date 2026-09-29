@@ -456,3 +456,23 @@ def test_backup_restores_notifications_and_account_preferences(app,tmp_path):
         assert account['initials']=='NIC' and account['unread']==0
         event=restored.get('/api/activity',headers=headers()).json['events'][0]
         assert event['yourRecordBroken'] and event['taunt']=='Your turn!'
+
+
+def test_display_timing_shared_and_persistent(app):
+    admin,tv=app.test_client(),app.test_client()
+    assert tv.get('/api/leaderboard').json['displaySettings']['rotationSeconds']==15
+    result=admin.patch('/api/admin/display-settings',headers=headers('admin'),json={'rotationSeconds':8})
+    assert result.status_code==200
+    assert tv.get('/api/leaderboard').json['displaySettings']['rotationSeconds']==8
+    assert admin.get('/api/account',headers=headers('admin')).json['displaySettings']['rotationSeconds']==8
+    assert create_app(dict(app.config)).test_client().get('/api/leaderboard').json['displaySettings']['rotationSeconds']==8
+
+
+def test_display_timing_admin_only_and_validation(app):
+    c=app.test_client();url='/api/admin/display-settings'
+    assert c.patch(url,json={'rotationSeconds':8}).status_code==401
+    assert c.patch(url,headers=headers(),json={'rotationSeconds':8}).status_code==403
+    for value in [0,4,121,8.5,'8',True,None]:
+        assert c.patch(url,headers=headers('admin'),json={'rotationSeconds':value}).status_code==400
+    for value in [5,120]:
+        assert c.patch(url,headers=headers('admin'),json={'rotationSeconds':value}).status_code==200
