@@ -100,3 +100,9 @@ Published app.js, main.css and index.html match the tested production artifact.
 ## Friendly fair-play footer — September 29, 2026
 
 Source a7c1c75 / Pages 4deee86 adds a cream square to the right of Scan. Play. Post.: “PLAY FAIR. Keep it fun. Post scores earned at Nick’s arcade. Brag honestly.” QR and note have equal square dimensions and aligned lower edges. Portrait browser checks at 1080x1920 and 540x960 show no footer overflow. JavaScript checks/build pass; published HTML/CSS match the tested artifact. No score or service changes.
+
+## Scoreboard menu — September 29, 2026
+
+Source 3b2e35f / Pages 79d2e62 replaces the faint lower TV control strip with an always-visible upper-right hamburger disclosure. Includes account, pause/play, full screen, rotate and score entry, plus unread count on the closed menu button. Native keyboard disclosure, outside click, Escape and action selection close behavior. Account/score navigation exits element fullscreen first. Local portrait browser verified expanded/collapsed appearance, Pause changing to Play, rotate/unrotate, full-screen toggle UI, signed-out account navigation, score-entry navigation and dismissals. JavaScript checks and production build pass. No backend or score changes.
+
+Public HTML, CSS and JavaScript match the production menu artifact.
