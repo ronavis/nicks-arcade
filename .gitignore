@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.venv/
+.local-preview/
+__pycache__/
+.pytest_cache/
+.env
+*.sqlite*
+uploads/
