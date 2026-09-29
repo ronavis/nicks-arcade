@@ -6,6 +6,23 @@ A shared high-score board for Nick’s basement arcade: a rotating portrait disp
 
 > **Source status — September 29, 2026:** The rebuilt app is deployed. Its current source is on [`codex/arcade-record-spotlight`](https://github.com/ronavis/nicks-arcade/tree/codex/arcade-record-spotlight), in [pull request #1](https://github.com/ronavis/nicks-arcade/pull/1). Until that PR is merged, `master` still contains the original implementation. GitHub Pages serves the separate `gh-pages` branch. Use the source branch below for local development.
 
+## Screenshots
+
+<table>
+  <tr>
+    <th>Portrait scoreboard</th>
+    <th>Arcade score entry</th>
+    <th>Add a missing game</th>
+  </tr>
+  <tr>
+    <td align="center" valign="top"><a href="docs/screenshots/tv-scoreboard.png"><img src="docs/screenshots/tv-scoreboard.png" alt="Live portrait scoreboard featuring Galaga, larger spaced initials, neighboring records and the QR code" height="480"></a></td>
+    <td align="center" valign="top"><a href="docs/screenshots/mobile-score-entry.png"><img src="docs/screenshots/mobile-score-entry.png" alt="Phone score entry with NIC initials, the full arcade alphabet keypad and optional proof photo" height="480"></a></td>
+    <td align="center" valign="top"><a href="docs/screenshots/add-game.png"><img src="docs/screenshots/add-game.png" alt="Game search offering to add Teenage Mutant Ninja Turtles and select the score type" height="480"></a></td>
+  </tr>
+</table>
+
+Click a screenshot to open the full-resolution PNG. The TV image is captured from the live site at **1080 × 1920**. Phone images show the current app in its labeled local preview with example initials and an unsubmitted score; no live records were created for these screenshots. Captured September 29, 2026.
+
 ## How to play
 
 1. Scan the QR code on the scoreboard, or open the score-entry link.
