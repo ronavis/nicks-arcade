@@ -31,8 +31,8 @@ To restore, stop only `nicks-arcade`, preserve the current data directory, copy 
 
 ## Rollback
 
-Save the previous Pages artifact and nginx configuration before publication. To roll back frontend/service code, restore the previous artifact/release while preserving `/var/lib/nicks-arcade`. This release initializes a new schema; it does not migrate an existing production arcade database. Never replace live data with demo data. If removing the new API route, validate nginx before reloading; never overwrite the entire host configuration or restart unrelated services.
+Save the previous Pages artifact and nginx configuration before publication. To roll back frontend/service code, restore the previous artifact/release while preserving `/var/lib/nicks-arcade`. The catalog update adds a games table without changing existing scores. Back up before deploying. Once custom games have scores, do not roll back to pre-catalog code: it cannot resolve those game IDs. Use a forward fix or a catalog-aware release while preserving live data. Never replace live data with demo data. If removing the new API route, validate nginx before reloading; never overwrite the entire host configuration or restart unrelated services.
 
-## Not yet verified
+## Remaining physical acceptance
 
-Google project ownership/origin/consent settings; a real Google browser login; actual phone-to-public-API traffic; live photo upload through nginx; physical QR scan; target TV model/browser/rotation behavior; production restart and scheduled/off-host backup. Local tests are evidence for implementation, not proof of these production steps.
+Ron confirmed QR scanning and Google sign-in on his phone. His Bubble Bobble 254,258 / TST submission is saved. The updated iPhone photo flow still needs his original photo retried; actual TV behavior and second-account acceptance remain pending. See launch-status.md.

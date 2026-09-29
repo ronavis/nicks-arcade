@@ -1,6 +1,6 @@
 # Nick's Arcade
 
-A portrait arcade record board and a phone score-entry app. Built from Nick's original 32-game collection, keeping the turquoise-and-cream design and authentic game artwork.
+A portrait arcade record board and a phone score-entry app. Starting with Nick's original 32 records, keeping the turquoise-and-cream design and authentic game artwork.
 
 ## What works
 
@@ -8,6 +8,8 @@ A portrait arcade record board and a phone score-entry app. Built from Nick's or
 - Phone entry with Google sign-in, a clickable A–Z keypad, three initials, DEL, and optional proof photo.
 - Scores appear without approval; the TV refreshes every five seconds. Lower scores remain in history. Equal scores preserve the earlier record. VS. Excitebike uses the lowest time.
 - Admin correction/removal, conflict protection, audit history and JSON export. Removing the top score promotes the best remaining entry.
+- Search ignores punctuation and spaces. The Simpsons is ready for its first record; signed-in players can add any missing game with their first score. New games persist in the shared database and appear on the TV.
+- iPhone HEIC/HEIF, JPG, PNG and WebP proof photos up to 40 MB and 64 megapixels are automatically resized to a maximum 1600-pixel edge and saved as JPEG.
 - Durable SQLite database and separate photo storage. Public responses exclude account details. Photos require sign-in and uploads are re-encoded to remove metadata.
 
 ## Local preview

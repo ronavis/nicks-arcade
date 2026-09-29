@@ -1,4 +1,6 @@
 """Nick's Arcade: Google-verified submissions, durable SQLite records and proof photos."""
+import hashlib
+import unicodedata
 import json
 import os
 import re
@@ -17,11 +19,17 @@ from google.auth.exceptions import GoogleAuthError, TransportError
 from google.auth.transport.requests import Request as GoogleRequest
 from google.oauth2 import id_token
 from PIL import Image, ImageOps, UnidentifiedImageError
+from pillow_heif import register_heif_opener
 from werkzeug.exceptions import HTTPException
 
 ROOT = Path(__file__).resolve().parents[1]
 CLIENT_ID = '569822322277-ng39tk1vcecgjfes85bs16umb5k47mc7.apps.googleusercontent.com'
-Image.MAX_IMAGE_PIXELS = 24_000_000
+Image.MAX_IMAGE_PIXELS = 64_000_000
+register_heif_opener(thumbnails=False, decode_threads=2)
+
+
+def game_key(title):
+    return re.sub('[^a-z0-9]', '', unicodedata.normalize('NFKD', title).lower())
 
 
 def score_value(raw, kind):
@@ -56,7 +64,7 @@ def create_app(config=None, *, allow_demo=False):
         ADMIN_EMAILS={x.strip().lower() for x in os.environ.get('ARCADE_ADMIN_EMAILS', 'ronavis@gmail.com').split(',') if x.strip()},
         ALLOWED_ORIGINS={x.strip().rstrip('/') for x in os.environ.get('ARCADE_ALLOWED_ORIGINS', 'https://ronavis.github.io').split(',') if x.strip()},
         PUBLIC_URL=os.environ.get('ARCADE_PUBLIC_URL', 'https://ronavis.github.io/nicks-arcade/'),
-        MAX_CONTENT_LENGTH=8 * 1024 * 1024,
+        MAX_CONTENT_LENGTH=41 * 1024 * 1024,
         DEMO=demo,
         TESTING=False,
     )
@@ -72,7 +80,6 @@ def create_app(config=None, *, allow_demo=False):
     photos.mkdir(exist_ok=True, mode=0o700)
     database = data / 'arcade.sqlite3'
     games = json.loads((ROOT / 'data/games.json').read_text())
-    by_id = {game['id']: game for game in games}
     google_request = GoogleRequest(session=cachecontrol.CacheControl(requests.Session()))
     demo_tokens = {}
 
@@ -85,6 +92,10 @@ def create_app(config=None, *, allow_demo=False):
     with connect() as db:
         db.execute('PRAGMA journal_mode=WAL')
         db.executescript('''
+          CREATE TABLE IF NOT EXISTS games (
+            id TEXT PRIMARY KEY, title TEXT NOT NULL, search_key TEXT NOT NULL UNIQUE,
+            image TEXT NOT NULL, kind TEXT NOT NULL, sort_order INTEGER NOT NULL
+          );
           CREATE TABLE IF NOT EXISTS scores (
             id TEXT PRIMARY KEY, game_id TEXT NOT NULL, value INTEGER NOT NULL CHECK(value>0),
             initials TEXT NOT NULL, user_sub TEXT NOT NULL, user_email TEXT NOT NULL,
@@ -101,8 +112,13 @@ def create_app(config=None, *, allow_demo=False):
           CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);
         ''')
         db.execute("BEGIN IMMEDIATE")
+        for game in games:
+            db.execute('INSERT OR IGNORE INTO games VALUES (?,?,?,?,?,?)',
+                       (game['id'], game['title'], game_key(game['title']), game['image'], game['kind'], game['order']))
         if not db.execute("SELECT 1 FROM metadata WHERE key='seed_v1'").fetchone():
             for game in games:
+                if not game.get('score'):
+                    continue
                 db.execute('INSERT INTO scores (id,game_id,value,initials,user_sub,user_email,created_at,request_id) VALUES (?,?,?,?,?,?,?,?)',
                            (str(uuid.uuid4()), game['id'], score_value(game['score'], game['kind']), game['initials'], 'imported', '', 0, game['id']))
             db.execute("INSERT INTO metadata VALUES ('seed_v1','1')")
@@ -111,6 +127,11 @@ def create_app(config=None, *, allow_demo=False):
         if 'db' not in g:
             g.db = connect()
         return g.db
+
+    def catalog():
+        if 'catalog' not in g:
+            g.catalog = {row['id']: dict(row) for row in get_db().execute('SELECT id,title,image,kind,sort_order AS \"order\" FROM games ORDER BY sort_order,title')}
+        return g.catalog
 
     @app.teardown_appcontext
     def close_db(_error):
@@ -186,12 +207,12 @@ def create_app(config=None, *, allow_demo=False):
         return decorate
 
     def public_record(row):
-        return {'id': row['id'], 'score': display_score(row['value'], by_id[row['game_id']]['kind']),
+        return {'id': row['id'], 'score': display_score(row['value'], catalog()[row['game_id']]['kind']),
                 'initials': row['initials'], 'createdAt': row['created_at'] or None,
                 'hasPhoto': bool(row['photo_id']), 'photoId': row['photo_id'], 'revision': row['revision']}
 
     def winner(db, game_id):
-        direction = 'ASC' if by_id[game_id]['kind'] == 'time' else 'DESC'
+        direction = 'ASC' if catalog()[game_id]['kind'] == 'time' else 'DESC'
         return db.execute(f'SELECT * FROM scores WHERE game_id=? AND deleted_at IS NULL ORDER BY value {direction},created_at ASC,id ASC LIMIT 1', (game_id,)).fetchone()
 
     @app.get('/api/config')
@@ -207,7 +228,7 @@ def create_app(config=None, *, allow_demo=False):
     def leaderboard():
         db = get_db()
         output = []
-        for game in games:
+        for game in catalog().values():
             row = winner(db, game['id'])
             output.append({k: game[k] for k in ['id', 'title', 'image', 'kind', 'order']} | {'record': public_record(row) if row else None})
         return jsonify(games=output, updatedAt=int(time.time()))
@@ -231,12 +252,16 @@ def create_app(config=None, *, allow_demo=False):
     def save_photo(upload):
         if not upload or not upload.filename:
             return None
+        upload.stream.seek(0, 2)
+        if upload.stream.tell() > 40 * 1024 * 1024:
+            raise ValueError('Choose a photo under 40 MB. Most camera photos work as they are.')
+        upload.stream.seek(0)
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter('error', Image.DecompressionBombWarning)
                 with Image.open(upload.stream) as image:
-                    if image.format not in {'JPEG', 'PNG', 'WEBP'}:
-                        raise ValueError('Use a JPG, PNG or WebP photo.')
+                    if image.format not in {'JPEG', 'PNG', 'WEBP', 'HEIF'}:
+                        raise ValueError('Choose an iPhone HEIC, JPG, PNG or WebP photo.')
                     image = ImageOps.exif_transpose(image)
                     image.thumbnail((1600, 1600))
                     if image.mode != 'RGB':
@@ -245,19 +270,35 @@ def create_app(config=None, *, allow_demo=False):
                     # Re-encoding strips EXIF, including location metadata, and ignores filenames.
                     image.save(photos / (photo_id + '.jpg'), format='JPEG', quality=85)
                     return photo_id
-        except (UnidentifiedImageError, OSError, Image.DecompressionBombError, Image.DecompressionBombWarning):
-            raise ValueError('That photo could not be read. Use a JPG, PNG or WebP under 8 MB and 24 megapixels.')
+        except (Image.DecompressionBombError, Image.DecompressionBombWarning):
+            raise ValueError('That photo exceeds 64 megapixels. Choose a regular camera photo instead of a panorama.')
+        except (UnidentifiedImageError, OSError, SyntaxError):
+            raise ValueError('That photo could not be opened. Try selecting it again. iPhone HEIC, JPG, PNG and WebP photos are supported.')
 
     @app.post('/api/scores')
     @authenticated()
     def submit():
         game_id = request.form.get('gameId', '')
-        if game_id not in by_id:
+        new_title = ' '.join(request.form.get('gameTitle', '').split())
+        kind = request.form.get('gameKind', 'points')
+        new_key = game_key(new_title)
+        if new_title:
+            if not 2 <= len(new_title) <= 80 or not new_key or any(unicodedata.category(c).startswith('C') for c in new_title):
+                raise ValueError('Enter a game name between 2 and 80 characters.')
+            if kind not in {'points', 'time'}:
+                raise ValueError('Choose points or fastest time for the new game.')
+            existing = get_db().execute('SELECT id,kind FROM games WHERE search_key=?', (new_key,)).fetchone()
+            game_id = existing['id'] if existing else 'custom-' + hashlib.sha256(new_key.encode()).hexdigest()[:24]
+            if existing and existing['kind'] != kind:
+                raise ValueError('That game already exists with a different score type. Choose it from search.')
+        elif game_id not in catalog():
             raise ValueError('Choose a game from the arcade collection.')
+        else:
+            kind = catalog()[game_id]['kind']
         initials = request.form.get('initials', '').strip().upper()
         if not re.fullmatch('[A-Z]{3}', initials):
             raise ValueError('Enter exactly three letters for your initials.')
-        value = score_value(request.form.get('score', ''), by_id[game_id]['kind'])
+        value = score_value(request.form.get('score', ''), kind)
         request_id = request.form.get('requestId', '')
         try:
             uuid.UUID(request_id)
@@ -267,11 +308,19 @@ def create_app(config=None, *, allow_demo=False):
         photo_id = None
         try:
             db.execute('BEGIN IMMEDIATE')
+            if new_title:
+                db.execute('INSERT OR IGNORE INTO games VALUES (?,?,?,?,?,?)',
+                           (game_id, new_title, new_key, 'images/new-game.svg', kind, 1000))
+                g.pop('catalog', None)
+                existing = db.execute('SELECT id,kind FROM games WHERE search_key=?', (new_key,)).fetchone()
+                game_id = existing['id']
+                if existing['kind'] != kind:
+                    raise ValueError('That game already exists with a different score type. Choose it from search.')
             previous = db.execute('SELECT * FROM scores WHERE user_sub=? AND request_id=?', (g.user['sub'], request_id)).fetchone()
             if previous:
                 if (previous['game_id'], previous['value'], previous['initials']) != (game_id, value, initials):
                     abort(409, 'This submission was already saved with different details. Start a new entry.')
-                return jsonify(record=public_record(previous), duplicate=True), 200
+                return jsonify(record=public_record(previous), game=catalog()[game_id], isRecord=winner(db, game_id)['id'] == previous['id'], duplicate=True), 200
             now = int(time.time())
             count = db.execute('SELECT COUNT(*) FROM scores WHERE user_sub=? AND created_at>?', (g.user['sub'], now - 60)).fetchone()[0]
             if count >= 5:
@@ -286,7 +335,7 @@ def create_app(config=None, *, allow_demo=False):
             row = db.execute('SELECT * FROM scores WHERE id=?', (score_id,)).fetchone()
             best = winner(db, game_id)
             db.commit()
-            return jsonify(record=public_record(row), isRecord=best['id'] == score_id), 201
+            return jsonify(record=public_record(row), game=catalog()[game_id], isRecord=best['id'] == score_id), 201
         except Exception:
             db.rollback()
             if photo_id:
@@ -312,7 +361,7 @@ def create_app(config=None, *, allow_demo=False):
     @authenticated(admin=True)
     def admin_scores():
         game_id = request.args.get('gameId')
-        if game_id not in by_id:
+        if game_id not in catalog():
             raise ValueError('Choose a game to review its submissions.')
         rows = get_db().execute('SELECT * FROM scores WHERE game_id=? ORDER BY deleted_at IS NOT NULL, created_at DESC, id DESC LIMIT 200', (game_id,)).fetchall()
         return jsonify(scores=[public_record(row) | {'email': row['user_email'] or 'Imported starting record', 'deleted': row['deleted_at'] is not None} for row in rows])
@@ -339,7 +388,7 @@ def create_app(config=None, *, allow_demo=False):
             else:
                 if row['deleted_at'] is not None:
                     abort(409, 'A removed submission cannot be edited.')
-                value = score_value(payload.get('score', ''), by_id[row['game_id']]['kind'])
+                value = score_value(payload.get('score', ''), catalog()[row['game_id']]['kind'])
                 initials = str(payload.get('initials', '')).upper().strip()
                 if not re.fullmatch('[A-Z]{3}', initials):
                     raise ValueError('Enter exactly three letters.')
@@ -353,7 +402,7 @@ def create_app(config=None, *, allow_demo=False):
     @app.get('/api/admin/export')
     @authenticated(admin=True)
     def export():
-        response = jsonify(games=games, scores=[dict(row) for row in get_db().execute('SELECT * FROM scores')], audit=[dict(row) for row in get_db().execute('SELECT * FROM audit')])
+        response = jsonify(games=list(catalog().values()), scores=[dict(row) for row in get_db().execute('SELECT * FROM scores')], audit=[dict(row) for row in get_db().execute('SELECT * FROM audit')])
         response.headers['Content-Disposition'] = 'attachment; filename="nicks-arcade-records.json"'
         return response
 

@@ -286,5 +286,12 @@
     "image": "images/original-slides/tetris.png",
     "kind": "points",
     "order": 31
+  },
+  {
+    "id": "simpsons",
+    "title": "The Simpsons",
+    "image": "images/mame_marquees/simpsons.png",
+    "kind": "points",
+    "order": 32
   }
 ]

@@ -43,7 +43,7 @@ def test_persistence_and_cross_client_visibility(app):
     assert record(tv)['score'] == '42,500'
     reopened = create_app(dict(app.config)).test_client()
     assert record(reopened)['score'] == '42,500'
-    assert len(reopened.get('/api/leaderboard').json['games']) == 32
+    assert len(reopened.get('/api/leaderboard').json['games']) == 33
 
 
 def test_lower_scores_are_history_not_replacements(app):
@@ -205,7 +205,7 @@ def test_google_signature_audience_expiry_and_issuer(app, monkeypatch, override,
 
 
 def test_oversize_upload_is_rejected(app):
-    assert submit(app.test_client(), photo=(io.BytesIO(b'x' * (8 * 1024 * 1024)), 'test.png')).status_code == 413
+    assert submit(app.test_client(), photo=(io.BytesIO(b'x' * (42 * 1024 * 1024)), 'test.png')).status_code == 413
 
 
 def test_third_party_email_cannot_gain_admin_by_email_alone(app):
@@ -237,3 +237,112 @@ def test_invalid_admin_json_does_not_crash(app):
     c = app.test_client()
     score_id = record(c)['id']
     assert c.patch('/api/admin/scores/' + score_id, json=['bad'], headers=headers('admin')).status_code == 400
+
+
+def test_simpsons_first_score_and_all_catalog_games(app):
+    c = app.test_client()
+    games = c.get('/api/leaderboard').json['games']
+    assert len({g['id'] for g in games}) == 33
+    assert record(c, 'simpsons') is None
+    for index, game in enumerate(games):
+        app.config['TEST_TOKEN_VERIFIER'] = lambda token: dict(sub=token, email='player@gmail.com', email_verified=True)
+        result = submit(c, '0:59.00' if game['kind'] == 'time' else '100', game=game['id'], token=f'player{index}')
+        assert result.status_code == 201, (game['title'], result.json)
+        if game['id'] == 'simpsons':
+            assert result.json['isRecord'] is True
+
+
+def test_new_game_atomic_persistent_searchable_and_admin(app):
+    c = app.test_client()
+    result = submit(c, '123', game='', gameTitle='  New Arcade Game  ', gameKind='points')
+    assert result.status_code == 201 and result.json['isRecord']
+    game_id = result.json['game']['id']
+    second = submit(c, '100', game='', gameTitle='New-Arcade Game', gameKind='points')
+    assert second.status_code == 201 and second.json['game']['id'] == game_id
+    reopened = create_app(dict(app.config)).test_client()
+    assert record(reopened, game_id)['score'] == '123'
+    saved = reopened.get('/api/admin/scores?gameId=' + game_id, headers=headers('admin')).json['scores']
+    assert len(saved) == 2
+    correction = reopened.patch('/api/admin/scores/' + result.json['record']['id'], json=dict(score='200', initials='ABC', revision=1), headers=headers('admin'))
+    assert correction.status_code == 200
+    assert record(c, game_id)['score'] == '200'
+
+
+def test_failed_new_game_does_not_leave_empty_catalog_entry(app):
+    c = app.test_client()
+    result = submit(c, game='', gameTitle='Unfinished Game', photo=(io.BytesIO(b'broken'), 'bad.heic'))
+    assert result.status_code == 400
+    assert not any(g['title'] == 'Unfinished Game' for g in c.get('/api/leaderboard').json['games'])
+
+
+def test_new_time_game_and_conflicting_kind(app):
+    c = app.test_client()
+    result = submit(c, '1:02.30', game='', gameTitle='New Racing Game', gameKind='time')
+    assert result.status_code == 201 and result.json['isRecord']
+    assert submit(c, '500', game='', gameTitle='New Racing Game', gameKind='points').status_code == 400
+    assert submit(c, '0:59.99', game=result.json['game']['id']).json['isRecord']
+
+
+def test_iphone_heic_reencoded_and_metadata_removed(app):
+    image = Image.new('RGB', (1200, 600), 'blue')
+    exif = Image.Exif(); exif[270] = 'private'; exif[274] = 6
+    source = io.BytesIO()
+    image.save(source, format='HEIF', exif=exif)
+    source.seek(0)
+    c = app.test_client()
+    response = submit(c, photo=(source, 'IMG_0001.HEIC'))
+    assert response.status_code == 201, response.json
+    saved = c.get('/api/photos/' + response.json['record']['photoId'], headers=headers())
+    decoded = Image.open(io.BytesIO(saved.data))
+    assert decoded.format == 'JPEG' and max(decoded.size) <= 1600
+    assert not decoded.getexif()
+
+
+def test_48_megapixel_camera_photo_is_resized(app):
+    source = io.BytesIO()
+    Image.new('RGB', (8064, 6048), 'green').save(source, format='JPEG')
+    source.seek(0)
+    c = app.test_client()
+    response = submit(c, photo=(source, 'IMG_48MP.JPG'))
+    assert response.status_code == 201, response.json
+    saved = c.get('/api/photos/' + response.json['record']['photoId'], headers=headers())
+    assert Image.open(io.BytesIO(saved.data)).size == (1600, 1200)
+
+
+def test_photo_over_old_eight_mb_limit(app):
+    source = io.BytesIO()
+    Image.new('RGB', (40, 40)).save(source, format='PNG')
+    source.write(b'\0' * (9 * 1024 * 1024))
+    source.seek(0)
+    assert submit(app.test_client(), photo=(source, 'large.png')).status_code == 201
+
+
+def test_pixel_limit_still_rejects_oversized_images(app, monkeypatch):
+    monkeypatch.setattr(Image, 'MAX_IMAGE_PIXELS', 100)
+    source = io.BytesIO()
+    Image.new('RGB', (20, 20)).save(source, format='PNG'); source.seek(0)
+    result = submit(app.test_client(), photo=(source, 'huge.png'))
+    assert result.status_code == 400 and '64 megapixels' in result.json['error']
+
+
+def test_upgrade_preserves_existing_scores(app):
+    c = app.test_client()
+    created = submit(c, '254258', initials='TST', game='bubblebobble')
+    with sqlite3.connect(str(app.config['DATA_DIR']) + '/arcade.sqlite3') as db:
+        before = db.execute('SELECT * FROM scores ORDER BY id').fetchall()
+        db.execute('DROP TABLE games')
+    reopened = create_app(dict(app.config)).test_client()
+    assert len(reopened.get('/api/leaderboard').json['games']) == 33
+    with sqlite3.connect(str(app.config['DATA_DIR']) + '/arcade.sqlite3') as db:
+        assert db.execute('SELECT * FROM scores ORDER BY id').fetchall() == before
+    assert created.status_code == 201
+
+
+def test_concurrent_new_game_uses_one_catalog_entry(app):
+    def post(score):
+        return submit(app.test_client(), str(score), game='', gameTitle='Concurrent Cabinet')
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(post, [123, 456]))
+    assert all(r.status_code == 201 for r in results)
+    assert len({r.json['game']['id'] for r in results}) == 1
+    assert record(app.test_client(), results[0].json['game']['id'])['score'] == '456'

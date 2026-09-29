@@ -12,6 +12,7 @@ if (process.env.ARCADE_API_BASE) {
   await writeFile(new URL('config.js', out), `window.ARCADE_CONFIG = ${JSON.stringify({ apiBase: endpoint.href.replace(/\/$/, '') })};\n`);
 }
 await mkdir(new URL('images/', out), { recursive: true });
+await copyFile(new URL('../images/new-game.svg', import.meta.url), new URL('images/new-game.svg', out));
 const games = JSON.parse(await readFile(new URL('../data/games.json', import.meta.url)));
 for (const game of games) {
   await mkdir(new URL('./', new URL(game.image, out)), { recursive: true });
@@ -26,4 +27,4 @@ await mkdir(new URL('vendor/licenses/', out), { recursive: true });
 for (const [source, name] of [['@fontsource/jersey-10/LICENSE', 'Jersey-10.txt'], ['@phosphor-icons/web/LICENSE', 'Phosphor.txt'], ['qrcode/license', 'QRCode.txt']]) {
   await copyFile(new URL('../node_modules/' + source, import.meta.url), new URL('vendor/licenses/' + name, out));
 }
-console.log('Built static site in dist/ with only the 32 game images used by the app.');
+console.log(`Built static site in dist/ with the ${games.length} game images used by the app.`);

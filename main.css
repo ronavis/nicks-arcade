@@ -26,3 +26,5 @@
 .rotated .display-panel{position:fixed;inset:0;width:100vw;height:100vh;transform:none;display:flex;align-items:center;justify-content:center}
 .rotated .board,.rotated .display-panel:fullscreen .board{width:min(100vh,calc(100vw * .5625));height:auto;aspect-ratio:9/16;transform:rotate(90deg);flex-shrink:0}
 .rotated .display-tools{position:fixed;right:12px;bottom:8px}
+
+#add-game{display:block;width:100%;min-height:48px;margin-top:12px;padding:10px;background:var(--cyan);border:2px solid var(--ink);font-weight:bold;overflow-wrap:anywhere}
