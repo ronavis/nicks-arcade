@@ -16,3 +16,10 @@ test('preserve assigned artwork and avoid incorrect matches for different editio
   assert.equal(resolve({ title: 'Unknown cabinet' }), 'images/new-game.svg');
   for (const entry of entries) assert.ok(fs.existsSync(entry.image), entry.image);
 });
+
+test('rejected pack URLs never render, including saved legacy selections', () => {
+  const old = 'https://raw.githubusercontent.com/ronavis/nicks-arcade/d014672/images/mame_marquees_clean/nbajam.png';
+  assert.equal(resolve({title:'NBA Jam', image:old}), 'images/cabinet-marquees/nbajam.jpg');
+  assert.equal(resolve({title:'Unknown cabinet', image:old}), 'images/new-game.svg');
+  assert.equal(resolve({title:'Unknown cabinet', image:'images/mame_marquees2/example.png'}), 'images/new-game.svg');
+});

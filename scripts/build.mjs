@@ -16,8 +16,10 @@ await copyFile(new URL('../images/new-game.svg', import.meta.url), new URL('imag
 await copyFile(new URL('../images/scouts-honor.png', import.meta.url), new URL('images/scouts-honor.png', out));
 const games = JSON.parse(await readFile(new URL('../data/games.json', import.meta.url)));
 const extraArtwork = JSON.parse(await readFile(new URL('../data/artwork.json', import.meta.url)));
+const searchableArtwork = JSON.parse(await readFile(new URL('../data/arcade-catalog.json', import.meta.url)));
+const cabinetArtwork = searchableArtwork.filter(entry => entry.image.includes('raw.githubusercontent.com/Snapouille/'));
 const artwork = [...games.map(({ title, id, image }) => ({ title, aliases: [id], image })), ...extraArtwork];
-await writeFile(new URL('artwork-catalog.js', out), `window.ARCADE_ARTWORK = ${JSON.stringify(artwork)};\n`);
+await writeFile(new URL('artwork-catalog.js', out), `window.ARCADE_ARTWORK = ${JSON.stringify([...cabinetArtwork.map(({id, title, image}) => ({title, aliases:[id], image})), ...artwork])};\n`);
 for (const game of artwork) {
   await mkdir(new URL('./', new URL(game.image, out)), { recursive: true });
   await copyFile(new URL('../' + game.image, import.meta.url), new URL(game.image, out));
