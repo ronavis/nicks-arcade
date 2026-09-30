@@ -91,7 +91,7 @@ function renderEntry() {
   $('score-label').textContent = game.kind === 'time' ? 'Your time' : 'Your score';
   $('score-input').inputMode = game.kind === 'time' ? 'text' : 'numeric';
   $('score-input').placeholder = game.kind === 'time' ? '1:02.30' : '0';
-  $('score-hint').textContent = game.kind === 'time' ? 'Minutes:seconds.hundredths. Lower is better.' : '';
+  $('score-hint').textContent = game.kind === 'time' ? 'Minutes:seconds.hundredths. 1:02:30 and 1:02.30 both mean 1 min 2.30 sec. Lower is better.' : '';
 }
 function renderInitials() {
   $('initials-slots').replaceChildren(...[0, 1, 2].map(index => node('span', index === state.initials.length ? 'active' : '', state.initials[index] || '_')));
@@ -402,6 +402,7 @@ function openEdit(score, action) {
   $('edit-summary').textContent = action === 'delete' ? `Remove ${score.score} by ${score.initials} from ${gameById($('admin-game').value)?.title}? The best remaining score will appear on the board. The removal is kept in the admin history.` : `Editing ${score.initials} · ${score.score} on ${gameById($('admin-game').value)?.title}. Changes are recorded in admin history.`;
   $('edit-taunt').hidden = action === 'delete'; $('edit-taunt-label').hidden = action === 'delete'; $('edit-taunt').value = score.taunt || '';
   $('edit-fields').hidden = action === 'delete'; $('edit-score').disabled = action === 'delete'; $('edit-initials').disabled = action === 'delete';
+  $('edit-time-hint').hidden = action === 'delete' || gameById($('admin-game').value)?.kind !== 'time';
   $('edit-score').value = score.score; $('edit-initials').value = score.initials; $('edit-message').textContent = '';
   $('save-edit').textContent = action === 'delete' ? 'Remove score' : 'Save correction'; $('edit-dialog').showModal();
 }
@@ -411,7 +412,7 @@ $('edit-form').addEventListener('submit', async event => {
   event.preventDefault(); const { score, action } = state.editing; $('save-edit').disabled = true;
   try {
     await api(`/admin/scores/${score.id}`, { method: action === 'delete' ? 'DELETE' : 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ revision: score.revision, score: $('edit-score').value, initials: $('edit-initials').value, taunt: $('edit-taunt').value }) });
-    $('edit-dialog').close(); await refreshBoard(); await loadAdmin(); $('admin-feedback').textContent = action === 'delete' ? 'Score removed. The scoreboard has been updated.' : 'Correction saved. The scoreboard is up to date.';
+    $('edit-dialog').close(); await refreshBoard(); await loadAdmin(); $('admin-feedback').textContent = action === 'delete' ? 'Score removed. The scoreboard has been updated.' : `Correction saved: ${adminScores.find(item => item.id === score.id)?.score || 'score updated'}. The scoreboard is up to date.`;
   } catch (error) { $('edit-message').textContent = error.message; }
   finally { $('save-edit').disabled = false; }
 });

@@ -18,11 +18,11 @@
     "order": 1
   },
   {
-    "title": "Bubble Bobble",
+    "title": "Puzzle Bobble",
     "score": "1,734,150",
     "initials": "RJW",
     "id": "bubblebobble",
-    "image": "images/bubblebobble.png",
+    "image": "images/cabinet-marquees/puzzle-bobble.png",
     "kind": "points",
     "order": 2
   },
