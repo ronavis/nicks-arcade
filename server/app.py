@@ -645,7 +645,23 @@ def create_app(config=None, *, allow_demo=False):
         if game_id not in catalog():
             raise ValueError('Choose a game to review its submissions.')
         rows = get_db().execute('SELECT * FROM scores WHERE game_id=? ORDER BY deleted_at IS NOT NULL, created_at DESC, id DESC LIMIT 200', (game_id,)).fetchall()
-        return jsonify(scores=[public_record(row) | {'email': row['user_email'] or 'Imported starting record', 'deleted': row['deleted_at'] is not None} for row in rows])
+        # Activity captures whether the submission actually broke the record then.
+        # Recover its original value from the first correction audit, not today's value.
+        history_rows = get_db().execute('''SELECT s.*, a.is_record,
+            (SELECT before_json FROM audit WHERE score_id=s.id AND action='correct' ORDER BY id LIMIT 1) AS original_json
+            FROM scores s LEFT JOIN activity a ON a.score_id=s.id
+            WHERE s.game_id=? AND (a.is_record=1 OR s.created_at=0)
+            ORDER BY s.created_at DESC, a.id DESC, s.id DESC''', (game_id,)).fetchall()
+        history = []
+        for row in history_rows:
+            original = json.loads(row['original_json']) if row['original_json'] else dict(row)
+            history.append({'id': row['id'], 'score': display_score(original['value'], catalog()[game_id]['kind']),
+                            'initials': original['initials'], 'email': row['user_email'] or None,
+                            'createdAt': row['created_at'] or None, 'imported': row['created_at'] == 0,
+                            'corrected': bool(row['original_json']), 'deleted': row['deleted_at'] is not None})
+        untracked = get_db().execute('''SELECT COUNT(*) FROM scores s LEFT JOIN activity a ON a.score_id=s.id
+            WHERE s.game_id=? AND s.created_at>0 AND a.id IS NULL''', (game_id,)).fetchone()[0]
+        return jsonify(scores=[public_record(row) | {'email': row['user_email'] or 'Imported starting record', 'deleted': row['deleted_at'] is not None} for row in rows], recordHistory=history, untrackedSubmissions=untracked)
 
     @app.route('/api/admin/scores/<score_id>', methods=['PATCH', 'DELETE'])
     @authenticated(admin=True)

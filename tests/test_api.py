@@ -755,3 +755,34 @@ def test_marquee_validation_and_backup_restore(app,tmp_path):
     assert restored.get('/api/marquees/'+first).status_code == 404
     with sqlite3.connect(destination/'arcade.sqlite3') as db:
         assert db.execute('SELECT COUNT(*) FROM marquee_audit').fetchone()[0] == 2
+
+
+def test_admin_record_history_preserves_milestones_after_correction_and_removal(app):
+    c = app.test_client()
+    assert c.get('/api/admin/scores?gameId=galaga', headers=headers('player')).status_code == 403
+    first = submit(c, '42000', 'AAA').json['record']
+    submit(c, '41900', 'BBB')  # Non-record and tie are submissions, not milestones.
+    submit(c, '42000', 'CCC')
+    second = submit(c, '43000', 'DDD').json['record']
+    assert c.patch('/api/admin/scores/'+first['id'], json={'revision':first['revision'],'score':'40000','initials':'ZZZ'}, headers=headers('admin')).status_code == 200
+    assert c.delete('/api/admin/scores/'+second['id'], json={'revision':second['revision']}, headers=headers('admin')).status_code == 200
+    history = c.get('/api/admin/scores?gameId=galaga', headers=headers('admin')).json['recordHistory']
+    assert [(h['score'],h['initials']) for h in history] == [('43,000','DDD'),('42,000','AAA'),('41,510','JJH')]
+    assert history[0]['deleted'] and history[1]['corrected']
+    assert history[1]['email']=='player@gmail.com' and history[1]['createdAt']
+    assert history[2]['imported'] and history[2]['createdAt'] is None
+    reopened = create_app(dict(app.config)).test_client()
+    assert reopened.get('/api/admin/scores?gameId=galaga',headers=headers('admin')).json['recordHistory']==history
+
+
+def test_admin_record_history_faster_times_and_tracking_gap(app):
+    c = app.test_client()
+    submit(c,'1:01:30','RON',game='vsexcitebike')
+    submit(c,'1:03:30','AAA',game='vsexcitebike')
+    result=c.get('/api/admin/scores?gameId=vsexcitebike',headers=headers('admin')).json
+    assert [h['score'] for h in result['recordHistory']]==['1:01.30','1:02.30']
+    with sqlite3.connect(app.config['DATA_DIR']+'/arcade.sqlite3') as db:
+        db.execute("DELETE FROM activity WHERE score_id IN (SELECT id FROM scores WHERE game_id='vsexcitebike')")
+    result=c.get('/api/admin/scores?gameId=vsexcitebike',headers=headers('admin')).json
+    assert result['untrackedSubmissions']==2
+    assert len(result['recordHistory'])==1 and result['recordHistory'][0]['imported']
