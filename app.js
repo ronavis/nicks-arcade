@@ -452,6 +452,13 @@ function accountSection(view) {
     $(id).setAttribute('aria-pressed', String(name === view));
   }
 }
+function accountArtwork(title) {
+  const game = state.allGames.find(game => game.title === title) || {title};
+  const artwork = node('img', 'my-score-artwork');
+  artwork.src = artworkUrl(game); artwork.alt = `${title} marquee`; artwork.loading = 'lazy';
+  artwork.addEventListener('error', () => { artwork.hidden = true; }, {once:true});
+  return artwork;
+}
 async function loadAccount(view = state.accountView) {
   if (!state.user) return;
   accountSection(view); $('account-message').textContent = 'Loading…';
@@ -463,6 +470,7 @@ async function loadAccount(view = state.accountView) {
       $('activity-list').replaceChildren(...result.events.map(event => {
         const card = node('article', `activity-card${event.unread ? ' unread' : ''}`);
         const title = event.yourRecordBroken ? 'YOUR RECORD WAS BROKEN!' : event.isRecord ? (event.previousScore ? 'NEW RECORD!' : 'FIRST RECORD!') : 'SCORE POSTED';
+        card.append(accountArtwork(event.gameTitle));
         card.append(node('strong', 'activity-title', title), node('h4', '', event.gameTitle), node('p', '', `${event.initials} · ${event.score}`));
         if (event.isRecord && event.previousScore) card.append(node('p', 'small', `Previous record: ${event.previousInitials} · ${event.previousScore}`));
         if (event.taunt) card.append(node('blockquote', '', event.taunt));
@@ -478,12 +486,7 @@ async function loadAccount(view = state.accountView) {
         const visibleScores = account.scores.filter(score => !score.deleted);
         $('my-scores-list').replaceChildren(...visibleScores.map(score => {
           const card = node('article','activity-card my-score-card');
-          const game = state.games.find(game => game.title === score.gameTitle);
-          const artwork = node('img', 'my-score-artwork');
-          artwork.src = game ? artworkUrl(game) : 'images/new-game.svg';
-          artwork.alt = `${score.gameTitle} marquee`; artwork.loading = 'lazy';
-          artwork.addEventListener('error', () => { artwork.hidden = true; }, { once: true });
-          card.append(artwork);
+          card.append(accountArtwork(score.gameTitle));
           card.append(node('h4','',score.gameTitle), node('p','my-score-value',`${score.initials} · ${score.score}`), node('strong','small',score.deleted ? 'Removed by admin' : score.isRecord ? 'Current record holder' : 'Saved in game history'));
           card.append(node('p', 'small', score.createdAt ? `Submitted ${new Date(score.createdAt * 1000).toLocaleString()}` : 'Imported arcade record · date unknown'));
           if (score.taunt) card.append(node('blockquote','',score.taunt));
@@ -646,6 +649,7 @@ async function renderCatalogSearch(mode, query) {
       const image = node('img'); image.src = artworkUrl(game); image.alt = ''; image.loading = 'lazy';
       image.onerror = () => { image.onerror = null; image.src = 'images/new-game.svg'; };
       const info = node('div'); info.append(node('strong', '', game.title), node('small', '', mode === 'admin' ? (game.inArcade ? 'Already in Nick’s arcade' : 'Add to Nick’s arcade') : 'Choose this game'));
+      if (ArcadeArtwork.resolve(game) === 'images/new-game.svg') info.append(node('small', '', 'Marquee unavailable'));
       button.append(image, info); button.disabled = mode === 'admin' && game.inArcade;
       button.addEventListener('click', async () => {
         if (mode === 'entry') {
