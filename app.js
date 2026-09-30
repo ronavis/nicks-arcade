@@ -381,21 +381,37 @@ function renderAdminScores() {
   }
 }
 
+function renderRecordHistory(history, untracked) {
+  $('record-history-note').textContent = 'Newest first · Scores and initials as originally entered. Corrections and removals are labeled.' + (untracked ? ` ${untracked} older submission${untracked === 1 ? '' : 's'} predate record tracking; their record status is unknown.` : '');
+  $('record-history-list').replaceChildren(...history.map(entry => {
+    const item = node('li', 'record-history-item');
+    item.append(node('span', 'admin-score-status', entry.imported ? 'Imported starting record' : 'New record'));
+    item.append(node('strong', 'record-history-score', `${entry.score} · ${entry.initials}`));
+    item.append(node('p', 'small', entry.email ? `${entry.imported ? 'Linked player' : 'Submitted by'}: ${entry.email}` : 'Original player account not recorded'));
+    const date = node('time', 'small', entry.createdAt ? new Date(entry.createdAt * 1000).toLocaleString() : 'Original date not recorded');
+    if (entry.createdAt) date.dateTime = new Date(entry.createdAt * 1000).toISOString();
+    item.append(date);
+    if (entry.corrected || entry.deleted) item.append(node('p', 'history-change', [entry.corrected ? 'Later corrected by an admin' : '', entry.deleted ? 'Removed from the scoreboard' : ''].filter(Boolean).join(' · ')));
+    return item;
+  }));
+  if (!history.length) $('record-history-list').append(node('li', 'small', 'No recorded milestones yet. The first new record will appear here.'));
+}
+
 async function loadAdmin() {
   if (!state.user?.admin) return;
   const requestNumber = ++adminLoad, token = state.token;
   const gameId = $('admin-game').value || state.selected, game = gameById(gameId);
-  adminScores = []; $('admin-list').replaceChildren();
+  adminScores = []; $('admin-list').replaceChildren(); $('record-history-list').replaceChildren(); $('record-history-note').textContent = 'Loading record history…';
   $('admin-message').textContent = 'Loading submissions…';
   $('admin-game-title').textContent = game?.title || 'Choose a game';
   $('admin-marquee').src = game ? artworkUrl(game) : 'images/new-game.svg';
   $('admin-marquee').alt = game ? `${game.title} marquee` : '';
   $('admin-current-record').textContent = game?.record ? `Record to beat: ${game.record.score} · ${game.record.initials}` : 'No current record';
   try {
-    const {scores} = await api(`/admin/scores?gameId=${encodeURIComponent(gameId)}`);
+    const {scores, recordHistory = [], untrackedSubmissions = 0} = await api(`/admin/scores?gameId=${encodeURIComponent(gameId)}`);
     if (requestNumber !== adminLoad || token !== state.token || !state.user?.admin) return;
-    adminScores = scores; renderAdminScores();
-  } catch (error) { if (requestNumber === adminLoad && token === state.token) $('admin-message').textContent = error.message; }
+    adminScores = scores; renderAdminScores(); renderRecordHistory(recordHistory, untrackedSubmissions);
+  } catch (error) { if (requestNumber === adminLoad && token === state.token) { $('admin-message').textContent = error.message; $('record-history-note').textContent = 'Record history could not be loaded. Try choosing the game again.'; } }
 }
 function openEdit(score, action) {
   state.editing = { score, action }; $('edit-heading').textContent = action === 'delete' ? 'REMOVE SCORE?' : 'CORRECT SCORE';
@@ -421,13 +437,13 @@ async function showPhoto(id) {
     const blob = await api(`/photos/${id}`, { blob: true });
     if ($('view-proof').dataset.url) URL.revokeObjectURL($('view-proof').dataset.url);
     const url = URL.createObjectURL(blob); $('view-proof').src = url; $('view-proof').dataset.url = url; $('photo-dialog').showModal();
-  } catch (error) { $('admin-message').textContent = error.message; }
+  } catch (error) { { $('admin-message').textContent = error.message; $('record-history-note').textContent = 'Record history could not be loaded. Try choosing the game again.'; } }
 }
 $('close-photo').addEventListener('click', () => $('photo-dialog').close());
 $('photo-dialog').addEventListener('close', () => { if ($('view-proof').dataset.url) URL.revokeObjectURL($('view-proof').dataset.url); $('view-proof').removeAttribute('src'); delete $('view-proof').dataset.url; });
 $('export-records').addEventListener('click', async () => {
   try { const data = await api('/admin/export'); const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })); const a = node('a'); a.href = url; a.download = 'nicks-arcade-records.json'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
-  catch (error) { $('admin-message').textContent = error.message; }
+  catch (error) { { $('admin-message').textContent = error.message; $('record-history-note').textContent = 'Record history could not be loaded. Try choosing the game again.'; } }
 });
 
 
