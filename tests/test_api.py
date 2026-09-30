@@ -688,3 +688,17 @@ def test_ron_nick_same_admin_access_martin_regular(tmp_path):
         assert c.get('/api/session', headers=headers(token)).json['admin'] == admin
         response = c.patch('/api/admin/display-settings', headers=headers(token), json={'bypassGamesRestriction':False})
         assert response.status_code == (200 if admin else 403)
+
+
+def test_excitebike_admin_time_normalization_and_real_correction(app):
+    c = app.test_client()
+    game = next(g for g in c.get('/api/leaderboard').json['games'] if g['kind'] == 'time')
+    first = game['record']
+    response = c.patch('/api/admin/scores/' + first['id'], json={'revision':first['revision'], 'score':'1:02:30', 'initials':first['initials']}, headers=headers('admin'))
+    assert response.status_code == 200
+    same = record(c, game['id'])
+    assert same['score'] == '1:02.30'
+    response = c.patch('/api/admin/scores/' + same['id'], json={'revision':same['revision'], 'score':'1:01:29', 'initials':same['initials']}, headers=headers('admin'))
+    assert response.status_code == 200
+    assert record(c, game['id'])['score'] == '1:01.29'
+    assert record(create_app(dict(app.config)).test_client(), game['id'])['score'] == '1:01.29'

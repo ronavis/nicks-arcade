@@ -131,7 +131,7 @@ Still to confirm:
 - Test Nick’s actual TV/browser for orientation, fullscreen, readability and sustained rotation.
 - Have Nick sign in with his own Google account and confirm his admin controls. Ron/Nick role parity and regular-player restrictions pass automated tests; the agent has not performed Nick’s live Google sign-in.
 - Verify the full regular-player flow with a second real non-admin Google account; local browser role checks pass.
-- Resolve source-record questions with Nick: Bubble Bobble versus Bust-a-Move, one Street Fighter edition, and whether VS. Excitebike’s original `1:02:30` means `1:02.30` (minutes:seconds.hundredths).
+- Resolve source-record questions with Nick: the exact Street Fighter edition.
 
 Imported starting records have unknown original dates and are seeded once, not reset on restart. Earlier browser-local scores are not silently imported; preserve any such records before discarding an old browser session.
 
@@ -172,3 +172,7 @@ Under **My account → Settings → Arcade rules**, admins can enable **Bypass m
 Ron and Nick have the same admin permissions through their configured Google accounts. Personal scores, notifications, and preferences still belong to each signed-in account. Nick must use his own Google account.
 
 Undated legacy records leave the date row blank while preserving its layout space.
+
+Nick confirmed the imported 1,734,150 / RJW record belongs to **Puzzle Bobble**. Its historical internal game ID is retained to preserve score ownership and history.
+
+Excitebike race times use minutes, seconds and hundredths: `1:02:30` and `1:02.30` both represent 62.30 seconds. The app accepts both and displays `1:02.30`; lower is better. [Nintendo’s VS. System description](https://www.nintendo.com/en-ca/store/products/arcade-archives-excitebike-switch/) confirms hundredth-of-a-second racing. Admin time fields explain this and save feedback includes the stored display value.

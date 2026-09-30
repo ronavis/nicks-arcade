@@ -27,3 +27,7 @@ Stored unchanged as `images/cabinet-marquees/nbajam.jpg`. Artwork belongs to its
 Ron supplied `images/nicks-arcade-token.jpg`. The built-in image tool produced `images/nicks-arcade-token-turquoise.png`; that asset supplies the PNG/ICO browser icons and Apple touch icon. Original retained.
 
 Edit prompt: “Edit the supplied Nick's Arcade token photograph for use as a square favicon. Replace ONLY the white background outside the circular token with solid turquoise #27c4cd. Preserve the gold coin, exact lettering Nick's Arcade, original patina, details, proportions and framing. Do not redesign or redraw the coin, add anything, or change text. Output square image with opaque turquoise background.”
+
+## Puzzle Bobble
+
+Nick corrected the imported record from Bubble Bobble to Puzzle Bobble on September 30, 2026. Cabinet artwork: [LaunchBox Puzzle Bobble marquee](https://gamesdb.launchbox-app.com/games/images/38330-bust-a-move), Japanese marquee https://images.launchbox-app.com/756610fa-9134-4788-85fa-b02edcb9823e.png, stored as `images/cabinet-marquees/puzzle-bobble.png`. Original Bubble Bobble artwork remains available for that separate game.
