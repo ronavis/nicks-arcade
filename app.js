@@ -437,13 +437,13 @@ async function showPhoto(id) {
     const blob = await api(`/photos/${id}`, { blob: true });
     if ($('view-proof').dataset.url) URL.revokeObjectURL($('view-proof').dataset.url);
     const url = URL.createObjectURL(blob); $('view-proof').src = url; $('view-proof').dataset.url = url; $('photo-dialog').showModal();
-  } catch (error) { { $('admin-message').textContent = error.message; $('record-history-note').textContent = 'Record history could not be loaded. Try choosing the game again.'; } }
+  } catch (error) { $('admin-message').textContent = error.message; }
 }
 $('close-photo').addEventListener('click', () => $('photo-dialog').close());
 $('photo-dialog').addEventListener('close', () => { if ($('view-proof').dataset.url) URL.revokeObjectURL($('view-proof').dataset.url); $('view-proof').removeAttribute('src'); delete $('view-proof').dataset.url; });
 $('export-records').addEventListener('click', async () => {
   try { const data = await api('/admin/export'); const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })); const a = node('a'); a.href = url; a.download = 'nicks-arcade-records.json'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
-  catch (error) { { $('admin-message').textContent = error.message; $('record-history-note').textContent = 'Record history could not be loaded. Try choosing the game again.'; } }
+  catch (error) { $('admin-message').textContent = error.message; }
 });
 
 
