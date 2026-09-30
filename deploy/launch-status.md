@@ -4,7 +4,7 @@ Software deployed and live core flow validated. Ron confirmed the live QR scan a
 
 ## Latest release snapshot — September 29, 2026
 
-- Pages build verified successful at `3b6567fa478144186b8ca061600349ec1fd3e702`; menu-layering source `17c7d8b`. Backend last deployed at `cc2b075`; subsequent changes were frontend-only.
+- Latest frontend source `b31be73` adds notification marquees and rejects the unwanted pack; Pages publication `f4a90cbc76a9ef9b402632f4f5b6843b86e21131` (verification below). Menu-layering source remains `17c7d8b`. Backend last deployed at `cc2b075`; subsequent changes were frontend-only.
 - QR/default landing and interactive sign-in return to the shared scoreboard. Enter a score leads the left-aligned menu for every role; admin actions remain role-restricted. The Manage scores label has no shield icon.
 - Latest menu fix keeps leaderboard repaint layers beneath the menu. Mobile and rotated hit checks passed; the reported intermittent overlap still needs user confirmation, and fullscreen capture was inconclusive.
 - The implementation remains in draft PR #1 on `codex/arcade-record-spotlight`. Default `master` retains the original implementation with an updated README; `gh-pages` serves the rebuilt site.
@@ -252,3 +252,9 @@ Source `00689bf`; Pages `dda0a08e50efba93122c4008c44e2a936b67bc46`. Menu row con
 ## Menu layering — September 29, 2026
 
 Source `17c7d8b`; Pages `3b6567fa478144186b8ca061600349ec1fd3e702`. Isolated the board at z-index 0 beneath the menu, isolated the menu, made native details content overflow explicit, and removed inherited opacity transition. Mobile and rotated browser checks found every visible menu action uncovered at its center after leaderboard updates. Intermittent user report was not reproduced exactly; fullscreen automation capture was inconclusive. Build/diff checks pass and published HTML/CSS match. No backend/record changes.
+
+## Catalog fallback and notification artwork — September 29, 2026
+
+Source `b31be73`; Pages `f4a90cbc76a9ef9b402632f4f5b6843b86e21131`. The shared frontend artwork resolver rejects old remote space-pack references, including saved game selections, and uses exact approved title/ROM matches or a neutral placeholder. No games were removed from search. The backend retains historical image references; no backend release or database change was needed. Notifications and My scores share the artwork component and look up all games, including games outside the eligible collection.
+
+All 11 frontend tests, syntax/build and diff checks passed. All 9,543 catalog entries were resolved without a rejected remote-pack URL. A 390px local browser check confirmed catalog placeholders, the correct NBA Jam cabinet image, and a Galaga record notification with loaded marquee, previous score, taunt, date and unread styling. One local-only score fixture was added; no live scores were created or changed.
