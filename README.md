@@ -111,7 +111,7 @@ npm run build
 .venv/bin/python -m pytest -q
 ```
 
-The September 30 validation passed **75 backend tests and 11 frontend tests**, covering persistence, new-game creation, concurrent submissions, duplicate retries, scoring/time rules, Google token validation, admin permissions, photo processing/privacy, origin restrictions, rate limits, backup/restore, collection eligibility, the bypass switch, catalog selection, celebration detection and date labels. All 33 supplied game entries were exercised in submission tests and browser search checks.
+The September 30 validation passed **77 backend tests and 11 frontend tests**, covering persistence, new-game creation, concurrent submissions, duplicate retries, scoring/time rules, Google token validation, admin permissions, photo processing/privacy, origin restrictions, rate limits, backup/restore, collection eligibility, the bypass switch, catalog selection, celebration detection and date labels. All 33 supplied game entries were exercised in submission tests and browser search checks.
 
 For a production frontend build:
 
@@ -180,3 +180,7 @@ Excitebike race times use minutes, seconds and hundredths: `1:02:30` and `1:02.3
 ### Replace a game’s artwork
 
 Admins can open **Menu → Manage games**, find the game, and select **Upload marquee**. Choose a saved JPG, PNG, WebP or iPhone HEIC image, then press **Use this marquee**. Images up to 40 MB and 64 megapixels are resized automatically; transparency is preserved and metadata is removed. The uploaded image overrides catalog artwork across the shared scoreboard, score entry, My scores, notifications and game management. It is stored on the server and included in backups, so it survives site updates. **Change marquee → Restore default artwork** removes the override. Regular players cannot change shared artwork.
+
+### Record history in Manage scores
+
+Each game now has a newest-first record timeline above its submission controls. It shows the original score and initials, the submitting Google account, and the local date/time for submissions recorded as new records. Lower scores and ties stay in the submission list without becoming record milestones. Faster times count as records for time-based games. Later corrections and removals are labeled, with original values recovered from the correction audit. Imported starting records show a linked player account when known and explicitly lack an original date. Older submissions without activity tracking are disclosed as a history gap rather than guessed. This view is admin-only.
