@@ -280,3 +280,11 @@ Nintendo's official VS. System release description confirms hundredths-of-a-seco
 ## Bust-A-Move display branding — September 30, 2026
 
 Source `65ddf2c`; Pages `38e472c8535944294a37886e00d575f6e4127f7c`. At Ron’s request, selected a clean wide Bust-A-Move logo after reviewing crowded marquee alternatives. Source seed and live display name/image updated, retaining the original game ID. Backup `/var/backups/nicks-arcade/before-bust-a-move-20260930/COMPLETE` preceded the audited metadata change; the transaction asserted every score row unchanged. Public API confirms Bust-A-Move with 1,734,150 / RJW. Local correction test, 11 frontend tests, build/diff checks passed. Pages built and all four changed live files matched. No backend restart.
+
+## Admin marquee uploads and Puzzle Bobble logo — September 30, 2026
+
+Source/backend `aea06f5`; Pages `f3a0d35fdee84f6d40c7b6d01ceb03ccbf2627fb`. Admins can upload, replace and restore artwork through Manage games. The override is shared across all devices and display surfaces. Immutable PNG storage preserves transparency, strips metadata and resizes accepted JPG/PNG/WebP/HEIC images. The schema adds an optional game marquee ID and before/after artwork audit history.
+
+75 backend tests and 11 frontend tests passed, including admin authorization, stale-edit conflicts, invalid-image rejection, metadata stripping, transparent resizing, public image availability, restore-default behavior and backup recovery with image history. Browser upload/save/reopen/restore checks passed in the local admin preview; the upload dialog fits a 390 × 844 viewport. No test score or test upload was created on production. A real iPhone HEIC marquee upload remains device acceptance; existing HEIC proof-photo decoding tests pass.
+
+Production backups completed before migration and after schema installation. Only nicks-arcade was restarted. Every score row matched the pre-release backup after migration. Public API health and unsigned-upload rejection (401) were verified. Pages reports built; index, app, CSS, artwork catalog and logo bytes all match the production build. The guarded Puzzle Bobble metadata correction asserted every score row unchanged, and live API readback confirms the clean logo with 1,734,150 / RJW. Daily backup now includes active and historical uploaded marquees.
