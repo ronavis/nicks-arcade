@@ -4,7 +4,7 @@ Software deployed and live core flow validated. Ron confirmed the live QR scan a
 
 ## Latest release snapshot — September 29, 2026
 
-- Latest frontend source `097488a` corrects Puzzle Bobble and clarifies time editing; Pages publication `5ec90136b5e0c7cca5be5a79f0b000ef96505939` (build and live assets verified). Notification marquees and pack filtering remain included. Menu-layering source remains `17c7d8b`. Backend last deployed at `cc2b075`; subsequent changes were frontend-only.
+- Latest frontend source `65ddf2c` uses the Bust-A-Move name and clean logo; Pages publication `38e472c8535944294a37886e00d575f6e4127f7c` (build and live assets verified). Notification marquees and pack filtering remain included. Menu-layering source remains `17c7d8b`. Backend last deployed at `cc2b075`; subsequent changes were frontend-only.
 - QR/default landing and interactive sign-in return to the shared scoreboard. Enter a score leads the left-aligned menu for every role; admin actions remain role-restricted. The Manage scores label has no shield icon.
 - Latest menu fix keeps leaderboard repaint layers beneath the menu. Mobile and rotated hit checks passed; the reported intermittent overlap still needs user confirmation, and fullscreen capture was inconclusive.
 - The implementation remains in draft PR #1 on `codex/arcade-record-spotlight`. Default `master` retains the original implementation with an updated README; `gh-pages` serves the rebuilt site.
@@ -276,3 +276,7 @@ Source `95d0943` plus image optimization `097488a`; Pages `5ec90136b5e0c7cca5be5
 Before correcting the production game metadata, database/photos were backed up at `/var/backups/nicks-arcade/before-puzzle-bobble-20260930/COMPLETE`. The guarded correction script was validated on a local backup and checked for repeat-run safety. Production correction changed only the game's title, search key and image, added an audit receipt and asserted every score row unchanged within the transaction. Public API readback confirms Puzzle Bobble and its original 1,734,150 / RJW record. Backend remains cc2b075; no restart needed.
 
 Nintendo's official VS. System release description confirms hundredths-of-a-second racing. Input 1:02:30 and 1:02.30 represent the same 62.30 seconds. Existing numeric scoring and display formatting remain unchanged. Entry/admin hints explain normalization; admin save feedback reports the stored value. A regression test confirms separator-only normalization and a genuinely different time persisting through an application reopen. 73 backend tests, 11 frontend tests, syntax/build and diff checks passed. No live Excitebike score was changed by this task.
+
+## Bust-A-Move display branding — September 30, 2026
+
+Source `65ddf2c`; Pages `38e472c8535944294a37886e00d575f6e4127f7c`. At Ron’s request, selected a clean wide Bust-A-Move logo after reviewing crowded marquee alternatives. Source seed and live display name/image updated, retaining the original game ID. Backup `/var/backups/nicks-arcade/before-bust-a-move-20260930/COMPLETE` preceded the audited metadata change; the transaction asserted every score row unchanged. Public API confirms Bust-A-Move with 1,734,150 / RJW. Local correction test, 11 frontend tests, build/diff checks passed. Pages built and all four changed live files matched. No backend restart.
