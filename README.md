@@ -111,7 +111,7 @@ npm run build
 .venv/bin/python -m pytest -q
 ```
 
-The September 29 validation passed **72 backend tests and 11 frontend tests**, covering persistence, new-game creation, concurrent submissions, duplicate retries, scoring/time rules, Google token validation, admin permissions, photo processing/privacy, origin restrictions, rate limits, backup/restore, collection eligibility, the bypass switch, catalog selection, celebration detection and date labels. All 33 supplied game entries were exercised in submission tests and browser search checks.
+The September 29 validation passed **73 backend tests and 11 frontend tests**, covering persistence, new-game creation, concurrent submissions, duplicate retries, scoring/time rules, Google token validation, admin permissions, photo processing/privacy, origin restrictions, rate limits, backup/restore, collection eligibility, the bypass switch, catalog selection, celebration detection and date labels. All 33 supplied game entries were exercised in submission tests and browser search checks.
 
 For a production frontend build:
 
