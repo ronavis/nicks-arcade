@@ -702,3 +702,56 @@ def test_excitebike_admin_time_normalization_and_real_correction(app):
     assert response.status_code == 200
     assert record(c, game['id'])['score'] == '1:01.29'
     assert record(create_app(dict(app.config)).test_client(), game['id'])['score'] == '1:01.29'
+
+
+def marquee_upload(c, game='galaga', token='admin', expected='', image=None):
+    if image is None:
+        image = io.BytesIO()
+        original = Image.new('RGBA', (2400, 600), (255, 0, 0, 100))
+        exif = Image.Exif(); exif[315] = 'private metadata'
+        original.save(image, format='PNG', exif=exif)
+        image.seek(0)
+    return c.post('/api/admin/games/' + game + '/marquee', data={'marquee':(image,'image.png'), 'expectedMarqueeId':expected}, headers=headers(token))
+
+
+def test_marquee_admin_roles_public_image_restore_and_conflict(app):
+    c = app.test_client()
+    assert marquee_upload(c, token='player').status_code == 403
+    assert c.post('/api/admin/games/galaga/marquee').status_code == 401
+    original = record(c)
+    r = marquee_upload(c); assert r.status_code == 200
+    first = r.json['marqueeId']
+    game = next(g for g in c.get('/api/leaderboard').json['games'] if g['id']=='galaga')
+    assert game['marqueeId'] == first and record(c) == original
+    matches = c.get('/api/game-catalog?q=Galaga').json['games']
+    assert all(g['marqueeId'] == first for g in matches if g['title'] == 'Galaga')
+    assert any(g['title'] == 'Galaga' for g in matches)
+    image = Image.open(io.BytesIO(c.get('/api/marquees/'+first).data))
+    assert image.size == (1600,400) and image.mode == 'RGBA' and not image.getexif()
+    assert image.getpixel((0,0))[3] == 100
+    assert marquee_upload(c).status_code == 409
+    assert c.delete('/api/admin/games/galaga/marquee', json={'expectedMarqueeId':first}, headers=headers('player')).status_code == 403
+    second = marquee_upload(c, expected=first).json['marqueeId']
+    assert second != first and c.get('/api/marquees/'+first).status_code == 404
+    assert c.delete('/api/admin/games/galaga/marquee', json={'expectedMarqueeId':first}, headers=headers('admin')).status_code == 409
+    assert c.delete('/api/admin/games/galaga/marquee', json={'expectedMarqueeId':second}, headers=headers('admin')).status_code == 200
+    assert c.get('/api/marquees/'+second).status_code == 404
+    assert record(c) == original
+
+
+def test_marquee_validation_and_backup_restore(app,tmp_path):
+    from scripts.backup import backup
+    c = app.test_client()
+    for content in [b'<svg onload="alert(1)"></svg>', b'not an image']:
+        assert marquee_upload(c,image=io.BytesIO(content)).status_code == 400
+    assert marquee_upload(c,game='missing').status_code == 404
+    assert c.get('/api/marquees/not-a-uuid').status_code == 404
+    r=marquee_upload(c); first=r.json['marqueeId']
+    second=marquee_upload(c,expected=first).json['marqueeId']
+    destination=backup(app.config['DATA_DIR'],tmp_path.parent/(tmp_path.name+'-marquee-backup'))
+    assert (destination/'marquees'/(first+'.png')).is_file()
+    restored=create_app(dict(app.config,DATA_DIR=str(destination))).test_client()
+    assert restored.get('/api/marquees/'+second).status_code == 200
+    assert restored.get('/api/marquees/'+first).status_code == 404
+    with sqlite3.connect(destination/'arcade.sqlite3') as db:
+        assert db.execute('SELECT COUNT(*) FROM marquee_audit').fetchone()[0] == 2

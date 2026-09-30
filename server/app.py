@@ -93,6 +93,8 @@ def create_app(config=None, *, allow_demo=False):
     data.mkdir(parents=True, exist_ok=True, mode=0o700)
     photos = data / 'photos'
     photos.mkdir(exist_ok=True, mode=0o700)
+    marquees = data / 'marquees'
+    marquees.mkdir(exist_ok=True, mode=0o700)
     database = data / 'arcade.sqlite3'
     games = json.loads((ROOT / 'data/games.json').read_text())
     artwork_catalog = {entry['id']: entry for entry in json.loads((ROOT / 'data/arcade-catalog.json').read_text())}
@@ -128,6 +130,7 @@ def create_app(config=None, *, allow_demo=False):
           CREATE TABLE IF NOT EXISTS legacy_accounts (email TEXT PRIMARY KEY, user_sub TEXT NOT NULL);
           CREATE TABLE IF NOT EXISTS profiles (user_sub TEXT PRIMARY KEY, initials TEXT NOT NULL DEFAULT '', read_event INTEGER NOT NULL DEFAULT 0);
           CREATE TABLE IF NOT EXISTS activity (id INTEGER PRIMARY KEY AUTOINCREMENT, score_id TEXT NOT NULL UNIQUE REFERENCES scores(id), previous_sub TEXT, previous_initials TEXT, previous_value INTEGER, is_record INTEGER NOT NULL);
+          CREATE TABLE IF NOT EXISTS marquee_audit (id INTEGER PRIMARY KEY, game_id TEXT NOT NULL, actor TEXT NOT NULL, previous_id TEXT, next_id TEXT, created_at INTEGER NOT NULL);
           CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);
         ''')
         if 'taunt' not in {row[1] for row in db.execute('PRAGMA table_info(scores)')}:
@@ -139,6 +142,8 @@ def create_app(config=None, *, allow_demo=False):
             db.execute('ALTER TABLE scores ADD COLUMN taunt_request TEXT')
         if 'eligible' not in {row[1] for row in db.execute('PRAGMA table_info(games)')}:
             db.execute('ALTER TABLE games ADD COLUMN eligible INTEGER NOT NULL DEFAULT 1')
+        if 'marquee_id' not in {row[1] for row in db.execute('PRAGMA table_info(games)')}:
+            db.execute('ALTER TABLE games ADD COLUMN marquee_id TEXT')
         db.execute("BEGIN IMMEDIATE")
         for game in games:
             db.execute('INSERT OR IGNORE INTO games (id,title,search_key,image,kind,sort_order) VALUES (?,?,?,?,?,?)',
@@ -158,7 +163,7 @@ def create_app(config=None, *, allow_demo=False):
 
     def catalog():
         if 'catalog' not in g:
-            g.catalog = {row['id']: dict(row) for row in get_db().execute('SELECT id,title,image,kind,eligible,sort_order AS \"order\" FROM games ORDER BY sort_order,title')}
+            g.catalog = {row['id']: dict(row) for row in get_db().execute('SELECT id,title,image,kind,eligible,marquee_id AS marqueeId,sort_order AS \"order\" FROM games ORDER BY sort_order,title')}
         return g.catalog
 
     @app.teardown_appcontext
@@ -313,7 +318,7 @@ def create_app(config=None, *, allow_demo=False):
                     if delta > 0:
                         amount = f'{delta / 100:.2f}s' if game['kind'] == 'time' else f'{delta:,}'
                         record['improvement'] = {'amount': amount, 'direction': 'down' if game['kind'] == 'time' else 'up', 'label': f'Beat previous record by {amount}' + (' (faster)' if game['kind'] == 'time' else ' points')}
-            output.append({k: game[k] for k in ['id', 'title', 'image', 'kind', 'order', 'eligible']} | {'record': record})
+            output.append({k: game[k] for k in ['id', 'title', 'image', 'kind', 'order', 'eligible', 'marqueeId']} | {'record': record})
         return jsonify(games=output, updatedAt=int(time.time()), displaySettings=display_settings())
 
     @app.get('/api/session')
@@ -517,12 +522,75 @@ def create_app(config=None, *, allow_demo=False):
             abort(404)
         return send_from_directory(photos, photo_id + '.jpg', mimetype='image/jpeg')
 
+    @app.get('/api/marquees/<marquee_id>')
+    def public_marquee(marquee_id):
+        try:
+            if str(uuid.UUID(marquee_id)) != marquee_id:
+                abort(404)
+        except ValueError:
+            abort(404)
+        if not get_db().execute('SELECT 1 FROM games WHERE marquee_id=?', (marquee_id,)).fetchone():
+            abort(404)
+        return send_from_directory(marquees, marquee_id + '.png', mimetype='image/png')
+
+    @app.route('/api/admin/games/<game_id>/marquee', methods=['POST', 'DELETE'])
+    @authenticated(admin=True)
+    def set_marquee(game_id):
+        if game_id not in catalog():
+            abort(404)
+        new_id = None
+        if request.method == 'POST':
+            upload = request.files.get('marquee')
+            if not upload or not upload.filename:
+                raise ValueError('Choose a marquee image from your device.')
+            upload.stream.seek(0, 2)
+            if upload.stream.tell() > 40 * 1024 * 1024:
+                raise ValueError('Choose an image under 40 MB.')
+            upload.stream.seek(0)
+            try:
+                with Image.open(upload.stream) as image:
+                    if image.format not in {'JPEG', 'PNG', 'WEBP', 'HEIF'}:
+                        raise ValueError('Choose a JPG, PNG, WebP or iPhone HEIC image.')
+                    if image.width * image.height > 64_000_000:
+                        raise ValueError('Choose an image under 64 megapixels.')
+                    image = ImageOps.exif_transpose(image)
+                    image.thumbnail((1600, 1600))
+                    clean = Image.new('RGBA', image.size)
+                    clean.paste(image.convert('RGBA'))
+                    new_id = str(uuid.uuid4())
+                    clean.save(marquees / (new_id + '.png'), format='PNG')
+            except (Image.DecompressionBombError, Image.DecompressionBombWarning):
+                raise ValueError('Choose an image under 64 megapixels.')
+            except (UnidentifiedImageError, OSError, SyntaxError):
+                raise ValueError('That image could not be opened. Choose a JPG, PNG, WebP or iPhone HEIC image.')
+            expected = request.form.get('expectedMarqueeId')
+        else:
+            payload = request.get_json(silent=True)
+            if not isinstance(payload, dict):
+                raise ValueError('Choose the current marquee before restoring the default.')
+            expected = payload.get('expectedMarqueeId')
+        try:
+            with get_db() as db:
+                db.execute('BEGIN IMMEDIATE')
+                current = db.execute('SELECT marquee_id FROM games WHERE id=?', (game_id,)).fetchone()[0]
+                if expected != (current or ''):
+                    abort(409, 'The marquee changed on another device. Close this window and try again.')
+                db.execute('UPDATE games SET marquee_id=? WHERE id=?', (new_id, game_id))
+                db.execute('INSERT INTO marquee_audit (game_id,actor,previous_id,next_id,created_at) VALUES (?,?,?,?,?)',
+                           (game_id, g.user['sub'], current, new_id, int(time.time())))
+        except Exception:
+            if new_id:
+                (marquees / (new_id + '.png')).unlink(missing_ok=True)
+            raise
+        return jsonify(ok=True, marqueeId=new_id)
+
     @app.get('/api/game-catalog')
     def search_game_catalog():
         query = game_key(request.args.get('q', ''))
         matches = [entry for entry in artwork_catalog.values() if query in game_key(entry['title']) or query in game_key(entry['id'])]
         owned = {game_key(game['title']) for game in catalog().values() if game['eligible']}
-        return jsonify(total=len(matches), games=[entry | {'inArcade': game_key(entry['title']) in owned} for entry in matches[:40]])
+        overrides = {game_key(game['title']): game['marqueeId'] for game in catalog().values() if game['marqueeId']}
+        return jsonify(total=len(matches), games=[entry | {'inArcade': game_key(entry['title']) in owned, 'marqueeId': overrides.get(game_key(entry['title']))} for entry in matches[:40]])
 
     @app.patch('/api/admin/games/<game_id>')
     @authenticated(admin=True)

@@ -35,3 +35,7 @@ Nick corrected the imported record from Bubble Bobble to Puzzle Bobble on Septem
 ## Bust-A-Move display artwork
 
 Ron requested the Bust-A-Move name if no better Puzzle Bobble marquee was available. Using the clean, wide logo from [LaunchBox](https://gamesdb.launchbox-app.com/games/images/38330-bust-a-move), https://images.launchbox-app.com/ed5349f3-dc34-4136-ac22-14d817c934c5.png, resized proportionally to 1600px. This is a clear logo, not a cabinet marquee scan. Original game ID, scores and ownership are preserved.
+
+## Puzzle Bobble clear logo (current)
+
+Ron chose the Puzzle Bobble name and logo instead of Bust-A-Move. The transparent Japan clear logo from [LaunchBox](https://gamesdb.launchbox-app.com/games/images/38330-bust-a-move) is [this source PNG](https://images.launchbox-app.com/2de4a3cc-6932-48c1-a733-68747a392ee9.png), resized proportionally to 1600 px and saved as `images/cabinet-marquees/puzzle-bobble-logo.png`. All score rows and the historical internal game ID remain unchanged. Admin-uploaded artwork takes precedence over this and all catalog defaults.

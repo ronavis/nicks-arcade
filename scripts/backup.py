@@ -1,4 +1,4 @@
-"""Create a restorable database + photo snapshot, without copying active WAL files.
+"""Create a restorable database, photo and marquee snapshot, without copying active WAL files.
 
 Usage: python scripts/backup.py /var/lib/nicks-arcade /secure/backups/arcade-YYYYMMDD
 Destination must be new. Keep backups private: they include player email addresses.
@@ -6,6 +6,7 @@ Destination must be new. Keep backups private: they include player email address
 import argparse
 import shutil
 import sqlite3
+import uuid
 from pathlib import Path
 
 
@@ -28,7 +29,23 @@ def backup(source, destination):
     for (photo_id,) in photo_ids:
         shutil.copyfile(source / 'photos' / f'{photo_id}.jpg', destination / 'photos' / f'{photo_id}.jpg')
         (destination / 'photos' / f'{photo_id}.jpg').chmod(0o600)
-    (destination / 'COMPLETE').write_text('Database integrity verified; all referenced photos copied.\n')
+    # Read image references from the consistent snapshot, including replacement history.
+    with sqlite3.connect(destination / 'arcade.sqlite3') as snapshot:
+        tables = {r[0] for r in snapshot.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        marquee_ids = set()
+        if 'marquee_id' in {r[1] for r in snapshot.execute('PRAGMA table_info(games)')}:
+            marquee_ids.update(r[0] for r in snapshot.execute('SELECT marquee_id FROM games WHERE marquee_id IS NOT NULL'))
+        if 'marquee_audit' in tables:
+            for previous, following in snapshot.execute('SELECT previous_id,next_id FROM marquee_audit'):
+                marquee_ids.update(value for value in (previous, following) if value)
+    (destination / 'marquees').mkdir(mode=0o700)
+    for marquee_id in marquee_ids:
+        if str(uuid.UUID(marquee_id)) != marquee_id:
+            raise ValueError('Invalid stored marquee reference')
+        target = destination / 'marquees' / (marquee_id + '.png')
+        shutil.copyfile(source / 'marquees' / (marquee_id + '.png'), target)
+        target.chmod(0o600)
+    (destination / 'COMPLETE').write_text('Database integrity verified; all referenced photos and marquees copied.\n')
     return destination
 
 

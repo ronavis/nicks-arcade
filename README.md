@@ -76,7 +76,7 @@ A browser that cannot preview HEIC can still upload it. Photos are available onl
 
 GitHub Pages does **not** run the database. Scores and photos live in persistent storage outside code releases, so rebuilding the website does not reset records. The browser keeps the current sign-in token in session storage; submitted scores are shared server data, not browser-local records.
 
-A daily backup runs at **06:00 UTC** and includes the database and referenced photos. Backup/restore has been tested, including an off-host copy. Automatic off-host copying and backup retention cleanup are not configured. The admin JSON export is useful for inspection but does not include photo files and is not a full backup.
+A daily backup runs at **06:00 UTC** and includes the database, referenced photos and uploaded marquees. Backup/restore has been tested, including an off-host copy. Automatic off-host copying and backup retention cleanup are not configured. The admin JSON export is useful for inspection but does not include photo files and is not a full backup.
 
 ## Run locally
 
@@ -111,7 +111,7 @@ npm run build
 .venv/bin/python -m pytest -q
 ```
 
-The September 29 validation passed **73 backend tests and 11 frontend tests**, covering persistence, new-game creation, concurrent submissions, duplicate retries, scoring/time rules, Google token validation, admin permissions, photo processing/privacy, origin restrictions, rate limits, backup/restore, collection eligibility, the bypass switch, catalog selection, celebration detection and date labels. All 33 supplied game entries were exercised in submission tests and browser search checks.
+The September 30 validation passed **75 backend tests and 11 frontend tests**, covering persistence, new-game creation, concurrent submissions, duplicate retries, scoring/time rules, Google token validation, admin permissions, photo processing/privacy, origin restrictions, rate limits, backup/restore, collection eligibility, the bypass switch, catalog selection, celebration detection and date labels. All 33 supplied game entries were exercised in submission tests and browser search checks.
 
 For a production frontend build:
 
@@ -173,6 +173,10 @@ Ron and Nick have the same admin permissions through their configured Google acc
 
 Undated legacy records leave the date row blank while preserving its layout space.
 
-Nick confirmed the imported 1,734,150 / RJW record belongs to **Puzzle Bobble**, now displayed under its **Bust-A-Move** name with a cleaner logo at Ron’s request. Its historical internal game ID is retained to preserve score ownership and history.
+Nick confirmed the imported 1,734,150 / RJW record belongs to **Puzzle Bobble**, displayed as **Puzzle Bobble** with a clean transparent logo at Ron’s request. Its historical internal game ID is retained to preserve score ownership and history.
 
 Excitebike race times use minutes, seconds and hundredths: `1:02:30` and `1:02.30` both represent 62.30 seconds. The app accepts both and displays `1:02.30`; lower is better. [Nintendo’s VS. System description](https://www.nintendo.com/en-ca/store/products/arcade-archives-excitebike-switch/) confirms hundredth-of-a-second racing. Admin time fields explain this and save feedback includes the stored display value.
+
+### Replace a game’s artwork
+
+Admins can open **Menu → Manage games**, find the game, and select **Upload marquee**. Choose a saved JPG, PNG, WebP or iPhone HEIC image, then press **Use this marquee**. Images up to 40 MB and 64 megapixels are resized automatically; transparency is preserved and metadata is removed. The uploaded image overrides catalog artwork across the shared scoreboard, score entry, My scores, notifications and game management. It is stored on the server and included in backups, so it survives site updates. **Change uploaded marquee → Restore default artwork** removes the override. Regular players cannot change shared artwork.

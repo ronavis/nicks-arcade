@@ -40,7 +40,7 @@ The account release adds `profiles` (default initials and notification read curs
 
 ## Backups and recovery
 
-Run `python scripts/backup.py /var/lib/nicks-arcade /secure/backups/arcade-YYYYMMDD-HHMM` as an account that can read the service data. Each destination must be new. The script uses SQLite's online backup API, checks integrity, copies every referenced immutable photo, and writes COMPLETE only after success. Store a private off-host copy; the installed timer runs daily at 06:00 UTC, with missed runs caught up at boot. Backups are retained; no automatic deletion is configured. An initial private off-host copy was validated. Automatic off-host transfer is not configured. JSON admin export is useful for inspection but does not include photos and is not a complete backup.
+Run `python scripts/backup.py /var/lib/nicks-arcade /secure/backups/arcade-YYYYMMDD-HHMM` as an account that can read the service data. Each destination must be new. The script uses SQLite's online backup API, checks integrity, copies every referenced immutable photo and active/historical uploaded marquee, and writes COMPLETE only after success. Store a private off-host copy; the installed timer runs daily at 06:00 UTC, with missed runs caught up at boot. Backups are retained; no automatic deletion is configured. An initial private off-host copy was validated. Automatic off-host transfer is not configured. JSON admin export is useful for inspection but does not include photos and is not a complete backup.
 
 To restore, stop only `nicks-arcade`, preserve the current data directory, copy a COMPLETE backup into a new service-owned data directory, point the environment there and restart only this service. Verify records, photos and health before resuming submissions. Test this with a temporary data directory before relying on it.
 
@@ -63,3 +63,7 @@ Existing links are durable: removing/changing the environment mapping does not t
 ## Saved taunt settings
 
 The taunt-settings release adds default_taunt and taunt_enabled (off by default) to profiles, plus taunt_request to scores for retry-safe submissions. Migrations preserve existing profiles and score data. Settings PATCH updates only supplied fields. Automatic taunts are resolved inside the score transaction against the current record and current profile; retries return the originally saved taunt even if settings change. Manual per-score taunts retain their existing behavior.
+
+## Uploaded marquees
+
+The marquee release adds `games.marquee_id`, the `marquee_audit` table, and immutable PNG files under the persistent `marquees/` directory. Only admins can upload or restore defaults. Public `/api/marquees/<uuid>` serves only currently assigned artwork; score-proof photos remain authenticated. Uploads accept JPG, PNG, WebP and HEIC up to 40 MB / 64 MP, normalize orientation, strip metadata and resize to 1600 px. Optimistic revision checks prevent one device from silently overwriting another’s change. Backups include current images and audit-history image references. Preserve the entire data directory and use a marquee-aware backend when rolling back after uploads.
