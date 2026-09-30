@@ -4,7 +4,7 @@ Software deployed and live core flow validated. Ron confirmed the live QR scan a
 
 ## Latest release snapshot — September 29, 2026
 
-- Latest frontend source `b31be73` adds notification marquees and rejects the unwanted pack; Pages publication `f4a90cbc76a9ef9b402632f4f5b6843b86e21131` (build and live assets verified). Menu-layering source remains `17c7d8b`. Backend last deployed at `cc2b075`; subsequent changes were frontend-only.
+- Latest frontend source `240fb5d` uses the supplied arcade token icon; Pages publication `68d31ee19006d6d53f5831cb0ffaef4141c783ce` (build and live assets verified). Notification marquees and pack filtering remain included. Menu-layering source remains `17c7d8b`. Backend last deployed at `cc2b075`; subsequent changes were frontend-only.
 - QR/default landing and interactive sign-in return to the shared scoreboard. Enter a score leads the left-aligned menu for every role; admin actions remain role-restricted. The Manage scores label has no shield icon.
 - Latest menu fix keeps leaderboard repaint layers beneath the menu. Mobile and rotated hit checks passed; the reported intermittent overlap still needs user confirmation, and fullscreen capture was inconclusive.
 - The implementation remains in draft PR #1 on `codex/arcade-record-spotlight`. Default `master` retains the original implementation with an updated README; `gh-pages` serves the rebuilt site.
@@ -260,3 +260,7 @@ Source `b31be73`; Pages `f4a90cbc76a9ef9b402632f4f5b6843b86e21131`. The shared f
 All 11 frontend tests, syntax/build and diff checks passed. All 9,543 catalog entries were resolved without a rejected remote-pack URL. A 390px local browser check confirmed catalog placeholders, the correct NBA Jam cabinet image, and a Galaga record notification with loaded marquee, previous score, taunt, date and unread styling. One local-only score fixture was added; no live scores were created or changed.
 
 GitHub reports the Pages build successful; all four changed published files match the production build byte-for-byte. Backend and production scores unchanged.
+
+## Supplied token favicon — September 29, 2026
+
+Source `240fb5d`; Pages `68d31ee19006d6d53f5831cb0ffaef4141c783ce`. Used the supplied photo unchanged in composition, converted to 32px PNG, multi-size ICO and 180px Apple touch icon. Original photo retained in source. Icon URLs versioned for cache refresh. Build and image-format checks passed; Pages reports built and all four changed live assets match the production build. No backend or data changes.
