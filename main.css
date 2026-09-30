@@ -100,3 +100,5 @@
 .display-tools,.tv .display-tools,.preview .display-tools,.rotated .display-tools,.display-panel:fullscreen .display-tools{overflow:visible;isolation:isolate;transition:none}
 .display-tools::details-content{overflow:visible}
 .display-menu-items{z-index:1}
+
+#marquee-dialog{width:min(520px,95vw);max-height:90dvh;overflow:auto}#marquee-preview{height:150px;margin:16px 0}#marquee-file{width:100%;max-width:100%;box-sizing:border-box;margin-top:8px}#marquee-form>button{width:100%;margin-top:10px}#marquee-heading{overflow-wrap:anywhere}

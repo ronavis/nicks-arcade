@@ -5,7 +5,7 @@ const apiBase = (window.ARCADE_CONFIG?.apiBase || '/api').replace(/\/$/, '');
 const display = new Intl.NumberFormat('en-US');
 const node = (tag, className, text) => { const el = document.createElement(tag); if (className) el.className = className; if (text !== undefined) el.textContent = text; return el; };
 const gameById = (id) => state.allGames.find(game => game.id === id) || (state.pendingGame?.id === id ? state.pendingGame : undefined);
-const artworkUrl = game => `${ArcadeArtwork.resolve(game)}?v=${game.id === 'simpsons' ? 'simpsons-cabinet-1' : 'marquee-2'}`;
+const artworkUrl = game => game.marqueeId ? `${apiBase}/marquees/${game.marqueeId}` : `${ArcadeArtwork.resolve(game)}?v=${game.id === 'simpsons' ? 'simpsons-cabinet-1' : 'marquee-2'}`;
 const scoreText = (game) => game?.record?.score || '—';
 const initialsText = (game) => game?.record?.initials || '___';
 const icon = (name) => { const el = node('i', `ph-bold ph-${name}`); el.setAttribute('aria-hidden', 'true'); return el; };
@@ -609,7 +609,10 @@ function renderArcadeGames() {
     if (!game.eligible) info.append(node('p', 'small', 'Outside Nick’s arcade'));
     view.hidden = !game.eligible && !state.bypassGamesRestriction;
     manage.hidden = !game.record && !game.eligible && !state.bypassGamesRestriction;
-    info.append(view, manage, eligibility); card.append(art, info); return card;
+    const changeArt = node('button', 'text-button', game.marqueeId ? 'Change uploaded marquee' : 'Upload marquee');
+    changeArt.addEventListener('click', () => openMarquee(game));
+    if (game.marqueeId) info.append(node('p', 'small', 'Custom marquee'));
+    info.append(view, manage, changeArt, eligibility); card.append(art, info); return card;
   }));
   if (!games.length) $('arcade-games-list').append(node('p', 'admin-empty', 'No games match this filter.'));
 }
@@ -650,7 +653,7 @@ async function renderCatalogSearch(mode, query) {
       const image = node('img'); image.src = artworkUrl(game); image.alt = ''; image.loading = 'lazy';
       image.onerror = () => { image.onerror = null; image.src = 'images/new-game.svg'; };
       const info = node('div'); info.append(node('strong', '', game.title), node('small', '', mode === 'admin' ? (game.inArcade ? 'Already in Nick’s arcade' : 'Add to Nick’s arcade') : 'Choose this game'));
-      if (ArcadeArtwork.resolve(game) === 'images/new-game.svg') info.append(node('small', '', 'Marquee unavailable'));
+      if (!game.marqueeId && ArcadeArtwork.resolve(game) === 'images/new-game.svg') info.append(node('small', '', 'Marquee unavailable'));
       button.append(image, info); button.disabled = mode === 'admin' && game.inArcade;
       button.addEventListener('click', async () => {
         if (mode === 'entry') {
@@ -670,3 +673,62 @@ let catalogSearchTimer;
 $('catalog-search').addEventListener('input', () => { ++catalogSearchVersion.admin; clearTimeout(catalogSearchTimer); catalogSearchTimer = setTimeout(() => renderCatalogSearch('admin', $('catalog-search').value), 200); });
 
 document.addEventListener('error', event => { const image = event.target; if (image instanceof HTMLImageElement && !image.src.endsWith('/images/new-game.svg')) image.src = 'images/new-game.svg'; }, true);
+
+
+let marqueeGame = null;
+let marqueePreviewUrl = null;
+let marqueeBusy = false;
+function clearMarqueePreview() {
+  if (marqueePreviewUrl) URL.revokeObjectURL(marqueePreviewUrl);
+  marqueePreviewUrl = null;
+}
+function openMarquee(game) {
+  if (!state.user?.admin) return;
+  marqueeGame = {...game}; clearMarqueePreview();
+  $('marquee-heading').textContent = `${game.title} artwork`;
+  $('marquee-file').value = ''; $('marquee-message').textContent = '';
+  $('marquee-preview').hidden = false; $('marquee-preview').src = artworkUrl(game);
+  $('marquee-preview').alt = `${game.title} marquee preview`;
+  $('marquee-save').disabled = true; $('marquee-reset').hidden = !game.marqueeId;
+  $('marquee-dialog').showModal();
+}
+$('marquee-file').addEventListener('change', () => {
+  clearMarqueePreview(); const file = $('marquee-file').files[0];
+  $('marquee-message').textContent = ''; $('marquee-save').disabled = !file;
+  if (!file) { $('marquee-preview').hidden = false; $('marquee-preview').src = artworkUrl(marqueeGame); return; }
+  if (file.size > 40 * 1024 * 1024) { $('marquee-message').textContent = 'Choose an image under 40 MB.'; $('marquee-save').disabled = true; return; }
+  marqueePreviewUrl = URL.createObjectURL(file);
+  $('marquee-preview').hidden = false; $('marquee-preview').src = marqueePreviewUrl;
+});
+$('marquee-preview').addEventListener('error', () => {
+  $('marquee-preview').hidden = true;
+  $('marquee-message').textContent = 'Preview unavailable on this device. You can still upload an iPhone HEIC image.';
+});
+$('close-marquee').addEventListener('click', () => { if (!marqueeBusy) $('marquee-dialog').close(); });
+$('marquee-dialog').addEventListener('cancel', event => { if (marqueeBusy) event.preventDefault(); });
+$('marquee-dialog').addEventListener('close', clearMarqueePreview);
+async function saveMarquee(reset = false) {
+  if (!marqueeGame || !state.user?.admin || marqueeBusy) return;
+  marqueeBusy = true;
+  for (const id of ['marquee-save','marquee-reset','marquee-file','close-marquee']) $(id).disabled = true;
+  $('marquee-message').textContent = reset ? 'Restoring default artwork…' : 'Uploading marquee…';
+  try {
+    let options;
+    if (reset) options = {method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({expectedMarqueeId:marqueeGame.marqueeId || ''})};
+    else {
+      const body = new FormData(); body.set('marquee', $('marquee-file').files[0]); body.set('expectedMarqueeId',marqueeGame.marqueeId || '');
+      options = {method:'POST',body};
+    }
+    await api(`/admin/games/${encodeURIComponent(marqueeGame.id)}/marquee`,options);
+    await refreshBoard();
+    $('games-feedback').textContent = reset ? `${marqueeGame.title}: default artwork restored.` : `${marqueeGame.title}: uploaded marquee is now used throughout the arcade.`;
+    $('marquee-dialog').close();
+  } catch(error) { $('marquee-message').textContent = error.message; }
+  finally {
+    marqueeBusy = false;
+    for (const id of ['marquee-reset','marquee-file','close-marquee']) $(id).disabled = false;
+    $('marquee-save').disabled = !$('marquee-file').files.length;
+  }
+}
+$('marquee-form').addEventListener('submit', event => { event.preventDefault(); saveMarquee(); });
+$('marquee-reset').addEventListener('click', () => saveMarquee(true));

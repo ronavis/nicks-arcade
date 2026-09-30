@@ -12,13 +12,13 @@
   <link rel="preload" href="vendor/bitcount-double.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="vendor/jersey10.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="vendor/icons/style.css">
-  <link rel="stylesheet" href="main.css?v=menu-layers-1">
+  <link rel="stylesheet" href="main.css?v=marquee-upload-1">
   <script src="config.js" defer></script>
   <script src="vendor/qr.js" defer></script>
   <script src="record-celebrations.js?v=quiet-dates-1" defer></script>
-  <script src="artwork-catalog.js?v=bustamove-1" defer></script>
+  <script src="artwork-catalog.js?v=puzzle-logo-1" defer></script>
   <script src="artwork.js?v=cabinet-only-1" defer></script>
-  <script src="app.js?v=time-help-1" defer></script>
+  <script src="app.js?v=marquee-upload-1" defer></script>
 </head>
 <body>
   <div id="preview-note" class="preview-note" hidden>LOCAL PREVIEW <span>Test scores stay here. Google sign-in is not being simulated.</span></div>
@@ -77,5 +77,6 @@
   <dialog id="photo-dialog"><div class="dialog-heading"><h2>SCORE PROOF</h2><button class="plain icon-button" id="close-photo" aria-label="Close proof photo"><i class="ph-bold ph-x" aria-hidden="true"></i></button></div><img id="view-proof" alt="Photo submitted as score proof"></dialog>
   <dialog id="edit-dialog"><form id="edit-form"><div class="dialog-heading"><h2 id="edit-heading">CORRECT SCORE</h2><button type="button" id="close-edit" class="plain icon-button" aria-label="Cancel"><i class="ph-bold ph-x" aria-hidden="true"></i></button></div><p id="edit-summary"></p><div id="edit-fields"><label for="edit-score">Score</label><input id="edit-score" required aria-describedby="edit-time-hint"><p id="edit-time-hint" class="small" hidden>Minutes:seconds.hundredths. 1:02:30 and 1:02.30 both mean 1 min 2.30 sec. Times are displayed with a decimal before hundredths; lower is better.</p><label for="edit-initials">Initials</label><input id="edit-initials" maxlength="3" pattern="[A-Za-z]{3}" required></div><label id="edit-taunt-label" for="edit-taunt">Taunt (clear it to remove)</label><input id="edit-taunt" maxlength="140"><p id="edit-message" role="status"></p><div class="edit-actions"><button id="cancel-edit" class="secondary" type="button">Cancel</button><button id="save-edit" class="primary" type="submit">Save correction</button></div></form></dialog>
   <noscript>This arcade needs JavaScript to show records and enter scores.</noscript>
+<dialog id="marquee-dialog"><form id="marquee-form"><div class="dialog-heading"><h2 id="marquee-heading">GAME ARTWORK</h2><button type="button" id="close-marquee" class="plain icon-button" aria-label="Close marquee upload">×</button></div><p>Upload your own marquee or logo to replace the catalog artwork for this game. It will be visible to everyone on the scoreboard.</p><img id="marquee-preview" class="my-score-artwork" alt="Marquee preview"><label for="marquee-file">Choose an image from your device</label><input id="marquee-file" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"><p class="small">JPG, PNG, WebP or iPhone HEIC · up to 40 MB and 64 megapixels. Wide artwork works best. Transparency is preserved.</p><p id="marquee-message" role="status"></p><button id="marquee-save" class="primary" type="submit" disabled>Use this marquee</button><button id="marquee-reset" class="secondary" type="button" hidden>Restore default artwork</button></form></dialog>
 </body>
 </html>
