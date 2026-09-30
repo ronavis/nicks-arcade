@@ -4,7 +4,7 @@ Software deployed and live core flow validated. Ron confirmed the live QR scan a
 
 ## Latest release snapshot — September 29, 2026
 
-- Latest frontend source `240fb5d` uses the supplied arcade token icon; Pages publication `68d31ee19006d6d53f5831cb0ffaef4141c783ce` (build and live assets verified). Notification marquees and pack filtering remain included. Menu-layering source remains `17c7d8b`. Backend last deployed at `cc2b075`; subsequent changes were frontend-only.
+- Latest frontend source `a432a0b` gives the token icon a turquoise background; Pages publication `bed4057b33c0d78e2d60c74a2808576d1438c0d6` (build and live assets verified). Notification marquees and pack filtering remain included. Menu-layering source remains `17c7d8b`. Backend last deployed at `cc2b075`; subsequent changes were frontend-only.
 - QR/default landing and interactive sign-in return to the shared scoreboard. Enter a score leads the left-aligned menu for every role; admin actions remain role-restricted. The Manage scores label has no shield icon.
 - Latest menu fix keeps leaderboard repaint layers beneath the menu. Mobile and rotated hit checks passed; the reported intermittent overlap still needs user confirmation, and fullscreen capture was inconclusive.
 - The implementation remains in draft PR #1 on `codex/arcade-record-spotlight`. Default `master` retains the original implementation with an updated README; `gh-pages` serves the rebuilt site.
@@ -264,3 +264,7 @@ GitHub reports the Pages build successful; all four changed published files matc
 ## Supplied token favicon — September 29, 2026
 
 Source `240fb5d`; Pages `68d31ee19006d6d53f5831cb0ffaef4141c783ce`. Used the supplied photo unchanged in composition, converted to 32px PNG, multi-size ICO and 180px Apple touch icon. Original photo retained in source. Icon URLs versioned for cache refresh. Build and image-format checks passed; Pages reports built and all four changed live assets match the production build. No backend or data changes.
+
+## Turquoise token background — September 29, 2026
+
+Source `a432a0b`; Pages `bed4057b33c0d78e2d60c74a2808576d1438c0d6`. Background edited with the built-in image tool; original photo preserved. Browser and Apple icons converted from the edited asset. Build/diff checks passed; Pages built and published HTML plus all three icons match the build. No backend or data changes.
