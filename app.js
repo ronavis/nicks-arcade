@@ -591,16 +591,16 @@ function renderArcadeGames() {
   $('arcade-games-list').replaceChildren(...games.map(game => {
     const card = node('article', 'arcade-game-card');
     const art = node('img'); art.src = artworkUrl(game); art.alt = `${game.title} artwork`; art.loading = 'lazy';
-    const info = node('div'); info.append(node('h3', '', game.title), node('p', game.record ? 'small' : 'open-record-label', game.record ? `${game.record.score} · ${game.record.initials}` : 'FIRST SCORE WANTED'));
+    const info = node('div', 'arcade-game-info'); info.append(node('h3', '', game.title), node('p', game.record ? 'small' : 'open-record-label', game.record ? `${game.record.score} · ${game.record.initials}` : 'FIRST SCORE WANTED'));
     const view = node('button', 'secondary', 'Show on TV');
     view.addEventListener('click', () => { $('games-dialog').close(); feature(game.id); location.hash = '#tv'; });
-    const manage = node('button', 'text-button', game.record ? 'Manage scores' : 'Enter first score');
+    const manage = node('button', 'secondary', game.record ? 'Manage scores' : 'Enter first score');
     manage.addEventListener('click', () => {
       $('games-dialog').close();
       if (game.record) { $('admin-game').value = game.id; if (location.hash === '#admin') loadAdmin(); else location.hash = '#admin'; }
       else { state.pendingGame = null; state.selected = game.id; state.requestId = crypto.randomUUID(); $('score-input').value = ''; clearPhoto(); applySavedTaunt(); $('score-form').hidden = false; $('record-preview').hidden = false; $('success-panel').hidden = true; renderEntry(); setMessage(); location.hash = '#play'; }
     });
-    const eligibility = node('button', 'text-button', game.eligible ? 'Remove from arcade' : 'Add to Nick’s arcade');
+    const eligibility = node('button', game.eligible ? 'secondary arcade-remove' : 'secondary', game.eligible ? 'Remove from arcade' : 'Add to Nick’s arcade');
     eligibility.addEventListener('click', async () => {
       eligibility.disabled = true;
       try { await api(`/admin/games/${encodeURIComponent(game.id)}`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({eligible:!game.eligible})}); await refreshBoard(); $('games-feedback').textContent = game.eligible ? `${game.title} removed from the eligible list. Score history is preserved.` : `${game.title} added to Nick’s arcade.`; }
@@ -609,10 +609,12 @@ function renderArcadeGames() {
     if (!game.eligible) info.append(node('p', 'small', 'Outside Nick’s arcade'));
     view.hidden = !game.eligible && !state.bypassGamesRestriction;
     manage.hidden = !game.record && !game.eligible && !state.bypassGamesRestriction;
-    const changeArt = node('button', 'text-button', game.marqueeId ? 'Change uploaded marquee' : 'Upload marquee');
+    const changeArt = node('button', 'secondary', game.marqueeId ? 'Change marquee' : 'Upload marquee');
     changeArt.addEventListener('click', () => openMarquee(game));
     if (game.marqueeId) info.append(node('p', 'small', 'Custom marquee'));
-    info.append(view, manage, changeArt, eligibility); card.append(art, info); return card;
+    const actions = node('div', 'arcade-game-actions');
+    actions.setAttribute('role', 'group'); actions.setAttribute('aria-label', `${game.title} actions`);
+    actions.append(view, manage, changeArt, eligibility); card.append(art, info, actions); return card;
   }));
   if (!games.length) $('arcade-games-list').append(node('p', 'admin-empty', 'No games match this filter.'));
 }
