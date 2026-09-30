@@ -4,7 +4,7 @@ Software deployed and live core flow validated. Ron confirmed the live QR scan a
 
 ## Latest release snapshot — September 29, 2026
 
-- Latest frontend source `a432a0b` gives the token icon a turquoise background; Pages publication `bed4057b33c0d78e2d60c74a2808576d1438c0d6` (build and live assets verified). Notification marquees and pack filtering remain included. Menu-layering source remains `17c7d8b`. Backend last deployed at `cc2b075`; subsequent changes were frontend-only.
+- Latest frontend source `097488a` corrects Puzzle Bobble and clarifies time editing; Pages publication `5ec90136b5e0c7cca5be5a79f0b000ef96505939` (build and live assets verified). Notification marquees and pack filtering remain included. Menu-layering source remains `17c7d8b`. Backend last deployed at `cc2b075`; subsequent changes were frontend-only.
 - QR/default landing and interactive sign-in return to the shared scoreboard. Enter a score leads the left-aligned menu for every role; admin actions remain role-restricted. The Manage scores label has no shield icon.
 - Latest menu fix keeps leaderboard repaint layers beneath the menu. Mobile and rotated hit checks passed; the reported intermittent overlap still needs user confirmation, and fullscreen capture was inconclusive.
 - The implementation remains in draft PR #1 on `codex/arcade-record-spotlight`. Default `master` retains the original implementation with an updated README; `gh-pages` serves the rebuilt site.
@@ -268,3 +268,11 @@ Source `240fb5d`; Pages `68d31ee19006d6d53f5831cb0ffaef4141c783ce`. Used the sup
 ## Turquoise token background — September 29, 2026
 
 Source `a432a0b`; Pages `bed4057b33c0d78e2d60c74a2808576d1438c0d6`. Background edited with the built-in image tool; original photo preserved. Browser and Apple icons converted from the edited asset. Build/diff checks passed; Pages built and published HTML plus all three icons match the build. No backend or data changes.
+
+## Puzzle Bobble identity and Excitebike time edits — September 30, 2026
+
+Source `95d0943` plus image optimization `097488a`; Pages `5ec90136b5e0c7cca5be5a79f0b000ef96505939` built successfully. All five changed live assets match the production build. Puzzle Bobble now uses the Japanese cabinet marquee, sized to 1600px. Seed data is corrected; its historical internal ID is retained. The separate Bubble Bobble game retains its own artwork in the catalog.
+
+Before correcting the production game metadata, database/photos were backed up at `/var/backups/nicks-arcade/before-puzzle-bobble-20260930/COMPLETE`. The guarded correction script was validated on a local backup and checked for repeat-run safety. Production correction changed only the game's title, search key and image, added an audit receipt and asserted every score row unchanged within the transaction. Public API readback confirms Puzzle Bobble and its original 1,734,150 / RJW record. Backend remains cc2b075; no restart needed.
+
+Nintendo's official VS. System release description confirms hundredths-of-a-second racing. Input 1:02:30 and 1:02.30 represent the same 62.30 seconds. Existing numeric scoring and display formatting remain unchanged. Entry/admin hints explain normalization; admin save feedback reports the stored value. A regression test confirms separator-only normalization and a genuinely different time persisting through an application reopen. 73 backend tests, 11 frontend tests, syntax/build and diff checks passed. No live Excitebike score was changed by this task.
