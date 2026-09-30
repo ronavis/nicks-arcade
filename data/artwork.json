@@ -12,5 +12,13 @@
       "bublbobl"
     ],
     "image": "images/bubblebobble.png"
+  },
+  {
+    "title": "Puzzle Bobble",
+    "aliases": [
+      "pbobble",
+      "pbobblen"
+    ],
+    "image": "images/cabinet-marquees/bust-a-move.png"
   }
 ]

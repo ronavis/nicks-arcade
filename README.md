@@ -173,6 +173,6 @@ Ron and Nick have the same admin permissions through their configured Google acc
 
 Undated legacy records leave the date row blank while preserving its layout space.
 
-Nick confirmed the imported 1,734,150 / RJW record belongs to **Puzzle Bobble**. Its historical internal game ID is retained to preserve score ownership and history.
+Nick confirmed the imported 1,734,150 / RJW record belongs to **Puzzle Bobble**, now displayed under its **Bust-A-Move** name with a cleaner logo at Ron’s request. Its historical internal game ID is retained to preserve score ownership and history.
 
 Excitebike race times use minutes, seconds and hundredths: `1:02:30` and `1:02.30` both represent 62.30 seconds. The app accepts both and displays `1:02.30`; lower is better. [Nintendo’s VS. System description](https://www.nintendo.com/en-ca/store/products/arcade-archives-excitebike-switch/) confirms hundredth-of-a-second racing. Admin time fields explain this and save feedback includes the stored display value.

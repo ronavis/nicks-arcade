@@ -31,3 +31,7 @@ Edit prompt: “Edit the supplied Nick's Arcade token photograph for use as a sq
 ## Puzzle Bobble
 
 Nick corrected the imported record from Bubble Bobble to Puzzle Bobble on September 30, 2026. Cabinet artwork: [LaunchBox Puzzle Bobble marquee](https://gamesdb.launchbox-app.com/games/images/38330-bust-a-move), Japanese marquee https://images.launchbox-app.com/756610fa-9134-4788-85fa-b02edcb9823e.png, stored as `images/cabinet-marquees/puzzle-bobble.png`. Original Bubble Bobble artwork remains available for that separate game.
+
+## Bust-A-Move display artwork
+
+Ron requested the Bust-A-Move name if no better Puzzle Bobble marquee was available. Using the clean, wide logo from [LaunchBox](https://gamesdb.launchbox-app.com/games/images/38330-bust-a-move), https://images.launchbox-app.com/ed5349f3-dc34-4136-ac22-14d817c934c5.png, resized proportionally to 1600px. This is a clear logo, not a cabinet marquee scan. Original game ID, scores and ownership are preserved.
