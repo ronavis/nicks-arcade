@@ -57,7 +57,7 @@ function renderBoard() {
   $('hero-marquee').alt = `${game.title} marquee`;
   $('hero-title').textContent = game.title;
   $('record-label').textContent = !game.record ? 'SET THE FIRST RECORD' : game.kind === 'time' ? 'TIME TO BEAT' : 'RECORD TO BEAT';
-  $('record-age').textContent = ArcadeCelebrations.recordAge(game.record);
+  refreshRecordAge();
   $('hero-score').textContent = game.record ? scoreText(game) : 'BE THE FIRST';
   $('hero-score').className = `hero-score${scoreText(game).length > 10 ? ' very-long' : scoreText(game).length > 7 ? ' long' : ''}`;
   $('hero-score').classList.toggle('empty-record', !game.record);
@@ -83,7 +83,13 @@ function renderBoard() {
 }
 function refreshRecordAge() {
   const game = state.boardGames.find(game => game.id === state.featured) || state.boardGames[0];
-  $('record-age').textContent = game ? ArcadeCelebrations.recordAge(game.record) : '';
+  const label = $('record-age'), text = game ? ArcadeCelebrations.recordAge(game.record) : '';
+  label.textContent = text;
+  const parts = text.split(' · ');
+  if (parts.length === 2) {
+    const corrected = parts[1] === 'corrected';
+    label.replaceChildren(node('strong', 'record-age-value', corrected ? 'Corrected' : parts[0]), node('span', 'record-age-date', corrected ? parts[0] : parts[1]));
+  }
 }
 // Keep time labels fresh even when a score fetch fails or rotation is paused.
 setInterval(refreshRecordAge, 30000);

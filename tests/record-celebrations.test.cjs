@@ -40,11 +40,11 @@ test('open scoreboard refreshes age on its own timer and on resume without a net
  const source=fs.readFileSync(path.join(__dirname,'../app.js'),'utf8');
  const code=source.slice(source.indexOf('function refreshRecordAge()'),source.indexOf('function feature(id)'));
  let now=new Date(2026,8,29,23,59).getTime(),tick,period;
- const label={textContent:''},events={};
+ const label={textContent:'',replaceChildren(){}},events={};
  const record={createdAt:now/1000,revision:1};
  const state={boardGames:[{id:'test',record}],featured:'test',paused:true,connected:false};
  vm.runInNewContext(code,{
-  state,$:()=>label,ArcadeCelebrations:{recordAge:r=>recordAge(r,now)},
+  state,$:()=>label,node:(tag,className,text)=>({textContent:text}),ArcadeCelebrations:{recordAge:r=>recordAge(r,now)},
   setInterval:(fn,ms)=>{tick=fn;period=ms},
   window:{addEventListener:(name,fn)=>events[name]=fn},
   document:{hidden:false,addEventListener:(name,fn)=>events[name]=fn}
