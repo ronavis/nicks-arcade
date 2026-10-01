@@ -15,7 +15,7 @@ def test_preview_commit_repeat_and_preservation(app):
     result=call(c,source).json
     assert result['counts']==dict(games=2,cabinets=2,assignments=3)
     assert not result['errors'] and result['rows'][0]['eligible']==0
-    assert len(c.get('/api/admin/cabinets',headers=headers('admin')).json['cabinets'])==18
+    assert len(c.get('/api/admin/cabinets',headers=headers('admin')).json['cabinets'])==19
     assert call(c,source,'commit',previewHash=result['previewHash']).status_code==200
     assert call(c,source).json['counts']==dict(games=0,cabinets=0,assignments=0)
     with sqlite3.connect(str(app.config['DATA_DIR'])+'/arcade.sqlite3') as db:
@@ -35,7 +35,7 @@ def test_invalid_rows_atomicity_and_roles(app):
     p=call(c,source).json
     assert len(p['errors'])==2
     assert call(c,source,'commit',previewHash=p['previewHash']).status_code==400
-    assert len(c.get('/api/admin/cabinets',headers=headers('admin')).json['cabinets'])==18
+    assert len(c.get('/api/admin/cabinets',headers=headers('admin')).json['cabinets'])==19
 
 
 def test_stale_preview_and_unicode_csv(app):

@@ -33,7 +33,7 @@
       "Dig Dug II",
       "Rompers",
       "Rolling Thunder",
-      "Galaga \u201988"
+      "Galaga ’88"
     ]
   },
   {
@@ -63,7 +63,7 @@
       "Dig Dug II",
       "Rompers",
       "Rolling Thunder",
-      "Galaga \u201988"
+      "Galaga ’88"
     ]
   },
   {
@@ -92,10 +92,10 @@
   },
   {
     "code": "DRL",
-    "name": "Dragon\u2019s Lair Cabinet",
+    "name": "Dragon’s Lair Cabinet",
     "games": [
-      "Dragon\u2019s Lair",
-      "Dragon\u2019s Lair II",
+      "Dragon’s Lair",
+      "Dragon’s Lair II",
       "Space Ace"
     ]
   },
@@ -135,7 +135,7 @@
   },
   {
     "code": "S2C",
-    "name": "Street Fighter II\u2019 Champion Edition Cabinet",
+    "name": "Street Fighter II’ Champion Edition Cabinet",
     "games": [
       "Street Fighter II' Champion Edition",
       "Super Street Fighter II Turbo",
@@ -227,6 +227,13 @@
     "games": [
       "TMNT: Turtles in Time",
       "Teenage Mutant Ninja Turtles"
+    ]
+  },
+  {
+    "code": "DK",
+    "name": "Donkey Kong Cabinet",
+    "games": [
+      "Donkey Kong"
     ]
   }
 ]

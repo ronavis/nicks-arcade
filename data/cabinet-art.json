@@ -196,5 +196,16 @@
       "scale": 1.5,
       "originY": 0
     }
+  },
+  "DK": {
+    "image": "images/cabinets/DK.png",
+    "source": "https://images.launchbox-app.com/5e8797be-3593-4452-8f53-9920f80f925c.png",
+    "page": "https://gamesdb.launchbox-app.com/games/images/7862",
+    "note": "Classic Donkey Kong reference for Nick\u2019s custom Arcade1Up build; upload a photo to show his actual cabinet.",
+    "crop": {
+      "fit": "contain",
+      "scale": 1.6,
+      "originY": 0
+    }
   }
 }

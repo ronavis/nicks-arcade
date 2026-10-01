@@ -42,7 +42,7 @@ def test_seed_is_one_time_and_preserves_scores(app):
     c=app.test_client()
     before=record(c)
     rows=c.get('/api/admin/cabinets',headers=headers('admin')).json['cabinets']
-    assert len(rows)==18
+    assert len(rows)==19
     assert sum('galaga' in r['gameIds'] for r in rows)==3
     r=c.put('/api/admin/games/galaga/cabinets',json={'expectedCabinetIds':['nick-pac','nick-pcm','nick-ckt'],'cabinetIds':[]},headers=headers('admin'))
     assert r.status_code==200
@@ -86,7 +86,7 @@ def test_photo_and_backup(app,tmp_path):
     assert (destination/'cabinets'/f'{pid}.jpg').exists()
     restored=create_app(dict(app.config,DATA_DIR=str(destination))).test_client()
     assert restored.get('/api/cabinet-photos/'+pid).status_code==200
-    assert len(restored.get('/api/admin/cabinets',headers=headers('admin')).json['cabinets'])==18
+    assert len(restored.get('/api/admin/cabinets',headers=headers('admin')).json['cabinets'])==19
 
 
 def test_pages_preflight_allows_assignments(app):
