@@ -211,7 +211,7 @@ Run `npm run build` followed by `npm run audit:artwork -- http://127.0.0.1:4174`
 
 ### Import your arcade from a spreadsheet
 
-Admins can open **Manage cabinets → Import spreadsheet**. Download the [Excel template](templates/arcade-inventory-template.xlsx) or [CSV template](templates/arcade-inventory-template.csv). Replace the example rows with your own collection; upload the Excel template directly, or export the Games sheet as **CSV UTF-8, comma separated**. Excel imports read only the worksheet named **Games**; Instructions and review questions are ignored. Nick’s original two-tab layout still needs conversion to the template.
+Admins can open **Manage games → Import spreadsheet**. Download the [Excel template](templates/arcade-inventory-template.xlsx) or [CSV template](templates/arcade-inventory-template.csv). Replace the example rows with your own collection; upload the Excel template directly, or export the Games sheet as **CSV UTF-8, comma separated**. Excel imports read only the worksheet named **Games**; Instructions and review questions are ignored. Nick’s original two-tab layout still needs conversion to the template.
 
 | Column | What to enter |
 |---|---|
