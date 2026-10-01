@@ -205,7 +205,7 @@
 .spotlight .hero-score.empty-record{font-size:calc(var(--u)*8)}
 .spotlight .hero-initials{font-size:calc(var(--u)*8);line-height:calc(var(--u)*9)}
 .spotlight .hero-initials.empty-record{font-size:calc(var(--u)*2.6)}
-.around-row img{height:calc(var(--u)*9)}
+.around-row img{height:calc(var(--u)*8.2)}
 .where-cabinet{display:flex;align-items:center;gap:20px;padding:12px;border-bottom:1px solid var(--line)}
 .where-cabinet img{width:110px;height:130px;object-fit:contain;background:transparent}
 #where-to-play-dialog{width:540px}
