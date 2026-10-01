@@ -1,9 +1,9 @@
 'use strict';
 let cabinets = [], selectedCabinet = null, assignmentGame = null, expectedCabinets = [], editingCabinet = null;
-const cabinetPicture = c => c.photoId ? `${apiBase}/cabinet-photos/${c.photoId}` : 'images/cabinet-default.png';
+const cabinetPicture = c => c.photoId ? `${apiBase}/cabinet-photos/${c.photoId}` : window.ARCADE_CABINET_ART?.[c.code]?.image || 'images/cabinet-default.png';
 const cabinetJSON = (method, body) => ({method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
 async function refreshCabinets() { cabinets = (await api('/admin/cabinets')).cabinets; }
-function cabinetImage(c) { const im=node('img','cabinet-photo'); im.src=cabinetPicture(c); im.alt=c.photoId ? c.name : 'Illustration — upload your cabinet photo'; im.loading='lazy'; return im; }
+function cabinetImage(c) { const im=node('img','cabinet-photo'); im.src=cabinetPicture(c); im.alt=c.name; im.loading='lazy'; return im; }
 function cabinetButton(text, action, style='secondary') { const b=node('button',style,text); b.type='button'; b.addEventListener('click',action); return b; }
 function renderCabinets() {
   const query=$('cabinet-search').value.trim().toLowerCase();
@@ -21,7 +21,9 @@ function renderCabinets() {
   const title=node('h3','',c.name); title.id='cabinet-detail-heading'; title.tabIndex=-1;
   const heading=node('div','cabinet-detail-top'); heading.append(cabinetImage(c),title);
   const actions=node('div','cabinet-actions'); actions.append(cabinetButton('Edit cabinet',()=>openCabinetEditor(c)),cabinetButton('Add games',()=>openCabinetGames(c),'primary'));
-  panel.append(back,heading,actions,node('h4','','Games on this cabinet'));
+  panel.append(back,heading);
+  if(!c.photoId&&window.ARCADE_CABINET_ART?.[c.code]?.note)panel.append(node('p','small',window.ARCADE_CABINET_ART[c.code].note));
+  panel.append(actions,node('h4','','Games on this cabinet'));
   const games=c.gameIds.map(gameById).filter(Boolean);
   if(!games.length)panel.append(node('p','cabinet-empty','No games assigned yet. Add games from your collection or the marquee catalog.'));
   for(const game of games){
@@ -162,3 +164,28 @@ $('commit-inventory-import').addEventListener('click',async()=>{
   }catch(e){inventoryPreview=null;$('inventory-import-message').textContent=`${e.message} Preview again to check what remains to import.`;}
   finally{controls.filter(id=>id!=='commit-inventory-import').forEach(id=>$(id).disabled=false);}
 });
+
+function renderFeaturedCabinets(game) {
+  const target=$('featured-cabinets'); target.replaceChildren();
+  const assigned=game?.cabinets||[];
+  target.classList.toggle('unassigned',!assigned.length);
+  if(!assigned.length)return;
+  target.append(node('p','cabinet-strip-label','PLAY IT ON'));
+  const row=node('div','cabinet-strip-row');
+  for(const c of assigned.slice(0,4)){
+    const button=cabinetButton('',()=>openWhereToPlay(game),'featured-cabinet');
+    const im=cabinetImage(c);im.loading='eager';
+    button.append(im,node('span','',c.name.replace(/ Cabinet$/,'')));
+    button.setAttribute('aria-label',`Find ${game.title} on ${c.name}`);row.append(button);
+  }
+  target.append(row);
+  if(assigned.length>4)target.append(cabinetButton(`View all ${assigned.length} cabinets`,()=>openWhereToPlay(game),'cabinet-strip-more'));
+}
+function openWhereToPlay(game) {
+  $('where-to-play-heading').textContent=`Where to play ${game.title}`;
+  $('where-to-play-list').replaceChildren(...game.cabinets.map(c=>{
+    const card=node('div','where-cabinet');card.append(cabinetImage(c),node('strong','',c.name));return card;
+  }));
+  $('where-to-play-dialog').showModal();
+}
+$('close-where-to-play').addEventListener('click',()=>$('where-to-play-dialog').close());

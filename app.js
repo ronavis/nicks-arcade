@@ -45,14 +45,14 @@ function renderImprovement(id, record) {
 function renderBoard() {
   const game = state.boardGames.find(game => game.id === state.featured) || state.boardGames[0];
   if (!game) {
-    $('hero-marquee').src = 'images/new-game.svg'; $('hero-marquee').alt = 'Nick’s Arcade';
+    renderFeaturedCabinets(null); $('hero-marquee').src = 'images/new-game.svg'; $('hero-marquee').alt = 'Nick’s Arcade';
     $('hero-title').textContent = 'Nick’s Arcade'; $('record-label').textContent = 'LEADERBOARD';
     $('hero-score').textContent = 'COMING SOON'; $('hero-score').className = 'hero-score empty-record';
     $('hero-initials').textContent = ''; $('record-age').textContent = '';
     renderImprovement('hero-improvement', null); $('around-list').replaceChildren(); $('page-dots').replaceChildren();
     return;
   }
-  state.featured = game.id;
+  state.featured = game.id; renderFeaturedCabinets(game);
   $('hero-marquee').src = artworkUrl(game);
   $('hero-marquee').alt = `${game.title} marquee`;
   $('hero-title').textContent = game.title;
