@@ -594,6 +594,12 @@ function openAccount() {
   $('account-dialog').showModal(); loadAccount();
 }
 $('account-button').addEventListener('click', openAccount);
+$('tv-settings-button').addEventListener('click', async () => {
+  if (document.fullscreenElement) await document.exitFullscreen();
+  $('display-menu').open = false;
+  state.accountView = 'settings';
+  openAccount();
+});
 $('tv-account-button').addEventListener('click', async () => {
   if (document.fullscreenElement) await document.exitFullscreen();
   openAccount();
