@@ -19,4 +19,4 @@ Generic cabinet art is generated illustration, not a photo of Nick's equipment. 
 
 ## Future inventory imports
 
-Use the README-linked Excel/CSV template and export the Games sheet as CSV. Manage cabinets → Import spreadsheet performs a read-only preview followed by an explicit additive commit. Standard-library CSV parsing supports quoted names, UTF-8 BOMs, blank cabinet cells and repeated game rows. Matching uses normalized exact game/cabinet names, without fuzzy edition guesses. Existing scores, eligibility, photos, marquees and assignments are preserved. See README for the schema and limits.
+Use the README-linked Excel/CSV template. Upload the Excel workbook directly (only Games is read), or export the Games sheet as CSV. Manage cabinets → Import spreadsheet performs a read-only preview followed by an explicit additive commit. Standard-library CSV parsing supports quoted names, UTF-8 BOMs, blank cabinet cells and repeated game rows. Matching uses normalized exact game/cabinet names, without fuzzy edition guesses. Existing scores, eligibility, photos, marquees and assignments are preserved. See README for the schema and limits.

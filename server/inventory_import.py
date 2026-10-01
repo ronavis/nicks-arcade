@@ -5,6 +5,7 @@ import io
 import json
 import unicodedata
 from flask import abort, g, jsonify, request
+from .inventory_workbook import workbook_csv
 
 
 def plan(db, text, key):
@@ -77,14 +78,20 @@ def register(app, get_db, authenticated, key):
     @app.post('/api/admin/inventory-import')
     @authenticated(admin=True)
     def import_inventory():
-        payload = request.get_json(silent=True)
+        if request.files:
+            file = request.files.get('file')
+            if not file or not file.filename.lower().endswith('.xlsx') or request.form.get('mode') != 'preview':
+                raise ValueError('Choose an Excel .xlsx workbook to preview.')
+            payload = {'mode': 'preview', 'csv': workbook_csv(file.read(2 * 1024 * 1024 + 1))}
+        else:
+            payload = request.get_json(silent=True)
         if not isinstance(payload, dict) or payload.get('mode') not in {'preview', 'commit'}:
             raise ValueError('Choose preview or commit.')
         with get_db() as db:
             db.execute('BEGIN IMMEDIATE' if payload['mode']=='commit' else 'BEGIN')
             result = plan(db, payload.get('csv'), key)
             if payload['mode'] == 'preview':
-                return jsonify(result)
+                return jsonify(result | {'csv': payload['csv']})
             if result['errors']:
                 raise ValueError('Correct all row errors before importing.')
             if payload.get('previewHash') != result['previewHash']:

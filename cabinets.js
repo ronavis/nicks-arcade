@@ -128,12 +128,16 @@ $('inventory-import-file').addEventListener('change',resetInventoryPreview);
 $('preview-inventory-import').addEventListener('click',async()=>{
   resetInventoryPreview();const version=inventoryVersion;const file=$('inventory-import-file').files[0];
   try{
-    if(!file)throw new Error('Choose your CSV file first.');
-    if(!file.name.toLowerCase().endsWith('.csv')||file.size>262144)throw new Error('Choose a CSV file under 256 KB. In Excel or Google Sheets, export the Games sheet as CSV UTF-8.');
+    if(!file)throw new Error('Choose your Excel or CSV file first.');
+    const excel=file.name.toLowerCase().endsWith('.xlsx');
+    if(!excel&&!file.name.toLowerCase().endsWith('.csv'))throw new Error('Choose an Excel .xlsx workbook or CSV file.');
+    if(file.size>(excel?2097152:262144))throw new Error(excel?'Choose an Excel workbook under 2 MB.':'Choose a CSV file under 256 KB.');
     $('inventory-import-message').textContent='Checking your spreadsheet…';
-    const csv=await file.text();const result=await api('/admin/inventory-import',cabinetJSON('POST',{mode:'preview',csv}));
+    let result;
+    if(excel){const body=new FormData();body.append('mode','preview');body.append('file',file);result=await api('/admin/inventory-import',{method:'POST',body});}
+    else result=await api('/admin/inventory-import',cabinetJSON('POST',{mode:'preview',csv:await file.text()}));
     if(version!==inventoryVersion)return;
-    inventoryCSV=csv;inventoryPreview=result;
+    inventoryCSV=result.csv;inventoryPreview=result;
     const target=$('inventory-import-results');
     for(const error of result.errors)target.append(node('p','import-row-error',error));
     for(const row of result.rows){

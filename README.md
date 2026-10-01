@@ -211,7 +211,7 @@ Run `npm run build` followed by `npm run audit:artwork -- http://127.0.0.1:4174`
 
 ### Import your arcade from a spreadsheet
 
-Admins can open **Manage cabinets → Import spreadsheet**. Download the [Excel template](templates/arcade-inventory-template.xlsx) or [CSV template](templates/arcade-inventory-template.csv). Replace the example rows with your own collection; for Excel or Google Sheets, export only the Games sheet as **CSV UTF-8, comma separated**. The importer currently accepts CSV, not arbitrary XLSX workbooks or Nick’s original two-tab layout.
+Admins can open **Manage cabinets → Import spreadsheet**. Download the [Excel template](templates/arcade-inventory-template.xlsx) or [CSV template](templates/arcade-inventory-template.csv). Replace the example rows with your own collection; upload the Excel template directly, or export the Games sheet as **CSV UTF-8, comma separated**. Excel imports read only the worksheet named **Games**; Instructions and review questions are ignored. Nick’s original two-tab layout still needs conversion to the template.
 
 | Column | What to enter |
 |---|---|
@@ -232,3 +232,5 @@ October 1 validation: **85 backend tests and 11 frontend tests passed**, includi
 ### Choose games for the leaderboard
 
 In **My account → Manage games**, admins can change **Show on leaderboard** for each game. This controls the featured rotation, neighboring records and celebrations independently of score-entry eligibility. New games (including spreadsheet imports) default to unchecked. On upgrade, existing games with active scores remain checked; games without scores start unchecked. Posting a score does not change the admin’s selection. Settings persist across restarts and apply to all screens on their next refresh. If every game is unchecked, the board shows Coming soon.
+
+Excel imports accept `.xlsx` files up to 2 MB and CSV up to 256 KB, with 500 game rows maximum. Use plain values rather than formulas. The same preview, duplicate detection and additive-save protections apply to both formats.

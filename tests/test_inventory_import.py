@@ -47,3 +47,53 @@ def test_stale_preview_and_unicode_csv(app):
     p=call(c,source).json
     assert call(c,source,'commit',previewHash=p['previewHash']).status_code==200
     assert call(c,source).json['counts']==dict(games=0,cabinets=0,assignments=0)
+
+
+def test_excel_template_preview_commit_and_repeat(app):
+    import io
+    from pathlib import Path
+    c = app.test_client()
+    workbook = Path('templates/arcade-inventory-template.xlsx').read_bytes()
+    def preview(token='admin', content=workbook):
+        return c.post('/api/admin/inventory-import', data={'mode':'preview','file':(io.BytesIO(content),'inventory.xlsx')}, headers=headers(token))
+    assert preview('player').status_code == 403
+    result = preview()
+    assert result.status_code == 200, result.json
+    p = result.json
+    assert not p['errors'] and len(p['rows']) == 3
+    assert call(c,p['csv'],'commit',previewHash=p['previewHash']).status_code == 200
+    assert preview().json['counts'] == dict(games=0,cabinets=0,assignments=0)
+    for bad in [b'not a workbook', b'x'*(2097153)]:
+        assert preview(content=bad).status_code == 400
+
+
+def test_populated_excel_matches_csv(app):
+    from pathlib import Path
+    from server.inventory_workbook import workbook_csv
+    c = app.test_client()
+    csv = workbook_csv(Path('templates/nicks-arcade-inventory-2026-10-01.xlsx').read_bytes())
+    actual = call(c,csv).json
+    expected = call(c,Path('templates/nicks-arcade-inventory-2026-10-01.csv').read_text()).json
+    assert len(actual['rows']) == 98 and not actual['errors']
+    assert actual['previewHash'] == expected['previewHash']
+
+
+def test_excel_rejects_missing_games_formulas_and_unsafe_xml(app):
+    import io
+    import zipfile
+    from pathlib import Path
+    original = Path('templates/arcade-inventory-template.xlsx').read_bytes()
+    def changed(path, transform):
+        out=io.BytesIO()
+        with zipfile.ZipFile(io.BytesIO(original)) as source, zipfile.ZipFile(out,'w') as dest:
+            for name in source.namelist():
+                value=source.read(name)
+                dest.writestr(name,transform(value) if name==path else value)
+        return out.getvalue()
+    c=app.test_client()
+    cases=[changed('xl/workbook.xml',lambda s:s.replace(b'name="Games"',b'name="Other"')),
+           changed('xl/worksheets/sheet1.xml',lambda s:s.replace(b'</x:c>',b'<x:f>1+1</x:f></x:c>',1)),
+           changed('xl/workbook.xml',lambda s:b'<!DOCTYPE workbook [<!ENTITY test "x">]>'+s)]
+    for content in cases:
+        result=c.post('/api/admin/inventory-import',data={'mode':'preview','file':(io.BytesIO(content),'test.xlsx')},headers=headers('admin'))
+        assert result.status_code==400,result.json
