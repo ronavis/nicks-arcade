@@ -237,4 +237,4 @@ Excel imports accept `.xlsx` files up to 2 MB and CSV up to 256 KB, with 500 gam
 
 ### Find the featured game
 
-The featured record includes a **Play it on** strip with up to four equal-sized cabinet images. Smaller groups stay centered at the same size. Tap an image to see the full cabinet list. Cabinet photos fit without cropping; the strip reserves its space across game changes. Real reference images are bundled with the site, so their display does not depend on third-party image hosts.
+The featured record includes a **Play it on** strip with up to four equal-sized cabinet images. Smaller groups stay centered at the same size. Tap an image to see the full cabinet list. The featured strip uses equal framed close-ups of cabinet marquees, screens and controls. Tap a tile to see the full cabinet photos. The strip reserves its space across game changes. Real reference images are bundled with the site, so their display does not depend on third-party image hosts.
