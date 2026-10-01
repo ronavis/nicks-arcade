@@ -197,8 +197,7 @@
 .cabinet-strip-row{display:flex;justify-content:center;gap:calc(var(--u)*1.3)}
 .featured-cabinet{flex:0 0 calc((100% - var(--u)*3.9)/4);min-width:0;border:1px solid var(--line);border-radius:calc(var(--u)*1);background:transparent;padding:0;overflow:hidden;color:var(--ink)}
 .cabinet-crop{height:calc(var(--u)*17.5);overflow:hidden}
-.featured-cabinet .cabinet-photo{display:block;width:100%;height:100%;object-fit:cover;object-position:center top;margin:0;background:transparent;border-radius:0}
-.cabinet-crop.upright-reference .cabinet-photo{transform:scale(1.5);transform-origin:center top}
+.featured-cabinet .cabinet-photo{display:block;width:100%;height:100%;object-fit:var(--cabinet-fit,cover);object-position:center top;margin:0;background:transparent;border-radius:0;transform:scale(var(--cabinet-scale,1));transform-origin:center var(--cabinet-origin-y,0%)}
 .featured-cabinet span{display:flex;align-items:center;justify-content:center;font:calc(var(--u)*2.6)/1.1 var(--display);height:calc(var(--u)*5.2);overflow:hidden}
 .cabinet-strip-more{position:absolute;right:0;top:0;border:0;background:var(--cream);font:calc(var(--u)*2.1) Arial;padding:0}
 .spotlight .hero-marquee{height:calc(var(--u)*15)}
@@ -216,7 +215,4 @@
 .spotlight .game-name{margin:calc(var(--u)*.2) 0}
 .spotlight .rotation{padding-block:calc(var(--u)*.3)}
 
-.cabinet-crop.upright-reference[data-cabinet="MPC"] .cabinet-photo{transform:scale(2);transform-origin:center 30%}
 
-/* Tall archival photos need less magnification than square product shots. */
-.cabinet-crop.upright-reference:is([data-cabinet="CPS"],[data-cabinet="SF2"],[data-cabinet="S2C"]) .cabinet-photo{object-fit:contain;transform:scale(1.6);transform-origin:center top}

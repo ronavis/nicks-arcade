@@ -176,7 +176,8 @@ function renderFeaturedCabinets(game) {
     const button=cabinetButton('',()=>openWhereToPlay(game),'featured-cabinet');
     const im=cabinetImage(c);im.loading='eager';
     const crop=node('div','cabinet-crop');crop.dataset.cabinet=c.code||'';
-    if(!c.photoId&&c.code!=='CKT')crop.classList.add('upright-reference');
+    const framing=!c.photoId&&window.ARCADE_CABINET_ART?.[c.code]?.crop;
+    if(framing){crop.style.setProperty('--cabinet-fit',framing.fit);crop.style.setProperty('--cabinet-scale',framing.scale);crop.style.setProperty('--cabinet-origin-y',`${framing.originY}%`);}
     crop.append(im);button.append(crop,node('span','',c.name.replace(/ Cabinet$/,'')));
     button.setAttribute('aria-label',`Find ${game.title} on ${c.name}`);row.append(button);
   }
