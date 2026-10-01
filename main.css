@@ -24,7 +24,7 @@
 
 /* Rotate the board inside a stable viewport; measure its unrotated width. */
 .rotated .display-panel{position:fixed;inset:0;width:100vw;height:100vh;transform:none;display:flex;align-items:center;justify-content:center}
-.rotated .board,.rotated .display-panel:fullscreen .board{width:min(100vh,calc(100vw * .5625));height:auto;aspect-ratio:9/16;transform:rotate(90deg);flex-shrink:0}
+.rotated .board-frame,.rotated .display-panel:fullscreen .board-frame{width:min(100vh,calc(100vw * .5625));height:auto;aspect-ratio:9/16;transform:rotate(90deg);flex-shrink:0}
 .rotated .display-tools{position:fixed;right:12px;bottom:8px}
 
 #add-game{display:block;width:100%;min-height:48px;margin-top:12px;padding:10px;background:var(--cyan);border:2px solid var(--ink);font-weight:bold;overflow-wrap:anywhere}
@@ -120,6 +120,13 @@
 
 /* Persisted TV orientation applies only to the scoreboard route. */
 .rotated .display-panel{width:100vw;height:100dvh}
-.rotated .board,.rotated .display-panel:fullscreen .board{width:min(100vw,calc(100dvh * .5625));height:auto;transform:rotate(var(--tv-angle,0deg));aspect-ratio:9/16}
-.rotated.tv-quarter-turn .board,.rotated.tv-quarter-turn .display-panel:fullscreen .board{width:min(100dvh,calc(100vw * .5625))}
+.rotated .board-frame,.rotated .display-panel:fullscreen .board-frame{width:min(100vw,calc(100dvh * .5625));height:auto;transform:rotate(var(--tv-angle,0deg));aspect-ratio:9/16}
+.rotated.tv-quarter-turn .board-frame,.rotated.tv-quarter-turn .display-panel:fullscreen .board-frame{width:min(100dvh,calc(100vw * .5625))}
 #tv-setup-dialog{width:min(520px,95vw);max-height:90dvh;overflow:auto}#tv-setup-dialog p{line-height:1.5}#tv-setup-dialog .primary{margin-top:8px}#copy-tv-link{margin-top:10px;width:100%}#tv-setup-link{font-size:13px}#account-tv-setup{width:100%;margin-bottom:18px}
+
+/* Rotate the board and its unclipped menu as one display, preserving menu stacking. */
+.board-frame{position:relative;width:100%;flex-shrink:0;isolation:isolate}
+.display-panel:fullscreen .board-frame{width:min(100vw,calc(100dvh * .5625));aspect-ratio:9/16}
+.display-panel:fullscreen .board-frame .board{width:100%;height:auto;aspect-ratio:9/16}
+.rotated .board-frame .display-menu-items{max-height:calc(min(100dvh,177.7778vw) - 80px)}
+.rotated.tv-quarter-turn .board-frame .display-menu-items{max-height:calc(min(100vw,177.7778dvh) - 80px)}
