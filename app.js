@@ -123,6 +123,8 @@ function renderSession() {
   $('account-admin').hidden = !state.user?.admin;
   $('admin-link').hidden = !state.user?.admin;
   $('tv-admin-button').hidden = !state.user?.admin;
+  $('tv-setup-button').hidden = !state.user?.admin; $('account-tv-setup').hidden = !state.user?.admin;
+  if (!state.user?.admin) $('tv-setup-dialog').close();
   $('tv-games-button').hidden = !state.user?.admin; $('account-games').hidden = !state.user?.admin;
   if (!state.user?.admin) { $('games-dialog').close(); $('arcade-games-list').replaceChildren(); }
   if (!state.user?.admin) { $('admin-list').replaceChildren(); $('admin-feedback').textContent = ''; }
@@ -173,6 +175,50 @@ for (const role of ['player', 'admin']) $(`demo-${role}`).addEventListener('clic
 });
 $('signout').addEventListener('click', () => signOut());
 
+const tvAngles = [0, 90, 180, 270];
+const validTvAngle = value => value !== null && value !== '' && tvAngles.includes(Number(value));
+let tvOrientation = 0;
+try { const stored = localStorage.getItem('arcade_tv_orientation'); if (validTvAngle(stored)) tvOrientation = Number(stored); } catch (_) { /* The bookmarked TV link also works without storage. */ }
+const linkedTvAngle = new URLSearchParams(location.search).get('tvRotation');
+if (validTvAngle(linkedTvAngle)) tvOrientation = Number(linkedTvAngle);
+function applyTvOrientation(active) {
+  document.body.classList.toggle('rotated', active && tvOrientation !== 0);
+  document.body.classList.toggle('tv-quarter-turn', active && tvOrientation % 180 !== 0);
+  document.body.style.setProperty('--tv-angle', `${tvOrientation}deg`);
+}
+function tvSetupUrl(angle) {
+  const url = new URL(location.href); url.searchParams.delete('view'); url.searchParams.set('tvRotation', String(angle)); url.hash = 'tv'; return url.href;
+}
+function saveTvOrientation(angle) {
+  if (!tvAngles.includes(angle)) return false;
+  tvOrientation = angle;
+  let saved = true;
+  try { localStorage.setItem('arcade_tv_orientation', String(angle)); } catch (_) { saved = false; }
+  history.replaceState(null, '', tvSetupUrl(angle));
+  return saved;
+}
+function updateTvLink() { $('tv-setup-link').value = tvSetupUrl(Number($('tv-orientation').value)); }
+async function openTvSetup() {
+  if (!state.user?.admin) return;
+  if (document.fullscreenElement) await document.exitFullscreen();
+  $('display-menu').open = false; $('account-dialog').close();
+  $('tv-orientation').value = String(tvOrientation); $('tv-setup-message').textContent = ''; updateTvLink(); $('tv-setup-dialog').showModal();
+}
+$('tv-setup-button').addEventListener('click', openTvSetup);
+$('account-tv-setup').addEventListener('click', openTvSetup);
+$('close-tv-setup').addEventListener('click', () => $('tv-setup-dialog').close());
+$('tv-orientation').addEventListener('change', updateTvLink);
+$('copy-tv-link').addEventListener('click', async () => {
+  if (!state.user?.admin) return;
+  try { await navigator.clipboard.writeText($('tv-setup-link').value); $('tv-setup-message').textContent = 'TV link copied. Set it as the TV browser’s startup page or bookmark.'; }
+  catch (_) { $('tv-setup-link').focus(); $('tv-setup-link').select(); $('tv-setup-message').textContent = 'Select and copy the TV link above.'; }
+});
+$('tv-setup-form').addEventListener('submit', event => {
+  event.preventDefault(); if (!state.user?.admin) return;
+  const saved = saveTvOrientation(Number($('tv-orientation').value)); route();
+  $('tv-setup-message').textContent = saved ? 'Saved for this browser. Close this window to view the TV screen. Bookmark the TV link to keep the angle even if browser data is cleared.' : 'Orientation applied. Browser storage is unavailable; use the TV link as your startup page to remember it.';
+});
+
 function route() {
   $('display-menu').open = false;
   const preview = state.config?.demo && new URLSearchParams(location.search).get('view') === 'preview' && location.hash !== '#admin';
@@ -185,6 +231,7 @@ function route() {
     if (!state.user?.admin) { location.hash = '#play'; setMessage('Sign in as the arcade administrator to manage scores.', true); }
     else loadAdmin();
   }
+  applyTvOrientation(mode === 'tv' && !preview);
   resizeBoard();
 }
 function resizeBoard() { const width = $('board').clientWidth; if (width > 0) $('board').style.setProperty('--u', `${width / 100}px`); }
@@ -197,7 +244,7 @@ $('pause').addEventListener('click', () => { state.paused = !state.paused; $('pa
 $('fullscreen').addEventListener('click', async () => {
   try { if (document.fullscreenElement) await document.exitFullscreen(); else await $('display-panel').requestFullscreen(); } catch (_) { $('connection').hidden = false; $('connection').textContent = 'Use your browser’s full-screen control on this device.'; }
 });
-$('rotate').addEventListener('click', () => { document.body.classList.toggle('rotated'); resizeBoard(); });
+$('rotate').addEventListener('click', () => { saveTvOrientation((tvOrientation + 90) % 360); route(); });
 let rotationTimer;
 let rotationSeconds;
 function applyDisplaySettings(settings) {
