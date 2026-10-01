@@ -1,0 +1,24 @@
+[
+  {
+    "title": "NBA Jam",
+    "aliases": [
+      "nbajam"
+    ],
+    "image": "images/cabinet-marquees/nbajam.jpg"
+  },
+  {
+    "title": "Bubble Bobble",
+    "aliases": [
+      "bublbobl"
+    ],
+    "image": "images/bubblebobble.png"
+  },
+  {
+    "title": "Puzzle Bobble",
+    "aliases": [
+      "pbobble",
+      "pbobblen"
+    ],
+    "image": "images/cabinet-marquees/puzzle-bobble-logo.png"
+  }
+]

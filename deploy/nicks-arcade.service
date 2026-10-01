@@ -1,0 +1,21 @@
+[Unit]
+Description=Nick's Arcade score service
+After=network.target
+
+[Service]
+User=nicks-arcade
+Group=nicks-arcade
+WorkingDirectory=/opt/nicks-arcade/current
+EnvironmentFile=/etc/nicks-arcade.env
+ExecStart=/opt/nicks-arcade/venv/bin/gunicorn --bind 127.0.0.1:8766 --workers 1 --threads 4 --timeout 45 'server.app:create_app()'
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full
+ReadWritePaths=/var/lib/nicks-arcade
+
+[Install]
+WantedBy=multi-user.target
