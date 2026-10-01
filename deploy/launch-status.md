@@ -321,3 +321,10 @@ A complete pre-deployment backup is recorded at `/var/backups/nicks-arcade/pre-i
 All 98 resolved artwork URLs returned nonempty image responses after publication. Signed-out browser verification confirmed the live scoreboard, Play. Scan. Post. wording and absence of admin controls. An unsigned import request returned 401. Authenticated preview/commit and responsive UI were tested locally; no authenticated production import was performed.
 
 Validation: 85 backend tests, 11 frontend tests, syntax checks, production build and diff checks passed. The populated October 1 workbook was generated from the live inventory and all three sheets visually reviewed. Its 98-row CSV was previewed against a read-only production database connection: zero errors and zero proposed additions. Source questions (MC2, five unassigned games, Nintendo editions) remain explicit; Nick’s source workbook was not changed.
+
+
+## October 1 — per-game leaderboard visibility
+
+Backend `4125a38`; Pages `e23c4524d1a648ff01784a3f4320d10ea422fa9f`. Admin Manage games now has a persistent Show on leaderboard checkbox independent of eligibility. The one-time migration keeps 32 scored games visible and unchecks 66 games without records. New games default off and submitting a score does not override the setting. The rotation, neighbors and celebrations honor visibility; entry search retains eligible games.
+
+86 backend tests and 11 frontend tests passed. Local browser checkbox on/off saved correctly. Tests cover role checks, invalid input, restart persistence, new-game defaults and posting to a hidden game. Pre-release backup: `/var/backups/nicks-arcade/pre-visibility-4125a38`. Readback preserved all 37 score, 3 activity, 34 audit and 122 cabinet-assignment rows; integrity OK and service production/ok. Unsigned visibility updates return 401.
