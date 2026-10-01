@@ -184,3 +184,9 @@ Admins can open **Menu → Manage games**, find the game, and select **Upload ma
 ### Record history in Manage scores
 
 Each game now has a newest-first record timeline above its submission controls. It shows the original score and initials, the submitting Google account, and the local date/time for submissions recorded as new records. Lower scores and ties stay in the submission list without becoming record milestones. Faster times count as records for time-based games. Later corrections and removals are labeled, with original values recovered from the correction audit. Imported starting records show a linked player account when known and explicitly lack an original date. Older submissions without activity tracking are disclosed as a history gap rather than guessed. This view is admin-only.
+
+### TV monitor orientation
+
+Admins can open **Menu → TV setup** or **My account → Settings → TV monitor setup**. Choose 0°, 90°, 180° or 270°, then **Save for this TV**. The choice is stored in this browser, survives reopening with normal browser storage, and affects only its scoreboard—not entry/admin pages or other devices. The existing Rotate action cycles these four angles and remembers the choice too.
+
+To prepare a TV from a phone, choose an angle and **Copy TV link**, without saving it on the phone. Bookmark that link or configure it as the TV browser’s startup page. The explicit `?tvRotation=90#tv` (or 0/180/270) angle takes priority over a stored preference and works without sign-in or persistent browser storage. The board’s QR code always opens the normal scoreboard URL on visitors’ phones. This configures page orientation; it does not turn on hardware, launch the browser or bypass browser restrictions on automatic fullscreen.
