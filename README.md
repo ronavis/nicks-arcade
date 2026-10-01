@@ -4,7 +4,7 @@ A shared high-score board for Nick’s basement arcade: a rotating portrait disp
 
 **[Open the TV scoreboard](https://ronavis.github.io/nicks-arcade/#tv) · [Enter a score](https://ronavis.github.io/nicks-arcade/#play)**
 
-> **Source status — September 29, 2026:** The rebuilt app is deployed. Its current source is on [`codex/arcade-record-spotlight`](https://github.com/ronavis/nicks-arcade/tree/codex/arcade-record-spotlight), in [pull request #1](https://github.com/ronavis/nicks-arcade/pull/1). Until that PR is merged, `master` still contains the original implementation. GitHub Pages serves the separate `gh-pages` branch. Use the source branch below for local development.
+> **Source status — October 1, 2026:** The rebuilt app is deployed. Its current source is on [`codex/arcade-record-spotlight`](https://github.com/ronavis/nicks-arcade/tree/codex/arcade-record-spotlight), in [pull request #1](https://github.com/ronavis/nicks-arcade/pull/1). Until that PR is merged, `master` still contains the original implementation. GitHub Pages serves the separate `gh-pages` branch. Use the source branch below for local development.
 
 ## Screenshots
 
@@ -191,7 +191,7 @@ Admins can open **Menu → TV setup** or **My account → Settings → TV monito
 
 To prepare a TV from a phone, choose an angle and **Copy TV link**, without saving it on the phone. Bookmark that link or configure it as the TV browser’s startup page. The explicit `?tvRotation=90#tv` (or 0/180/270) angle takes priority over a stored preference and works without sign-in or persistent browser storage. The board’s QR code always opens the normal scoreboard URL on visitors’ phones. This configures page orientation; it does not turn on hardware, launch the browser or bypass browser restrictions on automatic fullscreen.
 
-### Manage cabinets (local review candidate — October 1)
+### Manage cabinets (October 1)
 
 Admins have **Menu → Manage cabinets** and the same entry in My account. The gallery is separate from Manage games. Create or rename a cabinet, upload an optional photo, and select it to see its games with marquee artwork. On phones, selecting a cabinet opens its detail view with **Back to cabinets**.
 
@@ -201,13 +201,13 @@ The one-time migrations import 18 named cabinets and the confirmed game assignme
 
 Until a cabinet photo is uploaded, a clearly labeled generic illustration is used. Photos accept JPG, PNG, WebP and iPhone HEIC up to 40 MB / 64 megapixels; they are resized to 1200 px and stripped of metadata. Current cabinet photos have public image URLs. The cabinet inventory and edits are admin-only, enforced on the server. Optimistic conflict checks prevent stale edits from overwriting newer cabinet names/photos or game assignments.
 
-Cabinet tables, assignments and audit history live in the existing persistent SQLite database. Cabinet photos and replacement history are included by `scripts/backup.py`. Deploy the cabinet-aware backend before publishing its frontend; this candidate has only been run locally so far.
+Cabinet tables, assignments and audit history live in the existing persistent SQLite database. Cabinet photos and replacement history are included by `scripts/backup.py`. The cabinet-aware backend and frontend were published together on October 1.
 
-### Collection artwork audit (local candidate)
+### Collection artwork audit
 
 The October 1 cabinet preview's full 98-game collection now has artwork coverage, including imported games without scores. A full pass replaced 59 neutral fallbacks with 58 game-specific marquees/logos and shared Space Invaders artwork for the Color edition. New assets are optimized WebP files. The 9,543-entry search library still has uncovered variants; this is collection coverage, not a claim of complete library coverage. Sources and exceptions are documented in `docs/artwork-sources.md`, with per-image provenance in `data/artwork-provenance.json`.
 
-Run `npm run build` followed by `npm run audit:artwork -- http://127.0.0.1:4174` to check every game and image response in a running local preview. This candidate is not yet published.
+Run `npm run build` followed by `npm run audit:artwork -- http://127.0.0.1:4174` to check every game and image response in a running local preview. The complete collection artwork set is included in the October 1 release.
 
 ### Import your arcade from a spreadsheet
 
@@ -221,4 +221,10 @@ Admins can open **Manage cabinets → Import spreadsheet**. Download the [Excel 
 
 Preview shows each row, artwork where available, new/reused games, cabinet assignments and errors. **Import additions** saves only when all rows are valid. New games join the eligible collection without invented scores. Existing game eligibility, score history, uploaded artwork and cabinet relationships remain unchanged. Duplicate rows and repeat imports do not duplicate entries. Scoring conflicts require a corrected file; imports cannot change an existing game's scoring type. If relevant collection data changes after preview, preview again. Imports are transactional and audit the acting admin. Limit: 500 rows and 256 KB per CSV.
 
-These imports update the current arcade; they do not create separate user-owned arcades or tenants. Unknown artwork uses the neutral placeholder and can be replaced through Upload marquee. This feature and the templates are part of the local review candidate, pending publication.
+These imports update the current arcade; they do not create separate user-owned arcades or tenants. Unknown artwork uses the neutral placeholder and can be replaced through Upload marquee. The importer and templates are available in the October 1 release.
+
+### Nick’s populated inventory snapshot
+
+Download the [October 1 review workbook](templates/nicks-arcade-inventory-2026-10-01.xlsx) or [matching import CSV](templates/nicks-arcade-inventory-2026-10-01.csv). The workbook contains the live collection’s **98 games, 18 cabinets and 122 assignments**, plus a Questions for Nick sheet and import instructions. It is a dated snapshot, not a synchronized feed. Unresolved source entries are listed as questions rather than invented assignments. Use the blank template above for another collection.
+
+October 1 validation: **85 backend tests and 11 frontend tests passed**, including additive imports, role checks, stale previews, duplicate imports, cabinet mappings and preservation of existing records.

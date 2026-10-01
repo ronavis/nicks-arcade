@@ -106,3 +106,6 @@ Before: 59 placeholder resolutions. After: 98 working image responses, zero plac
 | Vs. The Goonies | ok | images/cabinet-marquees/vsthegoonies.webp |
 | X-Men Vs. Street Fighter | ok | images/cabinet-marquees/xmenvsstreetfighter.webp |
 | X-Men: Children of the Atom | ok | images/cabinet-marquees/xmenchildrenoftheatom.webp |
+
+
+October 1 production verification: all 98 resolved artwork URLs returned nonempty image responses after Pages release `c9c5699`.

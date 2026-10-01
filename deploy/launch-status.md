@@ -310,3 +310,14 @@ Frontend syntax, 11 frontend tests, build and diff checks passed. Local browser 
 ## Rotate the menu with the scoreboard — September 30, 2026
 
 Source `80dd9b8`; Pages `6fede38d950d055006067103cf6ffe800aea25e6`. A common board frame now rotates both scoreboard and menu, preserving the menu’s top-right position relative to the upright board. The dropdown remains outside the board’s overflow clipping and above artwork. All four orientations were checked at 1920x1080 for board/menu viewport containment and menu hit-testing; a 1280x720 rotated admin menu was visually checked. Fullscreen was attempted but the browser did not enter fullscreen, so that physical behavior remains unverified. Syntax, build and diff checks passed. Pages built; live HTML and CSS match the production build. No backend or data changes.
+
+
+## October 1 — cabinet inventory, artwork and spreadsheet imports published
+
+Backend release `a3582d50346a44cd2e2a083a1b236281745402de` is active at `/opt/nicks-arcade/current`. GitHub Pages build `c9c56995c5cc91dfb0737471ee8f03b9913a34fc` completed successfully. Published HTML, JS, CSS and workbook downloads match the production build.
+
+A complete pre-deployment backup is recorded at `/var/backups/nicks-arcade/pre-inventory-a3582d5/COMPLETE`. Only the nicks-arcade service was restarted. Read-only comparison preserved all 37 score rows, 3 activity rows and 34 score-audit rows. SQLite integrity is OK. The live inventory contains 98 games, 18 cabinets and 122 assignments; original 33 games were preserved. Public health reports production/ok.
+
+All 98 resolved artwork URLs returned nonempty image responses after publication. Signed-out browser verification confirmed the live scoreboard, Play. Scan. Post. wording and absence of admin controls. An unsigned import request returned 401. Authenticated preview/commit and responsive UI were tested locally; no authenticated production import was performed.
+
+Validation: 85 backend tests, 11 frontend tests, syntax checks, production build and diff checks passed. The populated October 1 workbook was generated from the live inventory and all three sheets visually reviewed. Its 98-row CSV was previewed against a read-only production database connection: zero errors and zero proposed additions. Source questions (MC2, five unassigned games, Nintendo editions) remain explicit; Nick’s source workbook was not changed.

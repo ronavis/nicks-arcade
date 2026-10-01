@@ -15,7 +15,7 @@ Pending source questions:
 - The King of Fighters Neowave, Ninja Gaiden, Playchoice-10: Super Mario Bros., Playchoice-10: Super Mario Bros. 3, and Tekken 4 have no cabinet assignments.
 - Legacy Nintendo scores require explicit edition confirmation before linking them to Nintendo Vs. titles.
 
-Generic cabinet art is generated illustration, not a photo of Nick's equipment. Admins may upload actual cabinet photographs. This feature is a local review candidate; it has not been deployed.
+Generic cabinet art is generated illustration, not a photo of Nick's equipment. Admins may upload actual cabinet photographs. Cabinet management, confirmed assignments and the preview-first importer were deployed on October 1, 2026. The unresolved source questions above remain open.
 
 ## Future inventory imports
 
