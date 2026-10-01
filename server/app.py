@@ -159,6 +159,10 @@ def create_app(config=None, *, allow_demo=False):
 
     with connect() as db:
         cabinets.initialize(db, ROOT / "data/cabinets.json", game_key)
+        if 'show_on_leaderboard' not in {row[1] for row in db.execute('PRAGMA table_info(games)')}:
+            db.execute('ALTER TABLE games ADD COLUMN show_on_leaderboard INTEGER NOT NULL DEFAULT 0')
+            db.execute('UPDATE games SET show_on_leaderboard=1 WHERE EXISTS (SELECT 1 FROM scores WHERE scores.game_id=games.id AND deleted_at IS NULL)')
+
 
     def get_db():
         if 'db' not in g:
@@ -167,7 +171,7 @@ def create_app(config=None, *, allow_demo=False):
 
     def catalog():
         if 'catalog' not in g:
-            g.catalog = {row['id']: dict(row) for row in get_db().execute('SELECT id,title,image,kind,eligible,marquee_id AS marqueeId,sort_order AS \"order\" FROM games ORDER BY sort_order,title')}
+            g.catalog = {row['id']: dict(row) for row in get_db().execute('SELECT id,title,image,kind,eligible,show_on_leaderboard AS showOnLeaderboard,marquee_id AS marqueeId,sort_order AS \"order\" FROM games ORDER BY sort_order,title')}
         return g.catalog
 
     @app.teardown_appcontext
@@ -322,7 +326,7 @@ def create_app(config=None, *, allow_demo=False):
                     if delta > 0:
                         amount = f'{delta / 100:.2f}s' if game['kind'] == 'time' else f'{delta:,}'
                         record['improvement'] = {'amount': amount, 'direction': 'down' if game['kind'] == 'time' else 'up', 'label': f'Beat previous record by {amount}' + (' (faster)' if game['kind'] == 'time' else ' points')}
-            output.append({k: game[k] for k in ['id', 'title', 'image', 'kind', 'order', 'eligible', 'marqueeId']} | {'record': record})
+            output.append({k: game[k] for k in ['id', 'title', 'image', 'kind', 'order', 'eligible', 'marqueeId', 'showOnLeaderboard']} | {'record': record})
         return jsonify(games=output, updatedAt=int(time.time()), displaySettings=display_settings())
 
     @app.get('/api/session')
@@ -607,6 +611,16 @@ def create_app(config=None, *, allow_demo=False):
             if not payload['eligible'] and catalog()[game_id]['eligible'] and db.execute('SELECT COUNT(*) FROM games WHERE eligible=1').fetchone()[0] <= 1:
                 raise ValueError('Keep at least one game in the arcade.')
             db.execute('UPDATE games SET eligible=? WHERE id=?', (int(payload['eligible']), game_id))
+        return jsonify(ok=True)
+
+    @app.patch('/api/admin/games/<game_id>/leaderboard')
+    @authenticated(admin=True)
+    def set_leaderboard_visibility(game_id):
+        payload = request.get_json(silent=True)
+        if game_id not in catalog() or not isinstance(payload, dict) or type(payload.get('showOnLeaderboard')) is not bool:
+            raise ValueError('Choose a game and whether to show it on the leaderboard.')
+        with get_db() as db:
+            db.execute('UPDATE games SET show_on_leaderboard=? WHERE id=?', (int(payload['showOnLeaderboard']), game_id))
         return jsonify(ok=True)
 
     @app.post('/api/admin/games')

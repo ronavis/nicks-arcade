@@ -228,3 +228,7 @@ These imports update the current arcade; they do not create separate user-owned 
 Download the [October 1 review workbook](templates/nicks-arcade-inventory-2026-10-01.xlsx) or [matching import CSV](templates/nicks-arcade-inventory-2026-10-01.csv). The workbook contains the live collection’s **98 games, 18 cabinets and 122 assignments**, plus a Questions for Nick sheet and import instructions. It is a dated snapshot, not a synchronized feed. Unresolved source entries are listed as questions rather than invented assignments. Use the blank template above for another collection.
 
 October 1 validation: **85 backend tests and 11 frontend tests passed**, including additive imports, role checks, stale previews, duplicate imports, cabinet mappings and preservation of existing records.
+
+### Choose games for the leaderboard
+
+In **My account → Manage games**, admins can change **Show on leaderboard** for each game. This controls the featured rotation, neighboring records and celebrations independently of score-entry eligibility. New games (including spreadsheet imports) default to unchecked. On upgrade, existing games with active scores remain checked; games without scores start unchecked. Posting a score does not change the admin’s selection. Settings persist across restarts and apply to all screens on their next refresh. If every game is unchecked, the board shows Coming soon.

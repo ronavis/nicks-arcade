@@ -1,6 +1,6 @@
 'use strict';
 const $ = (id) => document.getElementById(id);
-const state = { games: [], allGames: [], bypassGamesRestriction: false, account: null, accountView: 'activity', automaticTaunt: false, latestEvent: 0, pendingGame: null, selected: 'galaga', featured: 'galaga', initials: '', user: null, token: '', config: null, paused: false, posting: false, requestId: crypto.randomUUID(), editing: null, objectUrl: null, pickerFor: 'entry', connected: false };
+const state = { games: [], boardGames: [], allGames: [], bypassGamesRestriction: false, account: null, accountView: 'activity', automaticTaunt: false, latestEvent: 0, pendingGame: null, selected: 'galaga', featured: 'galaga', initials: '', user: null, token: '', config: null, paused: false, posting: false, requestId: crypto.randomUUID(), editing: null, objectUrl: null, pickerFor: 'entry', connected: false };
 const apiBase = (window.ARCADE_CONFIG?.apiBase || '/api').replace(/\/$/, '');
 const display = new Intl.NumberFormat('en-US');
 const node = (tag, className, text) => { const el = document.createElement(tag); if (className) el.className = className; if (text !== undefined) el.textContent = text; return el; };
@@ -43,8 +43,15 @@ function renderImprovement(id, record) {
   badge.onkeydown = event => { if (event.key === 'Escape') { detail.hidden = true; badge.setAttribute('aria-expanded', 'false'); } };
 }
 function renderBoard() {
-  const game = state.games.find(game => game.id === state.featured) || state.games[0];
-  if (!game) return;
+  const game = state.boardGames.find(game => game.id === state.featured) || state.boardGames[0];
+  if (!game) {
+    $('hero-marquee').src = 'images/new-game.svg'; $('hero-marquee').alt = 'Nick’s Arcade';
+    $('hero-title').textContent = 'Nick’s Arcade'; $('record-label').textContent = 'LEADERBOARD';
+    $('hero-score').textContent = 'COMING SOON'; $('hero-score').className = 'hero-score empty-record';
+    $('hero-initials').textContent = ''; $('record-age').textContent = '';
+    renderImprovement('hero-improvement', null); $('around-list').replaceChildren(); $('page-dots').replaceChildren();
+    return;
+  }
   state.featured = game.id;
   $('hero-marquee').src = artworkUrl(game);
   $('hero-marquee').alt = `${game.title} marquee`;
@@ -56,9 +63,9 @@ function renderBoard() {
   $('hero-score').classList.toggle('empty-record', !game.record);
   $('hero-initials').classList.toggle('empty-record', !game.record);
   $('hero-initials').textContent = game.record ? initialsText(game) : 'YOUR INITIALS HERE'; renderImprovement('hero-improvement', game.record);
-  const index = state.games.indexOf(game);
-  const preferred = game.id === 'galaga' ? ['donkeykong', 'mspacman', 'tetris'].map(id => state.games.find(other => other.id === id)).filter(Boolean) : [];
-  const around = [...preferred, ...[1, 2, 3].map(offset => state.games[(index + offset) % state.games.length])].filter((other, i, games) => other && other.id !== game.id && games.findIndex(entry => entry?.id === other.id) === i).slice(0, 3);
+  const index = state.boardGames.indexOf(game);
+  const preferred = game.id === 'galaga' ? ['donkeykong', 'mspacman', 'tetris'].map(id => state.boardGames.find(other => other.id === id)).filter(Boolean) : [];
+  const around = [...preferred, ...[1, 2, 3].map(offset => state.boardGames[(index + offset) % state.boardGames.length])].filter((other, i, games) => other && other.id !== game.id && games.findIndex(entry => entry?.id === other.id) === i).slice(0, 3);
   $('around-list').replaceChildren(...around.filter(Boolean).map(other => {
     const button = node('button', 'around-row');
     button.setAttribute('aria-label', `Feature ${other.title}, ${scoreText(other)}, ${initialsText(other)}`);
@@ -66,19 +73,19 @@ function renderBoard() {
     const info = node('div'); info.append(node('strong', scoreText(other).length > 8 ? 'long' : '', other.record ? scoreText(other) : 'OPEN RECORD'), node('span', '', other.record ? initialsText(other) : 'Be the first'));
     button.append(image, info); button.addEventListener('click', () => feature(other.id)); return button;
   }));
-  const positions = Array.from({ length: Math.min(5, state.games.length) }, (_, offset) => (index + offset) % state.games.length);
+  const positions = Array.from({ length: Math.min(5, state.boardGames.length) }, (_, offset) => (index + offset) % state.boardGames.length);
   $('page-dots').replaceChildren(...positions.map((position, offset) => {
     const dot = node('button', `page-dot${offset === 0 ? ' active' : ''}`);
-    dot.setAttribute('aria-label', `Show ${state.games[position].title}`);
+    dot.setAttribute('aria-label', `Show ${state.boardGames[position].title}`);
     if (!offset) dot.setAttribute('aria-current', 'true');
-    dot.addEventListener('click', () => feature(state.games[position].id)); return dot;
+    dot.addEventListener('click', () => feature(state.boardGames[position].id)); return dot;
   }));
 }
 function feature(id) { state.featured = id; renderBoard(); }
 function advance(step = 1) {
-  if (!state.games.length) return;
-  const index = Math.max(0, state.games.findIndex(game => game.id === state.featured));
-  feature(state.games[(index + step + state.games.length) % state.games.length].id);
+  if (!state.boardGames.length) return;
+  const index = Math.max(0, state.boardGames.findIndex(game => game.id === state.featured));
+  feature(state.boardGames[(index + step + state.boardGames.length) % state.boardGames.length].id);
 }
 function renderEntry() {
   const game = gameById(state.selected) || state.games[0];
@@ -361,9 +368,10 @@ async function refreshBoard() {
   try {
     const result = await api('/leaderboard');
     const visibleGames = result.games.filter(game => game.eligible !== 0 || result.displaySettings?.bypassGamesRestriction);
-    const celebrations = observeRecords({...result, games:visibleGames});
+    const boardGames = visibleGames.filter(game => game.showOnLeaderboard === 1);
+    const celebrations = observeRecords({...result, games:boardGames});
     if (!$('display-panel').hidden && !document.hidden && !document.querySelector('dialog[open]')) celebrationQueue.push(...celebrations.slice(0, 5 - celebrationQueue.length));
-    state.allGames = result.games; state.games = visibleGames;
+    state.allGames = result.games; state.games = visibleGames; state.boardGames = boardGames;
     if (!state.games.some(game => game.id === state.selected) && !state.pendingGame) state.selected = state.games[0]?.id;
     state.connected = true; applyDisplaySettings(result.displaySettings);
     const adminSelection = $('admin-game').value;
@@ -657,6 +665,15 @@ function renderArcadeGames() {
     const card = node('article', 'arcade-game-card');
     const art = node('img'); art.src = artworkUrl(game); art.alt = `${game.title} artwork`; art.loading = 'lazy';
     const info = node('div', 'arcade-game-info'); info.append(node('h3', '', game.title), node('p', game.record ? 'small' : 'open-record-label', game.record ? `${game.record.score} · ${game.record.initials}` : 'FIRST SCORE WANTED'));
+    const visibility = node('label', 'admin-removed-toggle');
+    const checkbox = node('input'); checkbox.type = 'checkbox'; checkbox.checked = game.showOnLeaderboard === 1;
+    checkbox.setAttribute('aria-label', `Show ${game.title} on leaderboard`);
+    visibility.append(checkbox, document.createTextNode('Show on leaderboard')); info.append(visibility);
+    checkbox.addEventListener('change', async () => {
+      checkbox.disabled = true;
+      try { await api(`/admin/games/${encodeURIComponent(game.id)}/leaderboard`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({showOnLeaderboard:checkbox.checked})}); await refreshBoard(); }
+      catch (error) { checkbox.checked = game.showOnLeaderboard === 1; checkbox.disabled = false; $('games-feedback').textContent = error.message; }
+    });
     const view = node('button', 'secondary', 'Show on TV');
     view.addEventListener('click', () => { $('games-dialog').close(); feature(game.id); location.hash = '#tv'; });
     const manage = node('button', 'secondary', game.record ? 'Manage scores' : 'Enter first score');
@@ -672,7 +689,7 @@ function renderArcadeGames() {
       catch (error) { $('games-feedback').textContent = error.message; eligibility.disabled = false; }
     });
     if (!game.eligible) info.append(node('p', 'small', 'Outside Nick’s arcade'));
-    view.hidden = !game.eligible && !state.bypassGamesRestriction;
+    view.hidden = !game.showOnLeaderboard || (!game.eligible && !state.bypassGamesRestriction);
     manage.hidden = !game.record && !game.eligible && !state.bypassGamesRestriction;
     const changeArt = node('button', 'secondary', game.marqueeId ? 'Change marquee' : 'Upload marquee');
     changeArt.addEventListener('click', () => openMarquee(game));
