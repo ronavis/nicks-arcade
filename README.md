@@ -238,3 +238,5 @@ Excel imports accept `.xlsx` files up to 2 MB and CSV up to 256 KB, with 500 gam
 ### Find the featured game
 
 The featured record includes a **Play it on** strip with up to four equal-sized cabinet images. Smaller groups stay centered at the same size. Tap an image to see the full cabinet list. The featured strip uses equal framed close-ups of cabinet marquees, screens and controls. Tap a tile to see the full cabinet photos. The strip reserves its space across game changes. Real reference images are bundled with the site, so their display does not depend on third-party image hosts.
+
+Record ages use calendar days in the display device’s timezone, matching the date shown beside them. Labels refresh every 30 seconds and on page resume, even while rotation is paused or score downloads are unavailable. Unknown legacy dates remain blank; corrected submissions retain their explicit corrected label.

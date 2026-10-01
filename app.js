@@ -81,6 +81,15 @@ function renderBoard() {
     dot.addEventListener('click', () => feature(state.boardGames[position].id)); return dot;
   }));
 }
+function refreshRecordAge() {
+  const game = state.boardGames.find(game => game.id === state.featured) || state.boardGames[0];
+  $('record-age').textContent = game ? ArcadeCelebrations.recordAge(game.record) : '';
+}
+// Keep time labels fresh even when a score fetch fails or rotation is paused.
+setInterval(refreshRecordAge, 30000);
+window.addEventListener('pageshow', refreshRecordAge);
+window.addEventListener('focus', refreshRecordAge);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshRecordAge(); });
 function feature(id) { state.featured = id; renderBoard(); }
 function advance(step = 1) {
   if (!state.boardGames.length) return;

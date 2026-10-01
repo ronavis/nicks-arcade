@@ -19,3 +19,38 @@ test('record dates distinguish missing dates, today, elapsed days and correction
  assert.match(recordAge({createdAt:100,revision:1},100000+3*86400000),/^Set 3 days ago/);
  assert.match(recordAge({createdAt:100,revision:2},100000),/^Submitted .*corrected$/);
 });
+
+test('record ages advance at midnight across time zones and daylight-saving changes',()=>{
+ const {execFileSync}=require('node:child_process');
+ for(const timezone of ['America/New_York','America/Los_Angeles','UTC']) {
+  execFileSync(process.execPath,['-e',`
+   const assert=require('node:assert/strict');
+   const {recordAge}=require('./record-celebrations.js');
+   const age=(created,now)=>recordAge({createdAt:created.getTime()/1000,revision:1},now.getTime());
+   assert.match(age(new Date(2026,8,29,23,45),new Date(2026,9,1,0,5)),/^Set 2 days ago/);
+   assert.match(age(new Date(2026,8,29,23,59),new Date(2026,8,30,0,0)),/^Set 1 day ago/);
+   assert.match(age(new Date(2026,2,7,23,30),new Date(2026,2,9,0,5)),/^Set 2 days ago/);
+   assert.match(age(new Date(2026,10,1,0,5),new Date(2026,10,1,23,55)),/^Set today/);
+   assert.equal(recordAge({createdAt:'invalid'}),'');
+  `],{cwd:require('node:path').resolve(__dirname,'..'),env:{...process.env,TZ:timezone}});
+ }
+});
+test('open scoreboard refreshes age on its own timer and on resume without a network request',()=>{
+ const vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
+ const source=fs.readFileSync(path.join(__dirname,'../app.js'),'utf8');
+ const code=source.slice(source.indexOf('function refreshRecordAge()'),source.indexOf('function feature(id)'));
+ let now=new Date(2026,8,29,23,59).getTime(),tick,period;
+ const label={textContent:''},events={};
+ const record={createdAt:now/1000,revision:1};
+ const state={boardGames:[{id:'test',record}],featured:'test',paused:true,connected:false};
+ vm.runInNewContext(code,{
+  state,$:()=>label,ArcadeCelebrations:{recordAge:r=>recordAge(r,now)},
+  setInterval:(fn,ms)=>{tick=fn;period=ms},
+  window:{addEventListener:(name,fn)=>events[name]=fn},
+  document:{hidden:false,addEventListener:(name,fn)=>events[name]=fn}
+ });
+ assert.equal(period,30000);tick();assert.match(label.textContent,/^Set today/);
+ now=new Date(2026,8,30,0,0).getTime();tick();assert.match(label.textContent,/^Set 1 day ago/);
+ now=new Date(2026,9,1,0,0).getTime();events.visibilitychange();assert.match(label.textContent,/^Set 2 days ago/);
+ state.boardGames=[];events.pageshow();assert.equal(label.textContent,'');
+});

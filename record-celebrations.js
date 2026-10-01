@@ -25,8 +25,12 @@ const ArcadeCelebrations = (() => {
   function recordAge(record, now = Date.now()) {
     if (!record) return 'No score posted yet';
     if (!record.createdAt) return '';
-    const days = Math.max(0, Math.floor((now - record.createdAt * 1000) / 86400000));
-    const date = new Date(record.createdAt * 1000).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'});
+    const created = new Date(record.createdAt * 1000), current = new Date(now);
+    if (!Number.isFinite(created.getTime()) || !Number.isFinite(current.getTime())) return '';
+    // Compare displayed local calendar dates, not elapsed 24-hour periods (DST-safe).
+    const dayNumber = date => Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000;
+    const days = Math.max(0, dayNumber(current) - dayNumber(created));
+    const date = created.toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'});
     if (record.revision > 1) return `Submitted ${date} · corrected`;
     return `${days === 0 ? 'Set today' : days === 1 ? 'Set 1 day ago' : `Set ${days} days ago`} · ${date}`;
   }
