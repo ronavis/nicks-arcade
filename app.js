@@ -125,6 +125,8 @@ function renderSession() {
   $('tv-admin-button').hidden = !state.user?.admin;
   $('tv-setup-button').hidden = !state.user?.admin; $('account-tv-setup').hidden = !state.user?.admin;
   if (!state.user?.admin) $('tv-setup-dialog').close();
+  $('tv-cabinets-button').hidden = !state.user?.admin; $('account-cabinets').hidden = !state.user?.admin;
+  if (!state.user?.admin) for (const id of ['cabinets-dialog','cabinet-editor','assignment-dialog','cabinet-add-dialog']) $(id).close();
   $('tv-games-button').hidden = !state.user?.admin; $('account-games').hidden = !state.user?.admin;
   if (!state.user?.admin) { $('games-dialog').close(); $('arcade-games-list').replaceChildren(); }
   if (!state.user?.admin) { $('admin-list').replaceChildren(); $('admin-feedback').textContent = ''; }
@@ -677,7 +679,9 @@ function renderArcadeGames() {
     if (game.marqueeId) info.append(node('p', 'small', 'Custom marquee'));
     const actions = node('div', 'arcade-game-actions');
     actions.setAttribute('role', 'group'); actions.setAttribute('aria-label', `${game.title} actions`);
-    actions.append(view, manage, changeArt, eligibility); card.append(art, info, actions); return card;
+    const assign = node('button', 'secondary', 'Assigned cabinets');
+    assign.addEventListener('click', () => openCabinetAssignment(game));
+    actions.append(view, manage, changeArt, assign, eligibility); card.append(art, info, actions); return card;
   }));
   if (!games.length) $('arcade-games-list').append(node('p', 'admin-empty', 'No games match this filter.'));
 }

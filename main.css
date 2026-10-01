@@ -130,3 +130,62 @@
 .display-panel:fullscreen .board-frame .board{width:100%;height:auto;aspect-ratio:9/16}
 .rotated .board-frame .display-menu-items{max-height:calc(min(100dvh,177.7778vw) - 80px)}
 .rotated.tv-quarter-turn .board-frame .display-menu-items{max-height:calc(min(100vw,177.7778dvh) - 80px)}
+
+/* Cabinet library follows the existing cream admin surfaces. */
+#cabinets-dialog { width: min(1240px, calc(100vw - 32px)); max-width:1240px; padding:28px; }
+#cabinets-dialog h2 { font-size:38px; margin:0; }
+#cabinets-dialog .dialog-heading p { margin:4px 0 8px; }
+#cabinet-layout { display:grid; grid-template-columns:minmax(0,1fr); gap:28px; }
+#cabinet-layout.has-selection { grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); }
+#cabinet-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-top:18px; }
+.cabinet-tile { display:flex; flex-direction:column; align-items:center; gap:8px; border:1px solid #bbd3d5; border-radius:8px; background:#fff; padding:12px; min-width:0; color:#10191b; text-align:center; }
+.cabinet-tile[aria-pressed=true] { border:2px solid #00bfcb; background:#e8f9f7; padding:11px; }
+.cabinet-tile:hover { border-color:#007e88; }
+.cabinet-photo { width:100%; height:170px; object-fit:contain; border-radius:5px; }
+.cabinet-tile strong { font:600 16px/1.3 Arial,sans-serif; }
+.cabinet-tile small { font:13px/1.4 Arial,sans-serif; color:#52686d; }
+#cabinet-detail { border-left:1px solid #bbd3d5; padding-left:24px; min-width:0; }
+.cabinet-detail-top { display:flex; align-items:center; gap:18px; }
+.cabinet-detail-top .cabinet-photo { width:115px; height:150px; }
+.cabinet-detail-top h3 { font-size:30px; line-height:1.1; }
+.cabinet-actions { display:flex; gap:10px; flex-wrap:wrap; margin:18px 0 24px; }
+.cabinet-game-row { display:grid; grid-template-columns:110px minmax(0,1fr) auto; align-items:center; gap:12px; padding:15px 0; border-bottom:1px solid #c9d8d9; }
+.cabinet-game-row img { width:110px; height:52px; object-fit:contain; background:#111719; border-radius:4px; }
+.cabinet-game-row strong { font:600 16px/1.3 Arial,sans-serif; }
+.cabinet-game-row small { display:block; margin-top:5px; color:#52686d; font:13px/1.4 Arial,sans-serif; }
+.cabinet-game-row .text-button { font-size:14px; max-width:90px; }
+.cabinet-back { display:none; }
+.cabinet-check { display:flex; align-items:center; gap:16px; padding:12px 0; border-bottom:1px solid #c9d8d9; font:16px/1.4 Arial,sans-serif; cursor:pointer; }
+.cabinet-check input { width:24px; height:24px; flex-shrink:0; accent-color:#008a96; }
+.cabinet-check .cabinet-photo { width:55px; height:70px; }
+#assignment-list { max-height:50vh; overflow:auto; }
+#cabinet-game-results { max-height:60vh; overflow:auto; }
+#cabinet-editor input[type=file] { max-width:100%; }
+@media(max-width:760px) {
+ #cabinets-dialog { padding:18px; width:calc(100vw - 20px); }
+ #cabinets-dialog h2 { font-size:32px; }
+ #cabinet-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ #cabinet-layout.has-selection { grid-template-columns:minmax(0,1fr); }
+ #cabinet-layout.has-selection .cabinet-library { display:none; }
+ #cabinet-detail { border:0; padding:0; }
+ .cabinet-back { display:block; margin-bottom:12px; }
+ .cabinet-photo { height:145px; }
+ .cabinet-game-row { grid-template-columns:86px minmax(0,1fr); gap:10px; }
+ .cabinet-game-row img { width:86px; }
+ .cabinet-game-row button { grid-column:2; justify-self:start; }
+ .cabinet-game-row .text-button { max-width:none; }
+}
+#cabinets-dialog { position:relative; }
+#add-cabinet { position:absolute; right:100px; top:42px; }
+#cabinet-message { min-height:18px; }
+.cabinet-actions .primary { width:auto; margin:0; padding:10px 18px; }
+.cabinet-actions .secondary { margin:0; }
+#cabinet-detail h4 { margin:18px 0 8px; }
+@media(max-width:760px) { #add-cabinet { position:static; } }
+
+#inventory-import-dialog { width:min(760px,calc(100vw - 24px)); }
+#inventory-import-results { max-height:45vh; overflow:auto; margin:16px 0; }
+#inventory-import-results .cabinet-game-row { grid-template-columns:110px minmax(0,1fr); }
+.import-row-error { color:#9f1c16; font-weight:600; }
+#open-inventory-import { margin:8px 0 8px 8px; }
+@media(max-width:600px) { #inventory-import-results .cabinet-game-row { grid-template-columns:84px minmax(0,1fr); } }

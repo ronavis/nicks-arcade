@@ -46,3 +46,38 @@ Real Google sign-in, public score/photo submission, admin proof retrieval, corre
 - The new-game dialog was visually checked at 390×844. The live Simpsons entry page loaded its artwork and first-record prompt.
 - HEIC and 48-megapixel JPEG conversion passed in tests and an isolated instance on the production VPS. This does not substitute for retrying Ron’s original phone photo.
 - Featured initials were enlarged approximately 17% with positive letter spacing. At 540×960 and 1080×1920 they did not overlap the score or rotation controls. Published HTML/CSS matched the build; live browser inspection confirmed the changed font size and spacing.
+
+## Cabinet gallery review — October 1, 2026
+
+Source visual: `/Users/studio/.codex/generated_images/01a0ed69-4bdd-71d2-b765-99cd8dd40c66/exec-e15441aa-f6a0-4f88-9771-37f59e345635.png` (1487 × 1058).
+Implementation: `../cabinets-desktop.png` (1440 × 1024); phone captures `../cabinets-mobile.png` and `../cabinets-mobile-detail.png` (390 × 844).
+
+State: local admin, Manage cabinets, Pac-Man filter, Pac-Man Cabinet selected. Desktop screenshot and source were opened together in one visual comparison. The source uses illustrative cabinet-specific art and invented hardware description; implementation intentionally uses a labeled generic illustration until actual photos are uploaded, and omits unsupported hardware claims. User requested removing Cabinets/Games tabs and keeping the existing Manage games screen. Source and implementation use near-identical aspect ratios; comparison covers overall hierarchy rather than pixel-identical raster sizing. Gallery, selected outline, cream/cyan palette and detail/game rows are preserved. Focused mobile captures verify the detail transition and readable controls.
+
+Iteration findings: compacted the full-width Add games button, moved Add cabinet to the header on desktop, and prevented detail focus from scrolling the close control out of view on phones. Post-fix captures show the final layout. No remaining P0/P1/P2 findings. P3: actual cabinet photos would distinguish tiles better.
+
+Browser checks: local admin login, menu access, gallery search, selecting cabinet, creating a test cabinet, adding Galaga as a fourth assignment, removing only that assignment, catalog search, existing Manage games Assigned cabinets action, and 390px responsive gallery/detail. Console error readback empty. Backend verifies role denial, persistence across app recreation, stale updates, photo processing and backup restoration. Latest checks: 81 backend tests, 11 frontend tests, JS syntax and static build pass. No production deployment or physical iPhone test claimed.
+
+final result: passed
+
+### October 1 — completed cabinet inventory and two marquee replacements
+
+- Syntax checks, 11 frontend tests, static build and 82 backend tests passed.
+- Upgrade test preserves every score row, an existing custom marquee/eligibility choice and an admin-removed cabinet assignment.
+- Fresh inventory: 18 cabinets, 98 games, 65 newly created scoreless games. Unresolved MC2/five unassigned titles excluded.
+- Local browser verified Dragon’s Lair cabinet contains all three games and each image loaded successfully. Unclaimed labels appear only on the two scoreless games.
+- Desktop 1440×1024 and mobile 390×844 checked; mobile detail has no horizontal overflow. Screenshots saved outside the repo in outputs/cabinet-dragons-lair-complete.png and outputs/cabinet-dragons-lair-mobile.png.
+- Local-only verification; no live deployment or production data changes. Remaining catalogue artwork gaps still use the neutral fallback.
+
+### October 1 — full collection artwork pass
+
+Scanned all 98 local database games (all eligible): 59 initial placeholders; after correction, 98 working image responses and zero placeholders/failures. All local image files passed Pillow decoding. The 58 new game-specific assets were visually reviewed, then optimized to 8.26 MB total WebP. Pac-Man, Neo Geo and CPS cabinet artwork was checked in the browser. Source manifest, exceptions and complete per-game results are recorded in data/artwork-provenance.json, docs/artwork-sources.md and docs/artwork-audit.md. This is a local candidate, not published or a claim of full search-library coverage.
+
+### October 1 — spreadsheet inventory import
+
+- Added admin-only CSV preview/commit with additive, transactional writes and an import audit.
+- 85 backend tests, 11 frontend tests, syntax checks and static build passed. Coverage includes preview with no writes, role enforcement, malformed files/headers, scoring conflicts, all-or-nothing errors, stale previews, UTF-8 BOM, duplicate rows and repeat imports, and score/artwork/eligibility preservation.
+- Browser uploaded a test CSV, previewed one assignment, committed it and verified a second preview had zero additions. Temporary assignment was removed through the UI.
+- CSV and Excel templates were exported, visually inspected and served successfully by the local site. CSV parsed with zero errors. README and app link to both.
+- Import modal verified at desktop and 390px mobile width, with no horizontal overflow.
+- No live deployment; GitHub publication remains pending with the cabinet feature.

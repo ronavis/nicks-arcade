@@ -21,6 +21,7 @@ from google.oauth2 import id_token
 from PIL import Image, ImageOps, UnidentifiedImageError
 from pillow_heif import register_heif_opener
 from werkzeug.exceptions import HTTPException
+from server import cabinets, inventory_import
 
 ROOT = Path(__file__).resolve().parents[1]
 CLIENT_ID = '569822322277-ng39tk1vcecgjfes85bs16umb5k47mc7.apps.googleusercontent.com'
@@ -156,6 +157,9 @@ def create_app(config=None, *, allow_demo=False):
                            (str(uuid.uuid4()), game['id'], score_value(game['score'], game['kind']), game['initials'], 'imported', '', 0, game['id']))
             db.execute("INSERT INTO metadata VALUES ('seed_v1','1')")
 
+    with connect() as db:
+        cabinets.initialize(db, ROOT / "data/cabinets.json", game_key)
+
     def get_db():
         if 'db' not in g:
             g.db = connect()
@@ -189,7 +193,7 @@ def create_app(config=None, *, allow_demo=False):
             response.headers['Access-Control-Allow-Origin'] = origin
             response.headers['Vary'] = 'Origin'
             response.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
-            response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PATCH, DELETE, OPTIONS'
+            response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, PATCH, DELETE, OPTIONS'
         if request.path.startswith('/api/'):
             response.headers['Cache-Control'] = 'no-store'
         response.headers['X-Content-Type-Options'] = 'nosniff'
@@ -713,6 +717,8 @@ def create_app(config=None, *, allow_demo=False):
             abort(404)
         return send_from_directory(ROOT / 'dist', path)
 
+    cabinets.register(app, get_db, authenticated, data, game_key)
+    inventory_import.register(app, get_db, authenticated, game_key)
     return app
 
 

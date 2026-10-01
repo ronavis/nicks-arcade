@@ -20,5 +20,454 @@
       "pbobblen"
     ],
     "image": "images/cabinet-marquees/puzzle-bobble-logo.png"
+  },
+  {
+    "title": "Space Ace",
+    "aliases": [
+      "spaceace"
+    ],
+    "image": "images/cabinet-marquees/space-ace.jpg"
+  },
+  {
+    "title": "Dragon's Lair II: Time Warp",
+    "aliases": [
+      "Dragon's Lair II",
+      "Dragon's Lair 2",
+      "lair2"
+    ],
+    "image": "images/cabinet-marquees/dragons-lair-ii.png"
+  },
+  {
+    "title": "Galaxian",
+    "aliases": [
+      "galaxian"
+    ],
+    "image": "images/cabinet-marquees/galaxian.jpg"
+  },
+  {
+    "title": "Dig Dug II",
+    "aliases": [
+      "digdug2",
+      "Dig Dug 2"
+    ],
+    "image": "images/cabinet-marquees/dig-dug-ii.jpg"
+  },
+  {
+    "title": "Super Pac-Man",
+    "aliases": [
+      "superpac"
+    ],
+    "image": "images/cabinet-marquees/super-pac-man.jpg"
+  },
+  {
+    "title": "1944: The Loop Master",
+    "aliases": [
+      "1944: The Loop Master"
+    ],
+    "image": "images/cabinet-marquees/1944theloopmaster.webp"
+  },
+  {
+    "title": "Aliens Vs. Predator",
+    "aliases": [
+      "Alien vs. Predator"
+    ],
+    "image": "images/cabinet-marquees/aliensvspredator.webp"
+  },
+  {
+    "title": "Armored Warriors",
+    "aliases": [
+      "Armored Warriors"
+    ],
+    "image": "images/cabinet-marquees/armoredwarriors.webp"
+  },
+  {
+    "title": "Art of Fighting",
+    "aliases": [
+      "Art of Fighting"
+    ],
+    "image": "images/cabinet-marquees/artoffighting.webp"
+  },
+  {
+    "title": "Battle Circuit",
+    "aliases": [
+      "Battle Circuit"
+    ],
+    "image": "images/cabinet-marquees/battlecircuit.webp"
+  },
+  {
+    "title": "Capcom Sports Club",
+    "aliases": [
+      "Capcom Sports Club"
+    ],
+    "image": "images/cabinet-marquees/capcomsportsclub.webp"
+  },
+  {
+    "title": "Captain Commando",
+    "aliases": [
+      "Captain Commando"
+    ],
+    "image": "images/cabinet-marquees/captaincommando.webp"
+  },
+  {
+    "title": "Commando",
+    "aliases": [
+      "Commando (Capcom)"
+    ],
+    "image": "images/cabinet-marquees/commando.webp"
+  },
+  {
+    "title": "Darkstalkers",
+    "aliases": [
+      "Darkstalkers: The Night Warriors"
+    ],
+    "image": "images/cabinet-marquees/darkstalkers.webp"
+  },
+  {
+    "title": "Final Fight",
+    "aliases": [
+      "Final Fight"
+    ],
+    "image": "images/cabinet-marquees/finalfight.webp"
+  },
+  {
+    "title": "Galaga \u201988",
+    "aliases": [
+      "Galaga '88"
+    ],
+    "image": "images/cabinet-marquees/galaga88.webp"
+  },
+  {
+    "title": "Ghosts 'N Goblins",
+    "aliases": [
+      "Ghosts'n Goblins"
+    ],
+    "image": "images/cabinet-marquees/ghostsngoblins.webp"
+  },
+  {
+    "title": "Giga Wing",
+    "aliases": [
+      "Giga Wing"
+    ],
+    "image": "images/cabinet-marquees/gigawing.webp"
+  },
+  {
+    "title": "Gravitar",
+    "aliases": [
+      "Gravitar"
+    ],
+    "image": "images/cabinet-marquees/gravitar.webp"
+  },
+  {
+    "title": "Hyper Street Fighter II",
+    "aliases": [
+      "Hyper Street Fighter II: The Anniversary Edition"
+    ],
+    "image": "images/cabinet-marquees/hyperstreetfighterii.webp"
+  },
+  {
+    "title": "Liberator",
+    "aliases": [
+      "Liberator"
+    ],
+    "image": "images/cabinet-marquees/liberator.webp"
+  },
+  {
+    "title": "Lunar Lander",
+    "aliases": [
+      "Lunar Lander"
+    ],
+    "image": "images/cabinet-marquees/lunarlander.webp"
+  },
+  {
+    "title": "Marvel Super Heroes Vs. Street Fighter",
+    "aliases": [
+      "Marvel Super Heroes vs. Street Fighter"
+    ],
+    "image": "images/cabinet-marquees/marvelsuperheroesvsstreetfighter.webp"
+  },
+  {
+    "title": "Marvel Vs. Capcom",
+    "aliases": [
+      "Marvel vs. Capcom: Clash of Super Heroes"
+    ],
+    "image": "images/cabinet-marquees/marvelvscapcom.webp"
+  },
+  {
+    "title": "Metal Slug 2",
+    "aliases": [
+      "Metal Slug 2"
+    ],
+    "image": "images/cabinet-marquees/metalslug2.webp"
+  },
+  {
+    "title": "Mortal Kombat",
+    "aliases": [
+      "Mortal Kombat"
+    ],
+    "image": "images/cabinet-marquees/mortalkombat.webp"
+  },
+  {
+    "title": "Ninja Masters",
+    "aliases": [
+      "Ninja Master's: Haou Ninpou-ko"
+    ],
+    "image": "images/cabinet-marquees/ninjamasters.webp"
+  },
+  {
+    "title": "Pac & Pal",
+    "aliases": [
+      "Pac & Pal"
+    ],
+    "image": "images/cabinet-marquees/pacpal.webp"
+  },
+  {
+    "title": "Pac-Man Plus",
+    "aliases": [
+      "Pac-Man Plus"
+    ],
+    "image": "images/cabinet-marquees/pacmanplus.webp"
+  },
+  {
+    "title": "Progear",
+    "aliases": [
+      "Progear"
+    ],
+    "image": "images/cabinet-marquees/progear.webp"
+  },
+  {
+    "title": "Real Bout Fatal Fury Special",
+    "aliases": [
+      "Real Bout Fatal Fury Special"
+    ],
+    "image": "images/cabinet-marquees/realboutfatalfuryspecial.webp"
+  },
+  {
+    "title": "Return of the Jedi",
+    "aliases": [
+      "Star Wars: Return of the Jedi"
+    ],
+    "image": "images/cabinet-marquees/returnofthejedi.webp"
+  },
+  {
+    "title": "Rolling Thunder",
+    "aliases": [
+      "Rolling Thunder"
+    ],
+    "image": "images/cabinet-marquees/rollingthunder.webp"
+  },
+  {
+    "title": "Rompers",
+    "aliases": [
+      "Rompers"
+    ],
+    "image": "images/cabinet-marquees/rompers.webp"
+  },
+  {
+    "title": "SVC Chaos: SNK Vs. Capcom",
+    "aliases": [
+      "SNK vs. Capcom: SVC Chaos"
+    ],
+    "image": "images/cabinet-marquees/svcchaossnkvscapcom.webp"
+  },
+  {
+    "title": "Samurai Shodown II",
+    "aliases": [
+      "Samurai Shodown II"
+    ],
+    "image": "images/cabinet-marquees/samuraishodownii.webp"
+  },
+  {
+    "title": "Samurai Shodown III",
+    "aliases": [
+      "Samurai Shodown III"
+    ],
+    "image": "images/cabinet-marquees/samuraishodowniii.webp"
+  },
+  {
+    "title": "Saturday Night Slammasters",
+    "aliases": [
+      "Saturday Night Slam Masters"
+    ],
+    "image": "images/cabinet-marquees/saturdaynightslammasters.webp"
+  },
+  {
+    "title": "Stakes Winner",
+    "aliases": [
+      "Stakes Winner"
+    ],
+    "image": "images/cabinet-marquees/stakeswinner.webp"
+  },
+  {
+    "title": "Street Fighter Alpha",
+    "aliases": [
+      "Street Fighter Alpha"
+    ],
+    "image": "images/cabinet-marquees/streetfighteralpha.webp"
+  },
+  {
+    "title": "Street Fighter Alpha 2",
+    "aliases": [
+      "Street Fighter Alpha 2"
+    ],
+    "image": "images/cabinet-marquees/streetfighteralpha2.webp"
+  },
+  {
+    "title": "Street Fighter Alpha 3",
+    "aliases": [
+      "Street Fighter Alpha 3"
+    ],
+    "image": "images/cabinet-marquees/streetfighteralpha3.webp"
+  },
+  {
+    "title": "Street Fighter III",
+    "aliases": [
+      "Street Fighter III: New Generation"
+    ],
+    "image": "images/cabinet-marquees/streetfighteriii.webp"
+  },
+  {
+    "title": "Street Fighter Zero 2' Alpha",
+    "aliases": [
+      "Street Fighter Zero 2 Alpha"
+    ],
+    "image": "images/cabinet-marquees/streetfighterzero2alpha.webp"
+  },
+  {
+    "title": "Strider",
+    "aliases": [
+      "Strider"
+    ],
+    "image": "images/cabinet-marquees/strider.webp"
+  },
+  {
+    "title": "Super Puzzle Fighter II Turbo",
+    "aliases": [
+      "Super Puzzle Fighter II Turbo"
+    ],
+    "image": "images/cabinet-marquees/superpuzzlefighteriiturbo.webp"
+  },
+  {
+    "title": "Super Street Fighter II",
+    "aliases": [
+      "Super Street Fighter II: The New Challengers"
+    ],
+    "image": "images/cabinet-marquees/superstreetfighterii.webp"
+  },
+  {
+    "title": "Super Street Fighter II Turbo",
+    "aliases": [
+      "Super Street Fighter II Turbo"
+    ],
+    "image": "images/cabinet-marquees/superstreetfighteriiturbo.webp"
+  },
+  {
+    "title": "TMNT: Turtles in Time",
+    "aliases": [
+      "Teenage Mutant Ninja Turtles: Turtles in Time"
+    ],
+    "image": "images/cabinet-marquees/tmntturtlesintime.webp"
+  },
+  {
+    "title": "Teenage Mutant Ninja Turtles",
+    "aliases": [
+      "Teenage Mutant Ninja Turtles"
+    ],
+    "image": "images/cabinet-marquees/teenagemutantninjaturtles.webp"
+  },
+  {
+    "title": "Tekken",
+    "aliases": [
+      "Tekken"
+    ],
+    "image": "images/cabinet-marquees/tekken.webp"
+  },
+  {
+    "title": "Tekken 2",
+    "aliases": [
+      "Tekken 2"
+    ],
+    "image": "images/cabinet-marquees/tekken2.webp"
+  },
+  {
+    "title": "Tekken 3",
+    "aliases": [
+      "Tekken 3"
+    ],
+    "image": "images/cabinet-marquees/tekken3.webp"
+  },
+  {
+    "title": "The Empire Strikes Back",
+    "aliases": [
+      "Star Wars: The Empire Strikes Back"
+    ],
+    "image": "images/cabinet-marquees/theempirestrikesback.webp"
+  },
+  {
+    "title": "The King of Dragons",
+    "aliases": [
+      "The King of Dragons"
+    ],
+    "image": "images/cabinet-marquees/thekingofdragons.webp"
+  },
+  {
+    "title": "The King of Fighters '94",
+    "aliases": [
+      "The King of Fighters '94"
+    ],
+    "image": "images/cabinet-marquees/thekingoffighters94.webp"
+  },
+  {
+    "title": "The King of Fighters '95",
+    "aliases": [
+      "The King of Fighters '95"
+    ],
+    "image": "images/cabinet-marquees/thekingoffighters95.webp"
+  },
+  {
+    "title": "The King of Fighters '96",
+    "aliases": [
+      "The King of Fighters '96"
+    ],
+    "image": "images/cabinet-marquees/thekingoffighters96.webp"
+  },
+  {
+    "title": "The King of Fighters '98",
+    "aliases": [
+      "The King of Fighters '98: The Slugfest"
+    ],
+    "image": "images/cabinet-marquees/thekingoffighters98.webp"
+  },
+  {
+    "title": "Vs. Super Mario Bros.",
+    "aliases": [
+      "Vs. Super Mario Bros."
+    ],
+    "image": "images/cabinet-marquees/vssupermariobros.webp"
+  },
+  {
+    "title": "Vs. The Goonies",
+    "aliases": [
+      "Vs. The Goonies"
+    ],
+    "image": "images/cabinet-marquees/vsthegoonies.webp"
+  },
+  {
+    "title": "X-Men Vs. Street Fighter",
+    "aliases": [
+      "X-Men vs. Street Fighter"
+    ],
+    "image": "images/cabinet-marquees/xmenvsstreetfighter.webp"
+  },
+  {
+    "title": "X-Men: Children of the Atom",
+    "aliases": [
+      "X-Men: Children of the Atom"
+    ],
+    "image": "images/cabinet-marquees/xmenchildrenoftheatom.webp"
+  },
+  {
+    "title": "Space Invaders Color",
+    "aliases": [],
+    "image": "images/spaceinvaders.png"
   }
 ]

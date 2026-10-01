@@ -39,3 +39,40 @@ Ron requested the Bust-A-Move name if no better Puzzle Bobble marquee was availa
 ## Puzzle Bobble clear logo (current)
 
 Ron chose the Puzzle Bobble name and logo instead of Bust-A-Move. The transparent Japan clear logo from [LaunchBox](https://gamesdb.launchbox-app.com/games/images/38330-bust-a-move) is [this source PNG](https://images.launchbox-app.com/2de4a3cc-6932-48c1-a733-68747a392ee9.png), resized proportionally to 1600 px and saved as `images/cabinet-marquees/puzzle-bobble-logo.png`. All score rows and the historical internal game ID remain unchanged. Admin-uploaded artwork takes precedence over this and all catalog defaults.
+
+## Dragon’s Lair cabinet games (October 1, 2026)
+
+Space Ace uses the [LaunchBox Arcade marquee](https://gamesdb.launchbox-app.com/games/images/38989-space-ace), [original JPEG](https://images.launchbox-app.com/b8bc8b65-264a-4fcc-a0d1-1b8a86e7e436.jpg), 3840 × 1203. Stored unchanged at `images/cabinet-marquees/space-ace.jpg`.
+
+Dragon’s Lair II: Time Warp uses the [LaunchBox Arcade marquee](https://gamesdb.launchbox-app.com/games/images/11819-dragons-lair-ii-time-warp), [original PNG](https://images.launchbox-app.com/f576c1ab-3b25-449f-a6d2-8fd1f553aa82.png), 1920 × 540. Stored unchanged at `images/cabinet-marquees/dragons-lair-ii.png`.
+
+Both were visually reviewed. Explicit title/ROM aliases resolve imported titles and neutral/rejected catalog images to these files. Admin-uploaded marquees retain priority. Artwork belongs to its respective owners; catalog-wide artwork gaps remain.
+
+## Galaxian, Dig Dug II and Super Pac-Man (October 1, 2026)
+
+Added visually reviewed Arcade marquees from LaunchBox, stored unchanged locally:
+
+- [Galaxian](https://gamesdb.launchbox-app.com/games/images/7561-galaxian): [source JPEG](https://images.launchbox-app.com/3e28c2c2-df0c-4838-81ff-f2a5adc7bfa4.jpg), 3840 × 957, `images/cabinet-marquees/galaxian.jpg`.
+- [Dig Dug II](https://gamesdb.launchbox-app.com/games/images/26068-dig-dug-ii): [source JPEG](https://images.launchbox-app.com/c408a5b0-59a3-4e92-8339-e274f870fcb7.jpg), 3840 × 1414, `images/cabinet-marquees/dig-dug-ii.jpg`.
+- [Super Pac-Man](https://gamesdb.launchbox-app.com/games/images/7547-super-pac-man): [source JPEG](https://images.launchbox-app.com/40fd0d10-a836-4194-84df-8e7aecfc4d63.jpg), 3840 × 1430, `images/cabinet-marquees/super-pac-man.jpg`.
+
+Shared title/ROM aliases replace neutral or rejected-pack artwork across the app. Custom admin-uploaded marquees retain priority. Artwork belongs to its respective owners.
+
+## Full collection artwork audit — October 1, 2026
+
+Audited all 98 games returned by the local cabinet preview API, including scoreless imported titles. Initially 59 resolved to the neutral placeholder. Added 58 game-specific assets from the [LaunchBox public metadata export](https://gamesdb.launchbox-app.com/Metadata.zip): 46 marquee images and 12 clear logos after visual review. Exact source image URLs, matched database titles and IDs are recorded in `data/artwork-provenance.json`. Full database export stays outside the repository.
+
+Neo Geo card-style layouts were replaced with clear logos for readability. A mislabeled Hyper Street Fighter II marquee was rejected in favor of the Anniversary Edition logo. Assets are proportionally fitted within 1600 × 800 and encoded as WebP quality 88, preserving transparency and avoiding upscaling. Artwork belongs to the respective owners.
+
+Space Invaders Color shares the existing Space Invaders branding; this is intentionally not claimed as a unique Color-edition marquee. The sheet's shortened “Street Fighter III” uses New Generation artwork; edition-specific scores were not merged or changed. All other reviewed title expansions are recorded in the provenance manifest.
+
+This audit covers the actual 98-game collection, not every regional/bootleg variant in the 9,543-entry search catalog. The broader search catalog may still show neutral placeholders. Uploaded admin marquees remain higher priority than these defaults.
+
+Repeat the read-only current-collection check after building:
+
+```sh
+npm run build
+npm run audit:artwork -- http://127.0.0.1:4174
+```
+
+The audit reads the leaderboard, uses the actual artwork resolver, and checks every resolved image URL for an image response with a non-empty body. Missing/failing artwork returns a nonzero exit status. It does not modify scores or game assignments. Local raster files were separately decoded with Pillow and new source artwork was visually reviewed.

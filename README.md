@@ -190,3 +190,35 @@ Each game now has a newest-first record timeline above its submission controls. 
 Admins can open **Menu → TV setup** or **My account → Settings → TV monitor setup**. Choose 0°, 90°, 180° or 270°, then **Save for this TV**. The choice is stored in this browser, survives reopening with normal browser storage, and affects only its scoreboard—not entry/admin pages or other devices. The existing Rotate action cycles these four angles and remembers the choice too.
 
 To prepare a TV from a phone, choose an angle and **Copy TV link**, without saving it on the phone. Bookmark that link or configure it as the TV browser’s startup page. The explicit `?tvRotation=90#tv` (or 0/180/270) angle takes priority over a stored preference and works without sign-in or persistent browser storage. The board’s QR code always opens the normal scoreboard URL on visitors’ phones. This configures page orientation; it does not turn on hardware, launch the browser or bypass browser restrictions on automatic fullscreen.
+
+### Manage cabinets (local review candidate — October 1)
+
+Admins have **Menu → Manage cabinets** and the same entry in My account. The gallery is separate from Manage games. Create or rename a cabinet, upload an optional photo, and select it to see its games with marquee artwork. On phones, selecting a cabinet opens its detail view with **Back to cabinets**.
+
+**Add games** searches the existing collection and the marquee catalog. Catalog additions also join the eligible game collection. **Assigned cabinets** in Manage games lets you check multiple cabinets for a game. Unchecking a cabinet changes only that relationship: scores, history, other assignments and game eligibility are preserved. Cabinet assignments do not replace the existing eligible-game restriction.
+
+The one-time migrations import 18 named cabinets and the confirmed game assignments from Nick’s October 1 email attachment, `Nick's Arcade List.xlsx`. A fresh database has 98 games: the original 33 plus 65 missing titles, with no invented scores. Reviewed title aliases reuse existing records; Nintendo Vs. entries remain separate from ambiguous legacy Nintendo titles. MC2 lacks a cabinet description, and five titles have no cabinet assignment, so those remain unresolved. An upgrade preserves existing scores, uploaded marquees, eligibility choices and administrator-edited assignments. Imported links are not recreated on later restarts. This is a copied starting inventory, not a live Google Sheet sync.
+
+Until a cabinet photo is uploaded, a clearly labeled generic illustration is used. Photos accept JPG, PNG, WebP and iPhone HEIC up to 40 MB / 64 megapixels; they are resized to 1200 px and stripped of metadata. Current cabinet photos have public image URLs. The cabinet inventory and edits are admin-only, enforced on the server. Optimistic conflict checks prevent stale edits from overwriting newer cabinet names/photos or game assignments.
+
+Cabinet tables, assignments and audit history live in the existing persistent SQLite database. Cabinet photos and replacement history are included by `scripts/backup.py`. Deploy the cabinet-aware backend before publishing its frontend; this candidate has only been run locally so far.
+
+### Collection artwork audit (local candidate)
+
+The October 1 cabinet preview's full 98-game collection now has artwork coverage, including imported games without scores. A full pass replaced 59 neutral fallbacks with 58 game-specific marquees/logos and shared Space Invaders artwork for the Color edition. New assets are optimized WebP files. The 9,543-entry search library still has uncovered variants; this is collection coverage, not a claim of complete library coverage. Sources and exceptions are documented in `docs/artwork-sources.md`, with per-image provenance in `data/artwork-provenance.json`.
+
+Run `npm run build` followed by `npm run audit:artwork -- http://127.0.0.1:4174` to check every game and image response in a running local preview. This candidate is not yet published.
+
+### Import your arcade from a spreadsheet
+
+Admins can open **Manage cabinets → Import spreadsheet**. Download the [Excel template](templates/arcade-inventory-template.xlsx) or [CSV template](templates/arcade-inventory-template.csv). Replace the example rows with your own collection; for Excel or Google Sheets, export only the Games sheet as **CSV UTF-8, comma separated**. The importer currently accepts CSV, not arbitrary XLSX workbooks or Nick’s original two-tab layout.
+
+| Column | What to enter |
+|---|---|
+| Game | Required game title. Use the exact existing title to reuse it. |
+| Cabinet 1–4 | Cabinet names, not lookup codes. Leave blank for an unassigned game. Repeat a game on more rows if needed. |
+| Scoring | `points` (highest wins) or `time` (lowest wins). Blank preserves an existing game's scoring type, or defaults a new game to points. |
+
+Preview shows each row, artwork where available, new/reused games, cabinet assignments and errors. **Import additions** saves only when all rows are valid. New games join the eligible collection without invented scores. Existing game eligibility, score history, uploaded artwork and cabinet relationships remain unchanged. Duplicate rows and repeat imports do not duplicate entries. Scoring conflicts require a corrected file; imports cannot change an existing game's scoring type. If relevant collection data changes after preview, preview again. Imports are transactional and audit the acting admin. Limit: 500 rows and 256 KB per CSV.
+
+These imports update the current arcade; they do not create separate user-owned arcades or tenants. Unknown artwork uses the neutral placeholder and can be replaced through Upload marquee. This feature and the templates are part of the local review candidate, pending publication.

@@ -1,0 +1,640 @@
+[
+  {
+    "title": "1944: The Loop Master",
+    "matchedTitle": "1944: The Loop Master",
+    "databaseId": "2435",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/dce4b2e8-3f57-45bb-b535-ce7986082be2.jpg",
+    "image": "images/cabinet-marquees/1944theloopmaster.webp",
+    "aliases": [
+      "1944: The Loop Master"
+    ]
+  },
+  {
+    "title": "Aliens Vs. Predator",
+    "matchedTitle": "Alien vs. Predator",
+    "databaseId": "10683",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/c5b21a5c-1a2d-4515-9ff6-c3762c7e513b.jpg",
+    "image": "images/cabinet-marquees/aliensvspredator.webp",
+    "aliases": [
+      "Alien vs. Predator"
+    ]
+  },
+  {
+    "title": "Armored Warriors",
+    "matchedTitle": "Armored Warriors",
+    "databaseId": "7900",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/28128904-b42e-4f63-abcf-c4affb40510f.jpg",
+    "image": "images/cabinet-marquees/armoredwarriors.webp",
+    "aliases": [
+      "Armored Warriors"
+    ]
+  },
+  {
+    "title": "Art of Fighting",
+    "matchedTitle": "Art of Fighting",
+    "databaseId": "35470",
+    "type": "Clear Logo",
+    "source": "https://images.launchbox-app.com/40aa421d-4b87-4202-a02c-7bae2bcc160d.png",
+    "image": "images/cabinet-marquees/artoffighting.webp",
+    "aliases": [
+      "Art of Fighting"
+    ]
+  },
+  {
+    "title": "Battle Circuit",
+    "matchedTitle": "Battle Circuit",
+    "databaseId": "12115",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/9124a146-d8ec-4580-a3dd-ec645859a582.jpg",
+    "image": "images/cabinet-marquees/battlecircuit.webp",
+    "aliases": [
+      "Battle Circuit"
+    ]
+  },
+  {
+    "title": "Capcom Sports Club",
+    "matchedTitle": "Capcom Sports Club",
+    "databaseId": "12154",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/656ab59c-40fb-4aab-bb5b-21b10dd23da3.jpg",
+    "image": "images/cabinet-marquees/capcomsportsclub.webp",
+    "aliases": [
+      "Capcom Sports Club"
+    ]
+  },
+  {
+    "title": "Captain Commando",
+    "matchedTitle": "Captain Commando",
+    "databaseId": "7856",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/6973e2be-8b27-473a-9fac-54c0d8b701a4.jpg",
+    "image": "images/cabinet-marquees/captaincommando.webp",
+    "aliases": [
+      "Captain Commando"
+    ]
+  },
+  {
+    "title": "Commando",
+    "matchedTitle": "Commando (Capcom)",
+    "databaseId": "7998",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/e3dc33e8-c252-4d1b-853c-c54b4cdae1e9.jpg",
+    "image": "images/cabinet-marquees/commando.webp",
+    "aliases": [
+      "Commando (Capcom)"
+    ]
+  },
+  {
+    "title": "Darkstalkers",
+    "matchedTitle": "Darkstalkers: The Night Warriors",
+    "databaseId": "12185",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/6959a199-3189-4c12-95d8-bcb68e77c571.jpg",
+    "image": "images/cabinet-marquees/darkstalkers.webp",
+    "aliases": [
+      "Darkstalkers: The Night Warriors"
+    ]
+  },
+  {
+    "title": "Final Fight",
+    "matchedTitle": "Final Fight",
+    "databaseId": "5480",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/dbb04cff-2b38-4140-8809-7eb8d0985c8a.jpg",
+    "image": "images/cabinet-marquees/finalfight.webp",
+    "aliases": [
+      "Final Fight"
+    ]
+  },
+  {
+    "title": "Galaga \u201988",
+    "matchedTitle": "Galaga '88",
+    "databaseId": "12262",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/f7d280a9-4746-4567-a672-fbfacf28c41c.jpg",
+    "image": "images/cabinet-marquees/galaga88.webp",
+    "aliases": [
+      "Galaga '88"
+    ]
+  },
+  {
+    "title": "Ghosts 'N Goblins",
+    "matchedTitle": "Ghosts'n Goblins",
+    "databaseId": "6382",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/97cff13a-906b-4eb9-aa9f-46b12dbabcbd.png",
+    "image": "images/cabinet-marquees/ghostsngoblins.webp",
+    "aliases": [
+      "Ghosts'n Goblins"
+    ]
+  },
+  {
+    "title": "Giga Wing",
+    "matchedTitle": "Giga Wing",
+    "databaseId": "9090",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/c6c6e781-2b65-4c0b-bda0-8348619d6434.jpg",
+    "image": "images/cabinet-marquees/gigawing.webp",
+    "aliases": [
+      "Giga Wing"
+    ]
+  },
+  {
+    "title": "Gravitar",
+    "matchedTitle": "Gravitar",
+    "databaseId": "37030",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/8ad44e42-eaf5-42ca-85b5-eae3ddb9ddcd.jpg",
+    "image": "images/cabinet-marquees/gravitar.webp",
+    "aliases": [
+      "Gravitar"
+    ]
+  },
+  {
+    "title": "Hyper Street Fighter II",
+    "matchedTitle": "Hyper Street Fighter II: The Anniversary Edition",
+    "databaseId": "26044",
+    "type": "Clear Logo",
+    "source": "https://images.launchbox-app.com/b8cb8cae-2e58-46b0-b2f8-ecaf3dc6003d.png",
+    "image": "images/cabinet-marquees/hyperstreetfighterii.webp",
+    "aliases": [
+      "Hyper Street Fighter II: The Anniversary Edition"
+    ]
+  },
+  {
+    "title": "Liberator",
+    "matchedTitle": "Liberator",
+    "databaseId": "37659",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/58f86dba-bf3f-4789-82e1-9e8c740eda43.jpg",
+    "image": "images/cabinet-marquees/liberator.webp",
+    "aliases": [
+      "Liberator"
+    ]
+  },
+  {
+    "title": "Lunar Lander",
+    "matchedTitle": "Lunar Lander",
+    "databaseId": "12620",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/22853189-5c65-4b04-a6ba-9ebe432931d2.jpg",
+    "image": "images/cabinet-marquees/lunarlander.webp",
+    "aliases": [
+      "Lunar Lander"
+    ]
+  },
+  {
+    "title": "Marvel Super Heroes Vs. Street Fighter",
+    "matchedTitle": "Marvel Super Heroes vs. Street Fighter",
+    "databaseId": "10685",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/2d6edf96-9c1d-42cd-96c8-e8577d62a4ea.jpg",
+    "image": "images/cabinet-marquees/marvelsuperheroesvsstreetfighter.webp",
+    "aliases": [
+      "Marvel Super Heroes vs. Street Fighter"
+    ]
+  },
+  {
+    "title": "Marvel Vs. Capcom",
+    "matchedTitle": "Marvel vs. Capcom: Clash of Super Heroes",
+    "databaseId": "7876",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/96bdaefb-44c1-4885-a57b-499c0f4eb9a7.jpg",
+    "image": "images/cabinet-marquees/marvelvscapcom.webp",
+    "aliases": [
+      "Marvel vs. Capcom: Clash of Super Heroes"
+    ]
+  },
+  {
+    "title": "Metal Slug 2",
+    "matchedTitle": "Metal Slug 2",
+    "databaseId": "7880",
+    "type": "Clear Logo",
+    "source": "https://images.launchbox-app.com/96920de0-7b02-40e3-89d1-9772e32155da.png",
+    "image": "images/cabinet-marquees/metalslug2.webp",
+    "aliases": [
+      "Metal Slug 2"
+    ]
+  },
+  {
+    "title": "Mortal Kombat",
+    "matchedTitle": "Mortal Kombat",
+    "databaseId": "7193",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/77bffc11-9073-4aae-8f37-4d7efdab0faa.jpg",
+    "image": "images/cabinet-marquees/mortalkombat.webp",
+    "aliases": [
+      "Mortal Kombat"
+    ]
+  },
+  {
+    "title": "Ninja Masters",
+    "matchedTitle": "Ninja Master's: Haou Ninpou-ko",
+    "databaseId": "18823",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/d4ee8be3-7e1a-4f3e-a990-63ac0fc4dacd.jpg",
+    "image": "images/cabinet-marquees/ninjamasters.webp",
+    "aliases": [
+      "Ninja Master's: Haou Ninpou-ko"
+    ]
+  },
+  {
+    "title": "Pac & Pal",
+    "matchedTitle": "Pac & Pal",
+    "databaseId": "38475",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/43279d84-d721-4cd6-b347-4c3e61cdf541.png",
+    "image": "images/cabinet-marquees/pacpal.webp",
+    "aliases": [
+      "Pac & Pal"
+    ]
+  },
+  {
+    "title": "Pac-Man Plus",
+    "matchedTitle": "Pac-Man Plus",
+    "databaseId": "30067",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/be14b0b9-324f-486d-b452-7c6d2b11bff2.jpg",
+    "image": "images/cabinet-marquees/pacmanplus.webp",
+    "aliases": [
+      "Pac-Man Plus"
+    ]
+  },
+  {
+    "title": "Progear",
+    "matchedTitle": "Progear",
+    "databaseId": "38767",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/cc086b31-f0ee-44a8-a261-21a52271fd43.png",
+    "image": "images/cabinet-marquees/progear.webp",
+    "aliases": [
+      "Progear"
+    ]
+  },
+  {
+    "title": "Real Bout Fatal Fury Special",
+    "matchedTitle": "Real Bout Fatal Fury Special",
+    "databaseId": "25798",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/768e6238-5ac5-41cd-b7fa-eb97c7f91f36.jpg",
+    "image": "images/cabinet-marquees/realboutfatalfuryspecial.webp",
+    "aliases": [
+      "Real Bout Fatal Fury Special"
+    ]
+  },
+  {
+    "title": "Return of the Jedi",
+    "matchedTitle": "Star Wars: Return of the Jedi",
+    "databaseId": "12302",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/c996ae56-636a-45d9-9722-ec44e931daf6.jpg",
+    "image": "images/cabinet-marquees/returnofthejedi.webp",
+    "aliases": [
+      "Star Wars: Return of the Jedi"
+    ]
+  },
+  {
+    "title": "Rolling Thunder",
+    "matchedTitle": "Rolling Thunder",
+    "databaseId": "8743",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/f8e85d1a-2d0b-4d97-9d69-d60dc4444099.png",
+    "image": "images/cabinet-marquees/rollingthunder.webp",
+    "aliases": [
+      "Rolling Thunder"
+    ]
+  },
+  {
+    "title": "Rompers",
+    "matchedTitle": "Rompers",
+    "databaseId": "39095",
+    "type": "Clear Logo",
+    "source": "https://images.launchbox-app.com/f7e22642-f70e-437e-be1c-c5d5e2a2332e.png",
+    "image": "images/cabinet-marquees/rompers.webp",
+    "aliases": [
+      "Rompers"
+    ]
+  },
+  {
+    "title": "SVC Chaos: SNK Vs. Capcom",
+    "matchedTitle": "SNK vs. Capcom: SVC Chaos",
+    "databaseId": "26420",
+    "type": "Clear Logo",
+    "source": "https://images.launchbox-app.com/b30d5f62-6430-4126-8c79-d451d072dc39.png",
+    "image": "images/cabinet-marquees/svcchaossnkvscapcom.webp",
+    "aliases": [
+      "SNK vs. Capcom: SVC Chaos"
+    ]
+  },
+  {
+    "title": "Samurai Shodown II",
+    "matchedTitle": "Samurai Shodown II",
+    "databaseId": "25788",
+    "type": "Clear Logo",
+    "source": "https://images.launchbox-app.com/137386f2-822d-4ce2-b71a-a6a3702b65df.png",
+    "image": "images/cabinet-marquees/samuraishodownii.webp",
+    "aliases": [
+      "Samurai Shodown II"
+    ]
+  },
+  {
+    "title": "Samurai Shodown III",
+    "matchedTitle": "Samurai Shodown III",
+    "databaseId": "25789",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/137211cf-c5eb-4c10-84d2-e92019928dfe.jpg",
+    "image": "images/cabinet-marquees/samuraishodowniii.webp",
+    "aliases": [
+      "Samurai Shodown III"
+    ]
+  },
+  {
+    "title": "Saturday Night Slammasters",
+    "matchedTitle": "Saturday Night Slam Masters",
+    "databaseId": "26867",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/339c9ab8-eccb-4646-ac09-65da4219bec0.jpg",
+    "image": "images/cabinet-marquees/saturdaynightslammasters.webp",
+    "aliases": [
+      "Saturday Night Slam Masters"
+    ]
+  },
+  {
+    "title": "Stakes Winner",
+    "matchedTitle": "Stakes Winner",
+    "databaseId": "28780",
+    "type": "Clear Logo",
+    "source": "https://images.launchbox-app.com/21fb7711-bb3d-461e-935a-dfbfdccab1b1.png",
+    "image": "images/cabinet-marquees/stakeswinner.webp",
+    "aliases": [
+      "Stakes Winner"
+    ]
+  },
+  {
+    "title": "Street Fighter Alpha",
+    "matchedTitle": "Street Fighter Alpha",
+    "databaseId": "34683",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/2c6fa78a-c5d4-4461-8f94-fd7782df25e8.png",
+    "image": "images/cabinet-marquees/streetfighteralpha.webp",
+    "aliases": [
+      "Street Fighter Alpha"
+    ]
+  },
+  {
+    "title": "Street Fighter Alpha 2",
+    "matchedTitle": "Street Fighter Alpha 2",
+    "databaseId": "2532",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/447445a8-158b-4cbb-860e-34edafd78eb8.jpg",
+    "image": "images/cabinet-marquees/streetfighteralpha2.webp",
+    "aliases": [
+      "Street Fighter Alpha 2"
+    ]
+  },
+  {
+    "title": "Street Fighter Alpha 3",
+    "matchedTitle": "Street Fighter Alpha 3",
+    "databaseId": "7877",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/f82ca150-3a19-4119-891a-dec4a3177a26.jpg",
+    "image": "images/cabinet-marquees/streetfighteralpha3.webp",
+    "aliases": [
+      "Street Fighter Alpha 3"
+    ]
+  },
+  {
+    "title": "Street Fighter III",
+    "matchedTitle": "Street Fighter III: New Generation",
+    "databaseId": "12697",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/3dca857f-40b5-49d7-9bdc-79a17814f5a1.jpg",
+    "image": "images/cabinet-marquees/streetfighteriii.webp",
+    "aliases": [
+      "Street Fighter III: New Generation"
+    ]
+  },
+  {
+    "title": "Street Fighter Zero 2' Alpha",
+    "matchedTitle": "Street Fighter Zero 2 Alpha",
+    "databaseId": "34682",
+    "type": "Clear Logo",
+    "source": "https://images.launchbox-app.com/c8f83b41-6d14-4b76-91d4-374dc7628952.png",
+    "image": "images/cabinet-marquees/streetfighterzero2alpha.webp",
+    "aliases": [
+      "Street Fighter Zero 2 Alpha"
+    ]
+  },
+  {
+    "title": "Strider",
+    "matchedTitle": "Strider",
+    "databaseId": "8272",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/65df7c15-6443-42e5-982e-43e190b9eb03.jpg",
+    "image": "images/cabinet-marquees/strider.webp",
+    "aliases": [
+      "Strider"
+    ]
+  },
+  {
+    "title": "Super Puzzle Fighter II Turbo",
+    "matchedTitle": "Super Puzzle Fighter II Turbo",
+    "databaseId": "8753",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/c4aaafd1-7807-4c7b-a10e-790f33ce489d.jpg",
+    "image": "images/cabinet-marquees/superpuzzlefighteriiturbo.webp",
+    "aliases": [
+      "Super Puzzle Fighter II Turbo"
+    ]
+  },
+  {
+    "title": "Super Street Fighter II",
+    "matchedTitle": "Super Street Fighter II: The New Challengers",
+    "databaseId": "7879",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/93b1ef10-47e1-4144-ac94-1dfe6a4d4ad2.jpg",
+    "image": "images/cabinet-marquees/superstreetfighterii.webp",
+    "aliases": [
+      "Super Street Fighter II: The New Challengers"
+    ]
+  },
+  {
+    "title": "Super Street Fighter II Turbo",
+    "matchedTitle": "Super Street Fighter II Turbo",
+    "databaseId": "8274",
+    "type": "Clear Logo",
+    "source": "https://images.launchbox-app.com/f9766658-cf12-42cf-bfef-7e2ae27bdff1.png",
+    "image": "images/cabinet-marquees/superstreetfighteriiturbo.webp",
+    "aliases": [
+      "Super Street Fighter II Turbo"
+    ]
+  },
+  {
+    "title": "TMNT: Turtles in Time",
+    "matchedTitle": "Teenage Mutant Ninja Turtles: Turtles in Time",
+    "databaseId": "7999",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/b4fa9cda-ec38-4fa2-b6e1-5d9406341a84.jpg",
+    "image": "images/cabinet-marquees/tmntturtlesintime.webp",
+    "aliases": [
+      "Teenage Mutant Ninja Turtles: Turtles in Time"
+    ]
+  },
+  {
+    "title": "Teenage Mutant Ninja Turtles",
+    "matchedTitle": "Teenage Mutant Ninja Turtles",
+    "databaseId": "8670",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/6f196425-5452-44e2-9dc1-6686f72f7daf.jpg",
+    "image": "images/cabinet-marquees/teenagemutantninjaturtles.webp",
+    "aliases": [
+      "Teenage Mutant Ninja Turtles"
+    ]
+  },
+  {
+    "title": "Tekken",
+    "matchedTitle": "Tekken",
+    "databaseId": "28620",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/2b96efce-0ede-4de5-9197-1f244a3654e4.jpg",
+    "image": "images/cabinet-marquees/tekken.webp",
+    "aliases": [
+      "Tekken"
+    ]
+  },
+  {
+    "title": "Tekken 2",
+    "matchedTitle": "Tekken 2",
+    "databaseId": "28621",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/700bf966-57b5-4712-b364-5b9b70cb55cc.jpg",
+    "image": "images/cabinet-marquees/tekken2.webp",
+    "aliases": [
+      "Tekken 2"
+    ]
+  },
+  {
+    "title": "Tekken 3",
+    "matchedTitle": "Tekken 3",
+    "databaseId": "28623",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/cb531332-d17a-4379-8ab9-c5d4556ca900.jpg",
+    "image": "images/cabinet-marquees/tekken3.webp",
+    "aliases": [
+      "Tekken 3"
+    ]
+  },
+  {
+    "title": "The Empire Strikes Back",
+    "matchedTitle": "Star Wars: The Empire Strikes Back",
+    "databaseId": "31293",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/33db76a4-8e19-4cac-b477-9acc7fcdc975.jpg",
+    "image": "images/cabinet-marquees/theempirestrikesback.webp",
+    "aliases": [
+      "Star Wars: The Empire Strikes Back"
+    ]
+  },
+  {
+    "title": "The King of Dragons",
+    "matchedTitle": "The King of Dragons",
+    "databaseId": "22610",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/83a771ed-692e-4967-ad1d-511739d88dc2.png",
+    "image": "images/cabinet-marquees/thekingofdragons.webp",
+    "aliases": [
+      "The King of Dragons"
+    ]
+  },
+  {
+    "title": "The King of Fighters '94",
+    "matchedTitle": "The King of Fighters '94",
+    "databaseId": "25790",
+    "type": "Clear Logo",
+    "source": "https://images.launchbox-app.com/2a147104-f274-443e-b8fd-c3efdebde25d.png",
+    "image": "images/cabinet-marquees/thekingoffighters94.webp",
+    "aliases": [
+      "The King of Fighters '94"
+    ]
+  },
+  {
+    "title": "The King of Fighters '95",
+    "matchedTitle": "The King of Fighters '95",
+    "databaseId": "25791",
+    "type": "Clear Logo",
+    "source": "https://images.launchbox-app.com/bb8bd2a7-d217-404b-a200-961ad273a41e.png",
+    "image": "images/cabinet-marquees/thekingoffighters95.webp",
+    "aliases": [
+      "The King of Fighters '95"
+    ]
+  },
+  {
+    "title": "The King of Fighters '96",
+    "matchedTitle": "The King of Fighters '96",
+    "databaseId": "25792",
+    "type": "Clear Logo",
+    "source": "https://images.launchbox-app.com/c1df7e9c-8d72-4fda-bfb9-b7cd2bba8b50.png",
+    "image": "images/cabinet-marquees/thekingoffighters96.webp",
+    "aliases": [
+      "The King of Fighters '96"
+    ]
+  },
+  {
+    "title": "The King of Fighters '98",
+    "matchedTitle": "The King of Fighters '98: The Slugfest",
+    "databaseId": "40068",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/f9750489-922c-416c-979a-c0f9da445e3b.jpg",
+    "image": "images/cabinet-marquees/thekingoffighters98.webp",
+    "aliases": [
+      "The King of Fighters '98: The Slugfest"
+    ]
+  },
+  {
+    "title": "Vs. Super Mario Bros.",
+    "matchedTitle": "Vs. Super Mario Bros.",
+    "databaseId": "12844",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/e9534ef6-b0ed-48de-8021-2139fd7df3b9.jpg",
+    "image": "images/cabinet-marquees/vssupermariobros.webp",
+    "aliases": [
+      "Vs. Super Mario Bros."
+    ]
+  },
+  {
+    "title": "Vs. The Goonies",
+    "matchedTitle": "Vs. The Goonies",
+    "databaseId": "40531",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/f4fa659b-4be2-400f-8cca-f87c2b9d3f20.jpg",
+    "image": "images/cabinet-marquees/vsthegoonies.webp",
+    "aliases": [
+      "Vs. The Goonies"
+    ]
+  },
+  {
+    "title": "X-Men Vs. Street Fighter",
+    "matchedTitle": "X-Men vs. Street Fighter",
+    "databaseId": "7867",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/3554e3f6-16a6-40a8-9cb4-fac115684876.jpg",
+    "image": "images/cabinet-marquees/xmenvsstreetfighter.webp",
+    "aliases": [
+      "X-Men vs. Street Fighter"
+    ]
+  },
+  {
+    "title": "X-Men: Children of the Atom",
+    "matchedTitle": "X-Men: Children of the Atom",
+    "databaseId": "2468",
+    "type": "Arcade - Marquee",
+    "source": "https://images.launchbox-app.com/c09af4d4-e8ac-4916-80fe-7d01794a0512.png",
+    "image": "images/cabinet-marquees/xmenchildrenoftheatom.webp",
+    "aliases": [
+      "X-Men: Children of the Atom"
+    ]
+  }
+]

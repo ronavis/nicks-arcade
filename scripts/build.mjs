@@ -3,7 +3,7 @@ import { build } from 'esbuild';
 const out = new URL('../dist/', import.meta.url);
 await rm(out, { recursive: true, force: true });
 await mkdir(new URL('vendor/', out), { recursive: true });
-for (const name of ['index.html', 'main.css', 'app.js', 'record-celebrations.js', 'artwork.js', 'config.js', 'favicon.ico', 'favicon-token.png', 'apple-touch-icon.png']) {
+for (const name of ['index.html', 'main.css', 'app.js', 'cabinets.js', 'record-celebrations.js', 'artwork.js', 'config.js', 'favicon.ico', 'favicon-token.png', 'apple-touch-icon.png']) {
   await copyFile(new URL('../' + name, import.meta.url), new URL(name, out));
 }
 if (process.env.ARCADE_API_BASE) {
@@ -11,8 +11,10 @@ if (process.env.ARCADE_API_BASE) {
   if (endpoint.protocol !== 'https:') throw new Error('Production API must use HTTPS.');
   await writeFile(new URL('config.js', out), `window.ARCADE_CONFIG = ${JSON.stringify({ apiBase: endpoint.href.replace(/\/$/, '') })};\n`);
 }
+await cp(new URL('../templates/', import.meta.url), new URL('templates/', out), { recursive: true });
 await mkdir(new URL('images/', out), { recursive: true });
 await copyFile(new URL('../images/new-game.svg', import.meta.url), new URL('images/new-game.svg', out));
+await copyFile(new URL('../images/cabinet-default.png', import.meta.url), new URL('images/cabinet-default.png', out));
 await copyFile(new URL('../images/scouts-honor.png', import.meta.url), new URL('images/scouts-honor.png', out));
 const games = JSON.parse(await readFile(new URL('../data/games.json', import.meta.url)));
 const extraArtwork = JSON.parse(await readFile(new URL('../data/artwork.json', import.meta.url)));

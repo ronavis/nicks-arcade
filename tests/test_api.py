@@ -43,7 +43,7 @@ def test_persistence_and_cross_client_visibility(app):
     assert record(tv)['score'] == '42,500'
     reopened = create_app(dict(app.config)).test_client()
     assert record(reopened)['score'] == '42,500'
-    assert len(reopened.get('/api/leaderboard').json['games']) == 33
+    assert len(reopened.get('/api/leaderboard').json['games']) == 98
 
 
 def test_lower_scores_are_history_not_replacements(app):
@@ -242,7 +242,7 @@ def test_invalid_admin_json_does_not_crash(app):
 def test_simpsons_first_score_and_all_catalog_games(app):
     c = app.test_client()
     games = c.get('/api/leaderboard').json['games']
-    assert len({g['id'] for g in games}) == 33
+    assert len({g['id'] for g in games}) == 98
     assert record(c, 'simpsons') is None
     for index, game in enumerate(games):
         app.config['TEST_TOKEN_VERIFIER'] = lambda token: dict(sub=token, email='player@gmail.com', email_verified=True)

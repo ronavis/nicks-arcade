@@ -1,0 +1,232 @@
+[
+  {
+    "code": "DKJ",
+    "name": "Donkey Kong Jr. Cabinet",
+    "games": [
+      "Donkey Kong Jr."
+    ]
+  },
+  {
+    "code": "CEN",
+    "name": "Centipede Cabinet",
+    "games": [
+      "Centipede",
+      "Crystal Castles",
+      "Gravitar",
+      "Liberator",
+      "Lunar Lander"
+    ]
+  },
+  {
+    "code": "PAC",
+    "name": "Pac-Man Cabinet",
+    "games": [
+      "Pac-Man",
+      "Super Pac-Man",
+      "Pac-Land",
+      "Pac & Pal",
+      "Pac-Man Plus",
+      "Galaga",
+      "Galaxian",
+      "Mappy",
+      "Dig Dug",
+      "Dig Dug II",
+      "Rompers",
+      "Rolling Thunder",
+      "Galaga \u201988"
+    ]
+  },
+  {
+    "code": "MPC",
+    "name": "Ms. Pac-Man Cabinet",
+    "games": [
+      "Ms. Pac-Man",
+      "Pac-Man Plus",
+      "Pac-Mania",
+      "Galaxian"
+    ]
+  },
+  {
+    "code": "PCM",
+    "name": "Pac-Mania Cabinet",
+    "games": [
+      "Pac-Mania",
+      "Pac-Man",
+      "Super Pac-Man",
+      "Pac-Land",
+      "Pac & Pal",
+      "Pac-Man Plus",
+      "Galaga",
+      "Galaxian",
+      "Mappy",
+      "Dig Dug",
+      "Dig Dug II",
+      "Rompers",
+      "Rolling Thunder",
+      "Galaga \u201988"
+    ]
+  },
+  {
+    "code": "QBT",
+    "name": "Q*bert Cabinet",
+    "games": [
+      "Q*bert"
+    ]
+  },
+  {
+    "code": "STW",
+    "name": "Star Wars Cabinet",
+    "games": [
+      "Star Wars",
+      "The Empire Strikes Back",
+      "Return of the Jedi"
+    ]
+  },
+  {
+    "code": "SPI",
+    "name": "Space Invaders Cabinet",
+    "games": [
+      "Space Invaders",
+      "Space Invaders Color"
+    ]
+  },
+  {
+    "code": "DRL",
+    "name": "Dragon\u2019s Lair Cabinet",
+    "games": [
+      "Dragon\u2019s Lair",
+      "Dragon\u2019s Lair II",
+      "Space Ace"
+    ]
+  },
+  {
+    "code": "CKT",
+    "name": "Ms. Pac-Man Cocktail",
+    "games": [
+      "Ms. Pac-Man",
+      "Super Pac-Man",
+      "Pac-Mania",
+      "Pac-Land",
+      "Dig Dug",
+      "Pac & Pal",
+      "Mappy",
+      "Dig Dug II",
+      "Galaga",
+      "Galaxian"
+    ]
+  },
+  {
+    "code": "SF2",
+    "name": "Street Fighter II Cabinet",
+    "games": [
+      "Street Fighter II",
+      "Super Street Fighter II",
+      "Darkstalkers",
+      "Strider",
+      "Street Fighter II' Champion Edition",
+      "Super Street Fighter II Turbo",
+      "1944: The Loop Master",
+      "Ghosts 'N Goblins",
+      "Turbo Street Fighter II' Hyper Fighting",
+      "Street Fighter",
+      "Final Fight",
+      "Commando"
+    ]
+  },
+  {
+    "code": "S2C",
+    "name": "Street Fighter II\u2019 Champion Edition Cabinet",
+    "games": [
+      "Street Fighter II' Champion Edition",
+      "Super Street Fighter II Turbo",
+      "Turbo Street Fighter II' Hyper Fighting",
+      "Super Puzzle Fighter II Turbo",
+      "Progear",
+      "Giga Wing",
+      "Battle Circuit",
+      "Captain Commando",
+      "Armored Warriors",
+      "Strider",
+      "Final Fight",
+      "The King of Dragons",
+      "Saturday Night Slammasters",
+      "Capcom Sports Club"
+    ]
+  },
+  {
+    "code": "CPS",
+    "name": "CPS-I / CPS-II / CPS-III Cabinet",
+    "games": [
+      "Street Fighter II",
+      "Street Fighter II' Champion Edition",
+      "Turbo Street Fighter II' Hyper Fighting",
+      "Super Street Fighter II",
+      "Super Street Fighter II Turbo",
+      "Street Fighter Alpha",
+      "Street Fighter Alpha 2",
+      "Street Fighter Zero 2' Alpha",
+      "Street Fighter Alpha 3",
+      "Hyper Street Fighter II",
+      "Darkstalkers",
+      "X-Men: Children of the Atom",
+      "X-Men Vs. Street Fighter",
+      "Marvel Super Heroes Vs. Street Fighter",
+      "Marvel Vs. Capcom",
+      "Aliens Vs. Predator",
+      "Street Fighter III"
+    ]
+  },
+  {
+    "code": "TEK",
+    "name": "Tekken 2 Cabinet",
+    "games": [
+      "Tekken 2",
+      "Tekken",
+      "Tekken 3",
+      "Soul Edge"
+    ]
+  },
+  {
+    "code": "NEO",
+    "name": "Neo-Geo Cabinet",
+    "games": [
+      "Puzzle Bobble",
+      "Samurai Shodown II",
+      "The King of Fighters '95",
+      "Real Bout Fatal Fury Special",
+      "Art of Fighting",
+      "The King of Fighters '94",
+      "The King of Fighters '96",
+      "The King of Fighters '98",
+      "Metal Slug 2",
+      "Ninja Masters",
+      "Samurai Shodown III",
+      "Stakes Winner",
+      "SVC Chaos: SNK Vs. Capcom"
+    ]
+  },
+  {
+    "code": "MK2",
+    "name": "Mortal Kombat II Cabinet",
+    "games": [
+      "Mortal Kombat"
+    ]
+  },
+  {
+    "code": "NVS",
+    "name": "Nintendo Vs. System Cabinet",
+    "games": [
+      "Vs. The Goonies",
+      "Vs. Super Mario Bros.",
+      "Vs. Excitebike"
+    ]
+  },
+  {
+    "code": "TUR",
+    "name": "TMNT: Turtles in Time Cabinet",
+    "games": [
+      "TMNT: Turtles in Time",
+      "Teenage Mutant Ninja Turtles"
+    ]
+  }
+]

@@ -45,6 +45,24 @@ def backup(source, destination):
         target = destination / 'marquees' / (marquee_id + '.png')
         shutil.copyfile(source / 'marquees' / (marquee_id + '.png'), target)
         target.chmod(0o600)
+    (destination / 'cabinets').mkdir(mode=0o700)
+    with sqlite3.connect(destination / 'arcade.sqlite3') as snapshot:
+        tables = {r[0] for r in snapshot.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        cabinet_photos = set()
+        if 'cabinets' in tables:
+            cabinet_photos.update(r[0] for r in snapshot.execute('SELECT photo_id FROM cabinets WHERE photo_id IS NOT NULL'))
+        if 'cabinet_audit' in tables:
+            import json
+            for before, after in snapshot.execute('SELECT before_json,after_json FROM cabinet_audit'):
+                for value in (json.loads(before),json.loads(after)):
+                    if isinstance(value,dict) and value.get('photo_id'):
+                        cabinet_photos.add(value['photo_id'])
+    for photo_id in cabinet_photos:
+        if str(uuid.UUID(photo_id)) != photo_id:
+            raise ValueError('Invalid cabinet photo reference')
+        target = destination / 'cabinets' / (photo_id + '.jpg')
+        shutil.copyfile(source / 'cabinets' / (photo_id + '.jpg'),target)
+        target.chmod(0o600)
     (destination / 'COMPLETE').write_text('Database integrity verified; all referenced photos and marquees copied.\n')
     return destination
 
