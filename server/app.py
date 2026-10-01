@@ -326,7 +326,8 @@ def create_app(config=None, *, allow_demo=False):
                     if delta > 0:
                         amount = f'{delta / 100:.2f}s' if game['kind'] == 'time' else f'{delta:,}'
                         record['improvement'] = {'amount': amount, 'direction': 'down' if game['kind'] == 'time' else 'up', 'label': f'Beat previous record by {amount}' + (' (faster)' if game['kind'] == 'time' else ' points')}
-            output.append({k: game[k] for k in ['id', 'title', 'image', 'kind', 'order', 'eligible', 'marqueeId', 'showOnLeaderboard']} | {'record': record})
+            assigned = [dict(c) for c in db.execute('SELECT c.id,c.name,c.code,c.photo_id AS photoId FROM cabinets c JOIN cabinet_games cg ON cg.cabinet_id=c.id WHERE cg.game_id=? ORDER BY c.name COLLATE NOCASE', (game['id'],))]
+            output.append({k: game[k] for k in ['id', 'title', 'image', 'kind', 'order', 'eligible', 'marqueeId', 'showOnLeaderboard']} | {'record': record, 'cabinets': assigned})
         return jsonify(games=output, updatedAt=int(time.time()), displaySettings=display_settings())
 
     @app.get('/api/session')

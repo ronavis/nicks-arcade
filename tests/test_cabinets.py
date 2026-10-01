@@ -93,3 +93,31 @@ def test_pages_preflight_allows_assignments(app):
     r=app.test_client().options('/api/admin/games/galaga/cabinets',headers={'Origin':'https://ronavis.github.io','Access-Control-Request-Method':'PUT','Access-Control-Request-Headers':'authorization,content-type'})
     assert r.status_code==204
     assert 'PUT' in r.headers['Access-Control-Allow-Methods']
+
+
+def test_public_board_exposes_only_cabinet_display_fields(app):
+    c=app.test_client()
+    def assigned():
+        return next(g for g in c.get('/api/leaderboard').json['games'] if g['id']=='galaga')['cabinets']
+    rows=assigned()
+    assert {r['id'] for r in rows}=={'nick-pac','nick-pcm','nick-ckt'}
+    assert all(set(r)=={'id','name','code','photoId'} for r in rows)
+    image=io.BytesIO();Image.new('RGB',(80,120),'blue').save(image,format='PNG');image.seek(0)
+    assert c.post('/api/admin/cabinets/nick-pac/photo',data={'revision':'1','photo':(image,'photo.png')},headers=headers('admin')).status_code==200
+    photo=next(r for r in assigned() if r['id']=='nick-pac')['photoId']
+    assert photo and c.get('/api/cabinet-photos/'+photo).status_code==200
+    assert c.put('/api/admin/games/galaga/cabinets',json={'expectedCabinetIds':[r['id'] for r in rows],'cabinetIds':[]},headers=headers('admin')).status_code==200
+    assert assigned()==[]
+
+
+def test_reference_images_cover_seeded_cabinets():
+    import json
+    from pathlib import Path
+    root=Path(__file__).resolve().parents[1]
+    art=json.loads((root/'data/cabinet-art.json').read_text())
+    seed=json.loads((root/'data/cabinets.json').read_text())
+    assert set(art)=={c['code'] for c in seed}
+    for reference in art.values():
+        with Image.open(root/reference['image']) as im:
+            im.verify()
+        assert reference['source'].startswith('https://')

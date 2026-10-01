@@ -15,6 +15,9 @@ await cp(new URL('../templates/', import.meta.url), new URL('templates/', out), 
 await mkdir(new URL('images/', out), { recursive: true });
 await copyFile(new URL('../images/new-game.svg', import.meta.url), new URL('images/new-game.svg', out));
 await copyFile(new URL('../images/cabinet-default.png', import.meta.url), new URL('images/cabinet-default.png', out));
+await cp(new URL('../images/cabinets/', import.meta.url), new URL('images/cabinets/', out), {recursive:true});
+const cabinetArt=JSON.parse(await readFile(new URL('../data/cabinet-art.json', import.meta.url)));
+await writeFile(new URL('cabinet-art.js',out),`window.ARCADE_CABINET_ART = ${JSON.stringify(cabinetArt)};\n`);
 await copyFile(new URL('../images/scouts-honor.png', import.meta.url), new URL('images/scouts-honor.png', out));
 const games = JSON.parse(await readFile(new URL('../data/games.json', import.meta.url)));
 const extraArtwork = JSON.parse(await readFile(new URL('../data/artwork.json', import.meta.url)));

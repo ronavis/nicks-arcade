@@ -1,0 +1,110 @@
+{
+  "DKJ": {
+    "image": "images/cabinets/DKJ.png",
+    "source": "https://images.launchbox-app.com/1de1c8e5-0a71-48be-a4c9-b9bca25e9089.png",
+    "page": "https://gamesdb.launchbox-app.com/games/images/7863",
+    "note": "Representative original arcade cabinet; exact machine unconfirmed."
+  },
+  "QBT": {
+    "image": "images/cabinets/QBT.png",
+    "source": "https://images.launchbox-app.com/aa2748a0-abfc-408c-8560-254b4dd12854.png",
+    "page": "https://gamesdb.launchbox-app.com/games/images/15080",
+    "note": "Representative original arcade cabinet; exact machine unconfirmed."
+  },
+  "TEK": {
+    "image": "images/cabinets/TEK.png",
+    "source": "https://images.launchbox-app.com/e467d31f-6edf-4ae5-9575-fdd1578c9a07.png",
+    "page": "https://gamesdb.launchbox-app.com/games/images/28621",
+    "note": "Representative original arcade cabinet; exact machine unconfirmed."
+  },
+  "NEO": {
+    "image": "images/cabinets/NEO.png",
+    "source": "https://images.launchbox-app.com/bae3c0a7-b6b5-4b11-b768-e21935e523e1.png",
+    "page": "https://gamesdb.launchbox-app.com/games/images/25788",
+    "note": "Representative original arcade cabinet; exact machine unconfirmed."
+  },
+  "NVS": {
+    "image": "images/cabinets/NVS.png",
+    "source": "https://images.launchbox-app.com/539e30d2-3f47-4340-9038-4753915593d4.png",
+    "page": "https://gamesdb.launchbox-app.com/games/images/40529",
+    "note": "Representative original arcade cabinet; exact machine unconfirmed."
+  },
+  "CPS": {
+    "image": "images/cabinets/CPS.png",
+    "source": "https://images.launchbox-app.com/9ce4df4a-4f1d-4347-ac63-b62911932db0.png",
+    "page": "https://gamesdb.launchbox-app.com/games/images/39660",
+    "note": "Representative original arcade cabinet; exact machine unconfirmed."
+  },
+  "S2C": {
+    "image": "images/cabinets/S2C.png",
+    "source": "https://images.launchbox-app.com/4c33ded7-fe8d-4f75-98fa-35f8ee7b76d3.png",
+    "page": "https://gamesdb.launchbox-app.com/games/images/22658",
+    "note": "Representative original arcade cabinet; exact machine unconfirmed."
+  },
+  "SF2": {
+    "image": "images/cabinets/SF2.png",
+    "source": "https://images.launchbox-app.com/dea13c8c-9ad1-4b40-b73b-58d018a82c96.png",
+    "page": "https://gamesdb.launchbox-app.com/games/images/5548",
+    "note": "Representative original arcade cabinet; exact machine unconfirmed."
+  },
+  "PCM": {
+    "image": "images/cabinets/PCM.jpg",
+    "source": "https://mobileimages.lowes.com/productimages/c0cb52ac-8fce-47a2-afd3-20c750770f3e/50380321.jpg?size=pdhism",
+    "page": "https://www.lowes.com/pd/Arcade-1up-PACMANIA-BANDAI-LEGACY/5013992891",
+    "note": "Arcade1Up Pac-Mania Legacy reference image."
+  },
+  "SPI": {
+    "image": "images/cabinets/SPI.png",
+    "source": "https://images.launchbox-app.com/r2_d1397611-6d81-40d0-9462-12e3eabe7477.png",
+    "page": "https://gamesdb.launchbox-app.com/games/images/116",
+    "note": "Representative original arcade cabinet; exact machine unconfirmed."
+  },
+  "TUR": {
+    "image": "images/cabinets/TUR.png",
+    "source": "https://images.launchbox-app.com/ec0cd095-171f-47ca-9d2b-ddc2ec23badb.png",
+    "page": "https://gamesdb.launchbox-app.com/games/images/7999",
+    "note": "Representative original arcade cabinet; exact machine unconfirmed."
+  },
+  "DRL": {
+    "image": "images/cabinets/DRL.jpg",
+    "source": "https://arcade1up.com/cdn/shop/articles/10172_DragonsLair_Render_B_copy.jpg?v=1657293358&width=640",
+    "page": "https://arcade1up.com/blogs/buzz/arcade1up-s-dragon-s-lair-cabinet-will-have-you-slaying-dragons-at-home",
+    "note": "Arcade1Up manufacturer reference image."
+  },
+  "PAC": {
+    "image": "images/cabinets/PAC.png",
+    "source": "https://cdn.shopify.com/s/files/1/0082/4092/2686/files/Pacman_delux_render_A_shadow_1.png?v=1776977504&width=640",
+    "page": "https://arcade1up.com/products/pac-man-deluxe-arcade-game-1",
+    "note": "Manufacturer reference image; exact edition unconfirmed."
+  },
+  "MPC": {
+    "image": "images/cabinets/MPC.png",
+    "source": "https://cdn.shopify.com/s/files/1/0082/4092/2686/files/MsPacMan_SE_B_2500x2500_e2d157d4-5c93-4fd0-9945-67a433e89477.png?v=1778091565&width=640",
+    "page": "https://arcade1up.com/products/ms-pac-man-classic-se-1",
+    "note": "Manufacturer reference image; exact edition unconfirmed."
+  },
+  "CKT": {
+    "image": "images/cabinets/CKT.jpg",
+    "source": "https://cdn.shopify.com/s/files/1/0082/4092/2686/files/424465_01.jpg?v=1779291375&width=640",
+    "page": "https://arcade1up.com/products/ms-pac-man-arcade-table",
+    "note": "Manufacturer reference image; exact edition unconfirmed."
+  },
+  "CEN": {
+    "image": "images/cabinets/CEN.png",
+    "source": "https://cdn.shopify.com/s/files/1/0082/4092/2686/files/Centipeded_Deluxe_Right.png?v=1789752835&width=640",
+    "page": "https://arcade1up.com/products/arcade-classics-atari-ultra-series-arcade-game-cabinet-with-17-screen",
+    "note": "Manufacturer reference image; exact edition unconfirmed."
+  },
+  "STW": {
+    "image": "images/cabinets/STW.jpg",
+    "source": "https://cdn.shopify.com/s/files/1/0082/4092/2686/files/417635_main.jpg?v=1774554330&width=640",
+    "page": "https://arcade1up.com/products/arcade-classics-atari-star-wars-ultra-series-free-standing-electronic-game",
+    "note": "Manufacturer reference image; exact edition unconfirmed."
+  },
+  "MK2": {
+    "image": "images/cabinets/MK2.png",
+    "source": "https://cdn.shopify.com/s/files/1/0082/4092/2686/files/MK_Deluxe_11.29.22_A_Shadow.png?v=1783695766&width=640",
+    "page": "https://arcade1up.com/products/mortal-kombat-ii-deluxe-arcade-game",
+    "note": "Manufacturer reference image; exact edition unconfirmed."
+  }
+}
