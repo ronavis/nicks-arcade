@@ -328,3 +328,12 @@ Validation: 85 backend tests, 11 frontend tests, syntax checks, production build
 Backend `4125a38`; Pages `e23c4524d1a648ff01784a3f4320d10ea422fa9f`. Admin Manage games now has a persistent Show on leaderboard checkbox independent of eligibility. The one-time migration keeps 32 scored games visible and unchecks 66 games without records. New games default off and submitting a score does not override the setting. The rotation, neighbors and celebrations honor visibility; entry search retains eligible games.
 
 86 backend tests and 11 frontend tests passed. Local browser checkbox on/off saved correctly. Tests cover role checks, invalid input, restart persistence, new-game defaults and posting to a hidden game. Pre-release backup: `/var/backups/nicks-arcade/pre-visibility-4125a38`. Readback preserved all 37 score, 3 activity, 34 audit and 122 cabinet-assignment rows; integrity OK and service production/ok. Unsigned visibility updates return 401.
+
+
+## October 1 — direct Excel inventory import
+
+Backend `57c7476`; Pages `bb9a721`. The template download can now be uploaded as XLSX directly (2 MB maximum), alongside existing CSV (256 KB). Only the Games worksheet is read, with a 500-row limit and plain values required. Both formats feed the existing exact-match, preview-hash, additive transaction path. No parser dependency or service configuration change was needed.
+
+89 backend tests and 11 frontend tests pass. Browser upload, preview and commit succeeded in an isolated local database using the real downloadable Excel template. The populated workbook produces the same preview hash as its CSV. Missing sheets, formulas, malformed files, size bounds and admin authorization were checked.
+
+A complete backup at `/var/backups/nicks-arcade/pre-excel-57c7476` preceded restart of nicks-arcade only. Production readback preserves all 37 score, 3 activity, 34 audit, 98 game, 18 cabinet and 122 assignment rows. Production health is OK; unsigned Excel upload returns 401. Deployed parser plus read-only production DB preview of Nick’s workbook reports 98 rows, zero errors and zero additions. No production import was committed.
