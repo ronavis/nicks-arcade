@@ -407,6 +407,29 @@ def create_app(config=None, *, allow_demo=False):
             backdrop=tmdb_image(item.get('backdrop_path'), 'w780'),
         )
 
+    @app.get('/api/movie-ladder/tmdb/person')
+    def movie_ladder_tmdb_person():
+        name = ' '.join(str(request.args.get('name', '')).split())
+        if not name or len(name) > 160:
+            raise ValueError('Person name is required.')
+        payload = tmdb_get('/search/person', params={
+            'query': name,
+            'include_adult': 'false',
+            'language': 'en-US',
+        })
+        results = payload.get('results') or []
+        if not results:
+            abort(404, 'TMDb could not find that person.')
+        item = next(
+            (candidate for candidate in results if candidate.get('known_for_department') == 'Acting'),
+            results[0],
+        )
+        return jsonify(
+            id=item.get('id'),
+            name=item.get('name'),
+            profile=tmdb_image(item.get('profile_path'), 'w185'),
+        )
+
     @app.get('/api/movie-ladder/tmdb/movie/<int:movie_id>')
     def movie_ladder_tmdb_movie(movie_id):
         payload = tmdb_get(f'/movie/{movie_id}', params={'language': 'en-US'})
