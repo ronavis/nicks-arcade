@@ -136,6 +136,22 @@ def create_app(config=None, *, allow_demo=False):
           CREATE TABLE IF NOT EXISTS activity (id INTEGER PRIMARY KEY AUTOINCREMENT, score_id TEXT NOT NULL UNIQUE REFERENCES scores(id), previous_sub TEXT, previous_initials TEXT, previous_value INTEGER, is_record INTEGER NOT NULL);
           CREATE TABLE IF NOT EXISTS marquee_audit (id INTEGER PRIMARY KEY, game_id TEXT NOT NULL, actor TEXT NOT NULL, previous_id TEXT, next_id TEXT, created_at INTEGER NOT NULL);
           CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+          CREATE TABLE IF NOT EXISTS movie_ladder_runs (
+            id TEXT PRIMARY KEY,
+            user_sub TEXT NOT NULL,
+            user_email TEXT NOT NULL,
+            score INTEGER NOT NULL CHECK(score>=0),
+            rung_reached INTEGER NOT NULL CHECK(rung_reached BETWEEN 1 AND 10),
+            completed INTEGER NOT NULL CHECK(completed IN (0,1)),
+            rank TEXT NOT NULL,
+            lives_remaining INTEGER NOT NULL CHECK(lives_remaining BETWEEN 0 AND 3),
+            correct_count INTEGER NOT NULL CHECK(correct_count BETWEEN 0 AND 10),
+            wrong_count INTEGER NOT NULL CHECK(wrong_count BETWEEN 0 AND 10),
+            max_streak INTEGER NOT NULL CHECK(max_streak BETWEEN 0 AND 10),
+            created_at INTEGER NOT NULL
+          );
+          CREATE INDEX IF NOT EXISTS movie_ladder_runs_user
+            ON movie_ladder_runs(user_sub, created_at DESC);
         ''')
         if 'taunt' not in {row[1] for row in db.execute('PRAGMA table_info(scores)')}:
             db.execute("ALTER TABLE scores ADD COLUMN taunt TEXT NOT NULL DEFAULT ''")
@@ -509,6 +525,138 @@ def create_app(config=None, *, allow_demo=False):
         if not path or not re.fullmatch(r'/[A-Za-z0-9_.-]+', str(path)):
             return None
         return f'https://image.tmdb.org/t/p/{size}{path}'
+
+    def movie_ladder_result_rank(rung_reached, completed):
+        if completed:
+            return 'Cinemaster'
+        if rung_reached <= 1:
+            return 'Moviegoer'
+        if rung_reached <= 3:
+            return 'Video Store Clerk'
+        if rung_reached <= 5:
+            return 'Projectionist'
+        if rung_reached <= 7:
+            return 'Film Buff'
+        return 'Movie Scholar'
+
+    def public_movie_ladder_run(row):
+        return {
+            'id': row['id'],
+            'score': row['score'],
+            'rungReached': row['rung_reached'],
+            'completed': bool(row['completed']),
+            'rank': row['rank'],
+            'livesRemaining': row['lives_remaining'],
+            'correctCount': row['correct_count'],
+            'wrongCount': row['wrong_count'],
+            'maxStreak': row['max_streak'],
+            'createdAt': row['created_at'],
+        }
+
+    @app.post('/api/movie-ladder/runs')
+    @authenticated()
+    def movie_ladder_save_run():
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict):
+            raise ValueError('Run summary is required.')
+
+        run_id = str(payload.get('id', '')).strip().lower()
+        try:
+            parsed = uuid.UUID(run_id)
+        except (ValueError, AttributeError):
+            raise ValueError('Run id must be a UUID.')
+        if str(parsed) != run_id:
+            raise ValueError('Run id must be a canonical UUID.')
+
+        def whole(name, minimum, maximum):
+            value = payload.get(name)
+            if type(value) is not int or not minimum <= value <= maximum:
+                raise ValueError(f'{name} must be between {minimum} and {maximum}.')
+            return value
+
+        score = whole('score', 0, 1_000_000)
+        rung_reached = whole('rungReached', 1, 10)
+        lives_remaining = whole('livesRemaining', 0, 3)
+        correct_count = whole('correctCount', 0, 10)
+        wrong_count = whole('wrongCount', 0, 10)
+        max_streak = whole('maxStreak', 0, 10)
+        completed = payload.get('completed')
+        if type(completed) is not bool:
+            raise ValueError('completed must be true or false.')
+        if correct_count + wrong_count < rung_reached - 1 or correct_count + wrong_count > 10:
+            raise ValueError('Run answer counts are inconsistent.')
+        if completed and rung_reached != 10:
+            raise ValueError('A completed run must reach rung 10.')
+
+        rank = movie_ladder_result_rank(rung_reached, completed)
+        now = int(time.time())
+
+        with get_db() as db:
+            existing = db.execute(
+                'SELECT * FROM movie_ladder_runs WHERE id=? AND user_sub=?',
+                (run_id, g.user['sub']),
+            ).fetchone()
+            if existing:
+                return jsonify(run=public_movie_ladder_run(existing)), 200
+
+            db.execute('BEGIN IMMEDIATE')
+            db.execute(
+                '''INSERT INTO movie_ladder_runs
+                   (id,user_sub,user_email,score,rung_reached,completed,rank,lives_remaining,
+                    correct_count,wrong_count,max_streak,created_at)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''',
+                (
+                    run_id, g.user['sub'], g.user['email'], score, rung_reached,
+                    1 if completed else 0, rank, lives_remaining,
+                    correct_count, wrong_count, max_streak, now,
+                ),
+            )
+            row = db.execute('SELECT * FROM movie_ladder_runs WHERE id=?', (run_id,)).fetchone()
+        return jsonify(run=public_movie_ladder_run(row)), 201
+
+    @app.get('/api/movie-ladder/runs')
+    @authenticated()
+    def movie_ladder_runs():
+        raw_limit = str(request.args.get('limit', '20')).strip()
+        if not re.fullmatch(r'\d{1,2}', raw_limit):
+            raise ValueError('limit must be a whole number.')
+        limit = max(1, min(int(raw_limit), 50))
+
+        db = get_db()
+        recent = db.execute(
+            '''SELECT * FROM movie_ladder_runs
+               WHERE user_sub=?
+               ORDER BY created_at DESC, rowid DESC
+               LIMIT ?''',
+            (g.user['sub'], limit),
+        ).fetchall()
+        best = db.execute(
+            '''SELECT * FROM movie_ladder_runs
+               WHERE user_sub=?
+               ORDER BY score DESC, completed DESC, rung_reached DESC, created_at ASC
+               LIMIT 5''',
+            (g.user['sub'],),
+        ).fetchall()
+        summary = db.execute(
+            '''SELECT COUNT(*) AS total_runs,
+                      COALESCE(MAX(score),0) AS best_score,
+                      COALESCE(MAX(rung_reached),0) AS highest_rung,
+                      COALESCE(SUM(completed),0) AS clears
+               FROM movie_ladder_runs
+               WHERE user_sub=?''',
+            (g.user['sub'],),
+        ).fetchone()
+
+        return jsonify(
+            recent=[public_movie_ladder_run(row) for row in recent],
+            best=[public_movie_ladder_run(row) for row in best],
+            summary={
+                'totalRuns': summary['total_runs'],
+                'bestScore': summary['best_score'],
+                'highestRung': summary['highest_rung'],
+                'clears': summary['clears'],
+            },
+        )
 
     @app.get('/api/movie-ladder/questions')
     def movie_ladder_questions():
