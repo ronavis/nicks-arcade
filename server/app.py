@@ -70,6 +70,7 @@ def create_app(config=None, *, allow_demo=False):
         DATA_DIR=os.environ.get('ARCADE_DATA_DIR'),
         GOOGLE_CLIENT_ID=os.environ.get('GOOGLE_CLIENT_ID', CLIENT_ID),
         ADMIN_EMAILS={x.strip().lower() for x in os.environ.get('ARCADE_ADMIN_EMAILS', 'ronavis@gmail.com').split(',') if x.strip()},
+        MOVIE_LADDER_ADMIN_EMAILS={x.strip().lower() for x in os.environ.get('MOVIE_LADDER_ADMIN_EMAILS', 'ronavis@gmail.com').split(',') if x.strip()},
         ALLOWED_ORIGINS={x.strip().rstrip('/') for x in os.environ.get('ARCADE_ALLOWED_ORIGINS', 'https://ronavis.github.io').split(',') if x.strip()},
         PUBLIC_URL=os.environ.get('ARCADE_PUBLIC_URL', 'https://ronavis.github.io/nicks-arcade/'),
         MAX_CONTENT_LENGTH=41 * 1024 * 1024,
@@ -284,6 +285,139 @@ def create_app(config=None, *, allow_demo=False):
         row = get_db().execute("SELECT value FROM metadata WHERE key='rotation_seconds'").fetchone()
         bypass = get_db().execute("SELECT value FROM metadata WHERE key='bypass_games_restriction'").fetchone()
         return {'rotationSeconds': int(row['value']) if row else 15, 'bypassGamesRestriction': bool(bypass and bypass['value'] == '1')}
+
+    def movie_ladder_admin_required():
+        if g.user['email'] not in app.config['MOVIE_LADDER_ADMIN_EMAILS']:
+            abort(403, 'Only the Movie Ladder administrator can manage TMDb.')
+
+    def metadata_value(key):
+        row = get_db().execute('SELECT value FROM metadata WHERE key=?', (key,)).fetchone()
+        return row['value'] if row else None
+
+    def set_metadata_value(key, value):
+        get_db().execute(
+            'INSERT INTO metadata(key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value',
+            (key, str(value)),
+        )
+
+    def delete_metadata_values(*keys):
+        if not keys:
+            return
+        placeholders = ','.join('?' for _ in keys)
+        get_db().execute(f'DELETE FROM metadata WHERE key IN ({placeholders})', keys)
+
+    def tmdb_headers(token=None):
+        token = (token or metadata_value('movie_ladder_tmdb_token') or '').strip()
+        if not token:
+            abort(503, 'TMDb is not configured yet.')
+        return {'Authorization': f'Bearer {token}', 'accept': 'application/json'}
+
+    def tmdb_get(path, *, params=None, token=None):
+        try:
+            response = requests.get(
+                'https://api.themoviedb.org/3' + path,
+                headers=tmdb_headers(token),
+                params=params or {},
+                timeout=10,
+            )
+        except requests.RequestException:
+            abort(503, 'TMDb is temporarily unavailable.')
+        if response.status_code in {401, 403}:
+            abort(502, 'TMDb rejected the configured credential.')
+        if response.status_code == 404:
+            abort(404, 'TMDb could not find that movie.')
+        if not response.ok:
+            abort(502, f'TMDb returned HTTP {response.status_code}.')
+        try:
+            return response.json()
+        except ValueError:
+            abort(502, 'TMDb returned an unreadable response.')
+
+    def tmdb_image(path, size):
+        if not path or not re.fullmatch(r'/[A-Za-z0-9_.-]+', str(path)):
+            return None
+        return f'https://image.tmdb.org/t/p/{size}{path}'
+
+    @app.get('/api/movie-ladder/admin/tmdb')
+    @authenticated()
+    def movie_ladder_tmdb_status():
+        movie_ladder_admin_required()
+        configured = bool(metadata_value('movie_ladder_tmdb_token'))
+        verified = metadata_value('movie_ladder_tmdb_verified_at')
+        return jsonify(
+            configured=configured,
+            lastVerifiedAt=int(verified) if verified and verified.isdigit() else None,
+        )
+
+    @app.put('/api/movie-ladder/admin/tmdb')
+    @authenticated()
+    def movie_ladder_tmdb_save():
+        movie_ladder_admin_required()
+        payload = request.get_json(silent=True)
+        token = str(payload.get('token', '')).strip() if isinstance(payload, dict) else ''
+        if len(token) < 20 or len(token) > 4096 or any(ch.isspace() for ch in token):
+            raise ValueError('Enter a valid TMDb API Read Access Token.')
+        tmdb_get('/configuration', token=token)
+        now = int(time.time())
+        with get_db() as db:
+            db.execute('BEGIN IMMEDIATE')
+            set_metadata_value('movie_ladder_tmdb_token', token)
+            set_metadata_value('movie_ladder_tmdb_verified_at', now)
+        return jsonify(configured=True, lastVerifiedAt=now)
+
+    @app.post('/api/movie-ladder/admin/tmdb/test')
+    @authenticated()
+    def movie_ladder_tmdb_test():
+        movie_ladder_admin_required()
+        tmdb_get('/configuration')
+        now = int(time.time())
+        with get_db() as db:
+            db.execute('BEGIN IMMEDIATE')
+            set_metadata_value('movie_ladder_tmdb_verified_at', now)
+        return jsonify(ok=True, configured=True, lastVerifiedAt=now)
+
+    @app.delete('/api/movie-ladder/admin/tmdb')
+    @authenticated()
+    def movie_ladder_tmdb_delete():
+        movie_ladder_admin_required()
+        with get_db() as db:
+            db.execute('BEGIN IMMEDIATE')
+            delete_metadata_values('movie_ladder_tmdb_token', 'movie_ladder_tmdb_verified_at')
+        return jsonify(configured=False)
+
+    @app.get('/api/movie-ladder/tmdb/search')
+    def movie_ladder_tmdb_search():
+        title = ' '.join(str(request.args.get('title', '')).split())
+        year = str(request.args.get('year', '')).strip()
+        if not title or len(title) > 160:
+            raise ValueError('Movie title is required.')
+        params = {'query': title, 'include_adult': 'false', 'language': 'en-US'}
+        if re.fullmatch(r'\d{4}', year):
+            params['year'] = year
+        payload = tmdb_get('/search/movie', params=params)
+        results = payload.get('results') or []
+        if not results:
+            abort(404, 'TMDb could not find that movie.')
+        item = results[0]
+        return jsonify(
+            id=item.get('id'),
+            title=item.get('title'),
+            releaseDate=item.get('release_date'),
+            poster=tmdb_image(item.get('poster_path'), 'w500'),
+            backdrop=tmdb_image(item.get('backdrop_path'), 'w780'),
+        )
+
+    @app.get('/api/movie-ladder/tmdb/movie/<int:movie_id>')
+    def movie_ladder_tmdb_movie(movie_id):
+        payload = tmdb_get(f'/movie/{movie_id}', params={'language': 'en-US'})
+        return jsonify(
+            id=payload.get('id'),
+            title=payload.get('title'),
+            releaseDate=payload.get('release_date'),
+            genres=[item.get('name') for item in payload.get('genres', []) if item.get('name')],
+            poster=tmdb_image(payload.get('poster_path'), 'w500'),
+            backdrop=tmdb_image(payload.get('backdrop_path'), 'w780'),
+        )
 
     @app.patch('/api/admin/display-settings')
     @authenticated(admin=True)
