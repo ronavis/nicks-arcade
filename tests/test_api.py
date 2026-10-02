@@ -1141,3 +1141,105 @@ def test_movie_ladder_csv_rejects_bad_rows_without_writing(app, csv_text, expect
     assert result.status_code == 400
     assert expected in result.json['error']
     assert c.get('/api/movie-ladder/questions').json['count'] == 0
+
+
+def test_movie_ladder_run_history_requires_auth_and_is_user_scoped(app):
+    c = app.test_client()
+    payload = {
+        'id': str(uuid.uuid4()),
+        'score': 1200,
+        'rungReached': 4,
+        'completed': False,
+        'livesRemaining': 0,
+        'correctCount': 3,
+        'wrongCount': 1,
+        'maxStreak': 2,
+    }
+
+    assert c.post('/api/movie-ladder/runs', json=payload).status_code == 401
+    saved = c.post('/api/movie-ladder/runs', headers=headers('player'), json=payload)
+    assert saved.status_code == 201
+    assert saved.json['run']['rank'] == 'Projectionist'
+
+    player = c.get('/api/movie-ladder/runs', headers=headers('player'))
+    assert player.status_code == 200
+    assert player.json['summary'] == {
+        'totalRuns': 1,
+        'bestScore': 1200,
+        'highestRung': 4,
+        'clears': 0,
+    }
+    assert len(player.json['recent']) == 1
+
+    other = c.get('/api/movie-ladder/runs', headers=headers('outsider'))
+    assert other.status_code == 200
+    assert other.json['summary']['totalRuns'] == 0
+    assert other.json['recent'] == []
+
+
+def test_movie_ladder_run_history_best_runs_and_idempotency(app):
+    c = app.test_client()
+
+    first_id = str(uuid.uuid4())
+    first = {
+        'id': first_id,
+        'score': 800,
+        'rungReached': 3,
+        'completed': False,
+        'livesRemaining': 0,
+        'correctCount': 2,
+        'wrongCount': 1,
+        'maxStreak': 2,
+    }
+    assert c.post('/api/movie-ladder/runs', headers=headers(), json=first).status_code == 201
+    assert c.post('/api/movie-ladder/runs', headers=headers(), json=first).status_code == 200
+
+    clear = {
+        'id': str(uuid.uuid4()),
+        'score': 5500,
+        'rungReached': 10,
+        'completed': True,
+        'livesRemaining': 2,
+        'correctCount': 10,
+        'wrongCount': 0,
+        'maxStreak': 10,
+    }
+    assert c.post('/api/movie-ladder/runs', headers=headers(), json=clear).status_code == 201
+
+    middle = {
+        'id': str(uuid.uuid4()),
+        'score': 3200,
+        'rungReached': 8,
+        'completed': False,
+        'livesRemaining': 0,
+        'correctCount': 7,
+        'wrongCount': 1,
+        'maxStreak': 4,
+    }
+    assert c.post('/api/movie-ladder/runs', headers=headers(), json=middle).status_code == 201
+
+    history = c.get('/api/movie-ladder/runs?limit=10', headers=headers()).json
+    assert history['summary'] == {
+        'totalRuns': 3,
+        'bestScore': 5500,
+        'highestRung': 10,
+        'clears': 1,
+    }
+    assert history['best'][0]['score'] == 5500
+    assert history['best'][0]['rank'] == 'Cinemaster'
+    assert history['best'][1]['score'] == 3200
+    assert len(history['recent']) == 3
+
+
+@pytest.mark.parametrize('payload, expected', [
+    ({'id': 'bad', 'score': 0, 'rungReached': 1, 'completed': False, 'livesRemaining': 3, 'correctCount': 0, 'wrongCount': 1, 'maxStreak': 0}, 'Run id must be a UUID'),
+    ({'id': None, 'score': 0, 'rungReached': 1, 'completed': False, 'livesRemaining': 3, 'correctCount': 0, 'wrongCount': 1, 'maxStreak': 0}, 'Run id must be a UUID'),
+    ({'id': str(uuid.uuid4()), 'score': -1, 'rungReached': 1, 'completed': False, 'livesRemaining': 3, 'correctCount': 0, 'wrongCount': 1, 'maxStreak': 0}, 'score must be between'),
+    ({'id': str(uuid.uuid4()), 'score': 100, 'rungReached': 11, 'completed': False, 'livesRemaining': 3, 'correctCount': 1, 'wrongCount': 0, 'maxStreak': 1}, 'rungReached must be between'),
+    ({'id': str(uuid.uuid4()), 'score': 100, 'rungReached': 5, 'completed': True, 'livesRemaining': 1, 'correctCount': 5, 'wrongCount': 0, 'maxStreak': 5}, 'completed run must reach rung 10'),
+])
+def test_movie_ladder_run_history_rejects_bad_payloads(app, payload, expected):
+    c = app.test_client()
+    result = c.post('/api/movie-ladder/runs', headers=headers(), json=payload)
+    assert result.status_code == 400
+    assert expected in result.json['error']
