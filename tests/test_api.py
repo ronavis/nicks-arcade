@@ -929,6 +929,7 @@ def test_movie_ladder_tmdb_person_prefers_actor_and_returns_profile(app, monkeyp
     assert result.json == {
         'id': 3,
         'name': 'Harrison Ford',
+        'department': 'Acting',
         'profile': 'https://image.tmdb.org/t/p/w185/harrison.jpg',
     }
     assert token not in result.text
@@ -956,3 +957,51 @@ def test_movie_ladder_tmdb_person_missing_profile_is_safe(app, monkeypatch):
     result = c.get('/api/movie-ladder/tmdb/person?name=No%20Photo%20Actor')
     assert result.status_code == 200
     assert result.json['profile'] is None
+
+
+def test_movie_ladder_tmdb_person_can_prefer_director_department(app, monkeypatch):
+    import server.app as module
+
+    def fake_get(url, headers=None, params=None, timeout=None):
+        if url.endswith('/configuration'):
+            return FakeTmdbResponse({'images': {}})
+        if url.endswith('/search/person'):
+            assert params['query'] == 'John Carpenter'
+            return FakeTmdbResponse({'results': [
+                {
+                    'id': 100,
+                    'name': 'John Carpenter',
+                    'known_for_department': 'Acting',
+                    'profile_path': '/actor.jpg',
+                },
+                {
+                    'id': 11770,
+                    'name': 'John Carpenter',
+                    'known_for_department': 'Directing',
+                    'profile_path': '/director.jpg',
+                },
+            ]})
+        raise AssertionError(url)
+
+    monkeypatch.setattr(module.requests, 'get', fake_get)
+    c = app.test_client()
+    token = 'tmdb-read-token-' + ('d' * 40)
+    assert c.put('/api/movie-ladder/admin/tmdb', headers=headers('admin'), json={'token': token}).status_code == 200
+
+    result = c.get('/api/movie-ladder/tmdb/person?name=John%20Carpenter&department=Directing')
+    assert result.status_code == 200
+    assert result.json == {
+        'id': 11770,
+        'name': 'John Carpenter',
+        'department': 'Directing',
+        'profile': 'https://image.tmdb.org/t/p/w185/director.jpg',
+    }
+
+
+def test_movie_ladder_tmdb_person_rejects_unknown_department(app, monkeypatch):
+    import server.app as module
+    monkeypatch.setattr(module.requests, 'get', lambda *a, **k: FakeTmdbResponse({'images': {}}))
+    c = app.test_client()
+    token = 'tmdb-read-token-' + ('e' * 40)
+    assert c.put('/api/movie-ladder/admin/tmdb', headers=headers('admin'), json={'token': token}).status_code == 200
+    assert c.get('/api/movie-ladder/tmdb/person?name=Someone&department=Producing').status_code == 400
