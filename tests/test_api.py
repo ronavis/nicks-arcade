@@ -1005,3 +1005,139 @@ def test_movie_ladder_tmdb_person_rejects_unknown_department(app, monkeypatch):
     token = 'tmdb-read-token-' + ('e' * 40)
     assert c.put('/api/movie-ladder/admin/tmdb', headers=headers('admin'), json={'token': token}).status_code == 200
     assert c.get('/api/movie-ladder/tmdb/person?name=Someone&department=Producing').status_code == 400
+
+
+MOVIE_LADDER_CSV = """rung,question,answer_type,answer1,answer1_year,answer2,answer2_year,answer3,answer3_year,answer4,answer4_year,correct,explanation,display_title,display_year,genre,hero_movie,hero_year,difficulty,points
+1,Who played Indiana Jones?,actor,Harrison Ford,,Kurt Russell,,Tom Selleck,,Michael Douglas,,1,Harrison Ford played Indiana Jones.,Raiders of the Lost Ark,1981,Adventure,Raiders of the Lost Ark,1981,Warm-up,100
+2,Who directed Jaws?,director,George Lucas,,Steven Spielberg,,Brian De Palma,,William Friedkin,,2,Steven Spielberg directed Jaws.,Jaws,1975,Thriller,Jaws,1975,Warm-up,200
+5,Which movie was released first?,movie,Rocky,1976,Star Wars,1977,Jaws,1975,Alien,1979,3,Jaws was released in 1975.,Release Order,,Timeline,,,Movie buff,500
+10,Which juror votes not guilty first?,text,Juror 3,,Juror 8,,Juror 9,,Juror 12,,2,Juror 8 casts the first not-guilty vote.,12 Angry Men,1957,Drama,12 Angry Men,1957,Cinemaster,1000
+"""
+
+
+def test_movie_ladder_question_bank_starts_empty_and_public(app):
+    c = app.test_client()
+    result = c.get('/api/movie-ladder/questions')
+    assert result.status_code == 200
+    assert result.json == {'questions': [], 'count': 0}
+
+
+def test_movie_ladder_csv_validation_is_admin_only_and_non_mutating(app):
+    c = app.test_client()
+    payload = {'csv': MOVIE_LADDER_CSV}
+
+    assert c.post('/api/movie-ladder/admin/questions/validate', json=payload).status_code == 401
+    assert c.post('/api/movie-ladder/admin/questions/validate', headers=headers(), json=payload).status_code == 403
+    assert c.post('/api/movie-ladder/admin/questions/validate', headers=headers('nick'), json=payload).status_code == 403
+
+    result = c.post('/api/movie-ladder/admin/questions/validate', headers=headers('admin'), json=payload)
+    assert result.status_code == 200
+    assert result.json['valid'] is True
+    assert result.json['count'] == 4
+    assert result.json['truncated'] is False
+    preview = result.json['preview']
+
+    actor = preview[0]
+    assert actor['rung'] == 1
+    assert actor['correct'] == 0
+    assert actor['personDepartment'] == 'Acting'
+    assert actor['answerPeople'] == [['Harrison Ford'], ['Kurt Russell'], ['Tom Selleck'], ['Michael Douglas']]
+    assert actor['tmdb'] == {'title': 'Raiders of the Lost Ark', 'year': 1981}
+
+    director = preview[1]
+    assert director['personDepartment'] == 'Directing'
+
+    movie = preview[2]
+    assert movie['tmdb'] is None
+    assert movie['answerMovies'] == [
+        {'title': 'Rocky', 'year': 1976},
+        {'title': 'Star Wars', 'year': 1977},
+        {'title': 'Jaws', 'year': 1975},
+        {'title': 'Alien', 'year': 1979},
+    ]
+
+    text_question = preview[3]
+    assert 'answerPeople' not in text_question
+    assert 'answerMovies' not in text_question
+
+    # Validation is preview-only.
+    assert c.get('/api/movie-ladder/questions').json['count'] == 0
+
+
+def test_movie_ladder_csv_append_persists_and_skips_duplicates(app):
+    c = app.test_client()
+    payload = {'csv': MOVIE_LADDER_CSV, 'mode': 'append'}
+
+    first = c.post('/api/movie-ladder/admin/questions/import', headers=headers('admin'), json=payload)
+    assert first.status_code == 200
+    assert first.json == {'ok': True, 'mode': 'append', 'added': 4, 'skipped': 0, 'count': 4}
+
+    duplicate = c.post('/api/movie-ladder/admin/questions/import', headers=headers('admin'), json=payload)
+    assert duplicate.status_code == 200
+    assert duplicate.json == {'ok': True, 'mode': 'append', 'added': 0, 'skipped': 4, 'count': 4}
+
+    public = c.get('/api/movie-ladder/questions')
+    assert public.status_code == 200
+    assert public.json['count'] == 4
+    assert all(item['id'].startswith('csv-') for item in public.json['questions'])
+
+    reopened = create_app(dict(app.config)).test_client()
+    assert reopened.get('/api/movie-ladder/questions').json['count'] == 4
+
+
+def test_movie_ladder_csv_replace_and_clear(app):
+    c = app.test_client()
+    assert c.post(
+        '/api/movie-ladder/admin/questions/import',
+        headers=headers('admin'),
+        json={'csv': MOVIE_LADDER_CSV, 'mode': 'append'},
+    ).status_code == 200
+
+    one_row = """rung,question,answer_type,answer1,answer2,answer3,answer4,correct,display_title,hero_movie,hero_year
+3,How fast must the DeLorean go?,text,77 mph,88 mph,99 mph,100 mph,2,Back to the Future,Back to the Future,1985
+"""
+    replaced = c.post(
+        '/api/movie-ladder/admin/questions/import',
+        headers=headers('admin'),
+        json={'csv': one_row, 'mode': 'replace'},
+    )
+    assert replaced.status_code == 200
+    assert replaced.json['count'] == 1
+    assert replaced.json['added'] == 1
+    assert c.get('/api/movie-ladder/questions').json['questions'][0]['movie'] == 'Back to the Future'
+
+    assert c.delete('/api/movie-ladder/admin/questions', headers=headers()).status_code == 403
+    cleared = c.delete('/api/movie-ladder/admin/questions', headers=headers('admin'))
+    assert cleared.status_code == 200
+    assert cleared.json == {'ok': True, 'count': 0}
+    assert c.get('/api/movie-ladder/questions').json['count'] == 0
+
+
+@pytest.mark.parametrize('csv_text, expected', [
+    (
+        "rung,question,answer_type,answer1,answer2,answer3,answer4,correct\n11,Q?,text,A,B,C,D,1\n",
+        'rung must be 1 through 10',
+    ),
+    (
+        "rung,question,answer_type,answer1,answer2,answer3,answer4,correct\n1,Q?,producer,A,B,C,D,1\n",
+        'answer_type must be text, actor, director, or movie',
+    ),
+    (
+        "rung,question,answer_type,answer1,answer2,answer3,answer4,correct\n1,Q?,text,A,A,C,D,1\n",
+        'answer1 through answer4 must be different',
+    ),
+    (
+        "rung,question,answer_type,answer1,answer2,answer3,answer4,correct\n1,Q?,text,A,B,C,D,5\n",
+        'correct must be 1, 2, 3, or 4',
+    ),
+])
+def test_movie_ladder_csv_rejects_bad_rows_without_writing(app, csv_text, expected):
+    c = app.test_client()
+    result = c.post(
+        '/api/movie-ladder/admin/questions/import',
+        headers=headers('admin'),
+        json={'csv': csv_text, 'mode': 'append'},
+    )
+    assert result.status_code == 400
+    assert expected in result.json['error']
+    assert c.get('/api/movie-ladder/questions').json['count'] == 0
