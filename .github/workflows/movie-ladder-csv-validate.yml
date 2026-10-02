@@ -1,9 +1,10 @@
-name: Validate Movie Ladder CSV Import Backend
+name: Validate Movie Ladder Backend
 
 on:
   push:
     branches:
       - codex/movie-ladder-csv-import
+      - codex/movie-ladder-run-history
 
 jobs:
   backend:
