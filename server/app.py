@@ -1,5 +1,7 @@
 """Nick's Arcade: Google-verified submissions, durable SQLite records and proof photos."""
+import csv
 import hashlib
+import io
 import unicodedata
 import json
 import os
@@ -288,7 +290,7 @@ def create_app(config=None, *, allow_demo=False):
 
     def movie_ladder_admin_required():
         if g.user['email'] not in app.config['MOVIE_LADDER_ADMIN_EMAILS']:
-            abort(403, 'Only the Movie Ladder administrator can manage TMDb.')
+            abort(403, 'Only the Movie Ladder administrator can manage Movie Ladder settings.')
 
     def metadata_value(key):
         row = get_db().execute('SELECT value FROM metadata WHERE key=?', (key,)).fetchone()
@@ -305,6 +307,176 @@ def create_app(config=None, *, allow_demo=False):
             return
         placeholders = ','.join('?' for _ in keys)
         get_db().execute(f'DELETE FROM metadata WHERE key IN ({placeholders})', keys)
+
+    def movie_ladder_custom_questions():
+        raw = metadata_value('movie_ladder_custom_questions')
+        if not raw:
+            return []
+        try:
+            questions = json.loads(raw)
+        except (TypeError, ValueError):
+            return []
+        return questions if isinstance(questions, list) else []
+
+    def movie_ladder_csv_cell(row, key, *, limit=500):
+        value = ' '.join(str(row.get(key, '') or '').strip().split())
+        if len(value) > limit:
+            raise ValueError(f'{key} is too long.')
+        return value
+
+    def movie_ladder_csv_year(row, key):
+        value = movie_ladder_csv_cell(row, key, limit=4)
+        if not value:
+            return None
+        if not re.fullmatch(r'\d{4}', value):
+            raise ValueError(f'{key} must be a four-digit year.')
+        return int(value)
+
+    def parse_movie_ladder_csv(csv_text):
+        if not isinstance(csv_text, str):
+            raise ValueError('Choose a CSV file to import.')
+        if len(csv_text.encode('utf-8')) > 1_000_000:
+            raise ValueError('Keep Movie Ladder CSV imports under 1 MB.')
+
+        csv_text = csv_text.lstrip('\ufeff')
+        reader = csv.DictReader(io.StringIO(csv_text))
+        if not reader.fieldnames:
+            raise ValueError('The CSV needs a header row.')
+
+        normalized_headers = [str(name or '').strip().lower() for name in reader.fieldnames]
+        required = {'rung', 'question', 'answer_type', 'answer1', 'answer2', 'answer3', 'answer4', 'correct'}
+        missing = sorted(required - set(normalized_headers))
+        if missing:
+            raise ValueError('Missing CSV column(s): ' + ', '.join(missing))
+
+        difficulties = {
+            1: 'Warm-up',
+            2: 'Warm-up',
+            3: 'Easy',
+            4: 'Movie buff',
+            5: 'Movie buff',
+            6: 'Movie buff',
+            7: 'Film nerd',
+            8: 'Film nerd',
+            9: 'Deep cut',
+            10: 'Cinemaster',
+        }
+
+        questions = []
+        seen_ids = set()
+
+        for row_number, original_row in enumerate(reader, start=2):
+            if row_number > 502:
+                raise ValueError('Import at most 500 questions at a time.')
+
+            row = {
+                str(key or '').strip().lower(): value
+                for key, value in original_row.items()
+                if key is not None
+            }
+
+            if not any(str(value or '').strip() for value in row.values()):
+                continue
+
+            try:
+                rung_text = movie_ladder_csv_cell(row, 'rung', limit=2)
+                if not re.fullmatch(r'(?:10|[1-9])', rung_text):
+                    raise ValueError('rung must be 1 through 10.')
+                rung = int(rung_text)
+
+                question = movie_ladder_csv_cell(row, 'question', limit=500)
+                if not question:
+                    raise ValueError('question is required.')
+
+                answer_type = movie_ladder_csv_cell(row, 'answer_type', limit=20).lower()
+                if answer_type not in {'text', 'actor', 'director', 'movie'}:
+                    raise ValueError('answer_type must be text, actor, director, or movie.')
+
+                answers = [
+                    movie_ladder_csv_cell(row, f'answer{i}', limit=240)
+                    for i in range(1, 5)
+                ]
+                if any(not answer for answer in answers):
+                    raise ValueError('answer1 through answer4 are required.')
+                if len({answer.casefold() for answer in answers}) != 4:
+                    raise ValueError('answer1 through answer4 must be different.')
+
+                correct_text = movie_ladder_csv_cell(row, 'correct', limit=1)
+                if correct_text not in {'1', '2', '3', '4'}:
+                    raise ValueError('correct must be 1, 2, 3, or 4.')
+                correct = int(correct_text) - 1
+
+                explanation = movie_ladder_csv_cell(row, 'explanation', limit=800)
+                if not explanation:
+                    explanation = f'The correct answer is {answers[correct]}.'
+
+                points_text = movie_ladder_csv_cell(row, 'points', limit=6)
+                if points_text:
+                    if not re.fullmatch(r'\d{1,6}', points_text):
+                        raise ValueError('points must be a whole number.')
+                    points = int(points_text)
+                    if not 1 <= points <= 100000:
+                        raise ValueError('points must be between 1 and 100000.')
+                else:
+                    points = rung * 100
+
+                difficulty = movie_ladder_csv_cell(row, 'difficulty', limit=60) or difficulties[rung]
+                display_title = movie_ladder_csv_cell(row, 'display_title', limit=160)
+                display_year = movie_ladder_csv_year(row, 'display_year')
+                genre = movie_ladder_csv_cell(row, 'genre', limit=100) or 'Trivia'
+                hero_movie = movie_ladder_csv_cell(row, 'hero_movie', limit=160)
+                hero_year = movie_ladder_csv_year(row, 'hero_year')
+
+                if not display_title:
+                    display_title = hero_movie or ('Movie Choices' if answer_type == 'movie' else 'Movie Trivia')
+
+                normalized = {
+                    'rung': rung,
+                    'movie': display_title,
+                    'year': display_year,
+                    'genre': genre,
+                    'source': 'CSV Import',
+                    'difficulty': difficulty,
+                    'points': points,
+                    'question': question,
+                    'answers': answers,
+                    'correct': correct,
+                    'note': explanation,
+                    'tmdb': {'title': hero_movie, 'year': hero_year} if hero_movie else None,
+                }
+
+                if answer_type == 'actor':
+                    normalized['answerPeople'] = [[answer] for answer in answers]
+                    normalized['personDepartment'] = 'Acting'
+                elif answer_type == 'director':
+                    normalized['answerPeople'] = [[answer] for answer in answers]
+                    normalized['personDepartment'] = 'Directing'
+                elif answer_type == 'movie':
+                    normalized['answerMovies'] = [
+                        {
+                            'title': answer,
+                            'year': movie_ladder_csv_year(row, f'answer{i}_year'),
+                        }
+                        for i, answer in enumerate(answers, start=1)
+                    ]
+                    normalized['tmdb'] = None
+
+                fingerprint = hashlib.sha256(
+                    json.dumps(normalized, sort_keys=True, separators=(',', ':')).encode('utf-8')
+                ).hexdigest()[:20]
+                normalized['id'] = 'csv-' + fingerprint
+
+                if normalized['id'] in seen_ids:
+                    raise ValueError('duplicate question appears more than once in this CSV.')
+                seen_ids.add(normalized['id'])
+                questions.append(normalized)
+            except ValueError as error:
+                raise ValueError(f'CSV row {row_number}: {error}') from error
+
+        if not questions:
+            raise ValueError('The CSV does not contain any question rows.')
+
+        return questions
 
     def tmdb_headers(token=None):
         token = (token or metadata_value('movie_ladder_tmdb_token') or '').strip()
@@ -337,6 +509,87 @@ def create_app(config=None, *, allow_demo=False):
         if not path or not re.fullmatch(r'/[A-Za-z0-9_.-]+', str(path)):
             return None
         return f'https://image.tmdb.org/t/p/{size}{path}'
+
+    @app.get('/api/movie-ladder/questions')
+    def movie_ladder_questions():
+        questions = movie_ladder_custom_questions()
+        return jsonify(questions=questions, count=len(questions))
+
+    @app.get('/api/movie-ladder/admin/questions')
+    @authenticated()
+    def movie_ladder_admin_questions():
+        movie_ladder_admin_required()
+        questions = movie_ladder_custom_questions()
+        return jsonify(count=len(questions), questions=questions)
+
+    @app.post('/api/movie-ladder/admin/questions/validate')
+    @authenticated()
+    def movie_ladder_admin_questions_validate():
+        movie_ladder_admin_required()
+        payload = request.get_json(silent=True)
+        csv_text = payload.get('csv') if isinstance(payload, dict) else None
+        questions = parse_movie_ladder_csv(csv_text)
+        return jsonify(
+            valid=True,
+            count=len(questions),
+            preview=questions[:20],
+            truncated=len(questions) > 20,
+        )
+
+    @app.post('/api/movie-ladder/admin/questions/import')
+    @authenticated()
+    def movie_ladder_admin_questions_import():
+        movie_ladder_admin_required()
+        payload = request.get_json(silent=True)
+        csv_text = payload.get('csv') if isinstance(payload, dict) else None
+        mode = str(payload.get('mode', 'append')).strip().lower() if isinstance(payload, dict) else 'append'
+        if mode not in {'append', 'replace'}:
+            raise ValueError('Import mode must be append or replace.')
+
+        incoming = parse_movie_ladder_csv(csv_text)
+        existing = movie_ladder_custom_questions()
+
+        if mode == 'replace':
+            combined = incoming
+            added = len(incoming)
+            skipped = 0
+        else:
+            existing_ids = {str(item.get('id', '')) for item in existing if isinstance(item, dict)}
+            added_rows = [item for item in incoming if item['id'] not in existing_ids]
+            skipped = len(incoming) - len(added_rows)
+            combined = existing + added_rows
+            added = len(added_rows)
+
+        if len(combined) > 5000:
+            raise ValueError('Movie Ladder supports up to 5,000 imported questions.')
+
+        with get_db() as db:
+            db.execute('BEGIN IMMEDIATE')
+            set_metadata_value(
+                'movie_ladder_custom_questions',
+                json.dumps(combined, separators=(',', ':'), ensure_ascii=False),
+            )
+            set_metadata_value('movie_ladder_questions_updated_at', int(time.time()))
+
+        return jsonify(
+            ok=True,
+            mode=mode,
+            added=added,
+            skipped=skipped,
+            count=len(combined),
+        )
+
+    @app.delete('/api/movie-ladder/admin/questions')
+    @authenticated()
+    def movie_ladder_admin_questions_delete():
+        movie_ladder_admin_required()
+        with get_db() as db:
+            db.execute('BEGIN IMMEDIATE')
+            delete_metadata_values(
+                'movie_ladder_custom_questions',
+                'movie_ladder_questions_updated_at',
+            )
+        return jsonify(ok=True, count=0)
 
     @app.get('/api/movie-ladder/admin/tmdb')
     @authenticated()
