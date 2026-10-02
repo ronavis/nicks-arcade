@@ -893,3 +893,66 @@ def test_movie_ladder_tmdb_test_and_disconnect(app, monkeypatch):
     removed = c.delete('/api/movie-ladder/admin/tmdb', headers=headers('admin'))
     assert removed.json == {'configured': False}
     assert c.get('/api/movie-ladder/tmdb/search?title=Jaws&year=1975').status_code == 503
+
+
+def test_movie_ladder_tmdb_person_prefers_actor_and_returns_profile(app, monkeypatch):
+    import server.app as module
+
+    def fake_get(url, headers=None, params=None, timeout=None):
+        if url.endswith('/configuration'):
+            return FakeTmdbResponse({'images': {}})
+        if url.endswith('/search/person'):
+            assert params['query'] == 'Harrison Ford'
+            return FakeTmdbResponse({'results': [
+                {
+                    'id': 999,
+                    'name': 'Harrison Ford',
+                    'known_for_department': 'Directing',
+                    'profile_path': '/wrong.jpg',
+                },
+                {
+                    'id': 3,
+                    'name': 'Harrison Ford',
+                    'known_for_department': 'Acting',
+                    'profile_path': '/harrison.jpg',
+                },
+            ]})
+        raise AssertionError(url)
+
+    monkeypatch.setattr(module.requests, 'get', fake_get)
+    c = app.test_client()
+    token = 'tmdb-read-token-' + ('p' * 40)
+    assert c.put('/api/movie-ladder/admin/tmdb', headers=headers('admin'), json={'token': token}).status_code == 200
+
+    result = c.get('/api/movie-ladder/tmdb/person?name=Harrison%20Ford')
+    assert result.status_code == 200
+    assert result.json == {
+        'id': 3,
+        'name': 'Harrison Ford',
+        'profile': 'https://image.tmdb.org/t/p/w185/harrison.jpg',
+    }
+    assert token not in result.text
+
+
+def test_movie_ladder_tmdb_person_missing_profile_is_safe(app, monkeypatch):
+    import server.app as module
+
+    def fake_get(url, headers=None, params=None, timeout=None):
+        if url.endswith('/configuration'):
+            return FakeTmdbResponse({'images': {}})
+        if url.endswith('/search/person'):
+            return FakeTmdbResponse({'results': [{
+                'id': 4,
+                'name': 'No Photo Actor',
+                'known_for_department': 'Acting',
+                'profile_path': None,
+            }]})
+        raise AssertionError(url)
+
+    monkeypatch.setattr(module.requests, 'get', fake_get)
+    c = app.test_client()
+    token = 'tmdb-read-token-' + ('r' * 40)
+    assert c.put('/api/movie-ladder/admin/tmdb', headers=headers('admin'), json={'token': token}).status_code == 200
+    result = c.get('/api/movie-ladder/tmdb/person?name=No%20Photo%20Actor')
+    assert result.status_code == 200
+    assert result.json['profile'] is None
