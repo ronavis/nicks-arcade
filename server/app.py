@@ -410,8 +410,11 @@ def create_app(config=None, *, allow_demo=False):
     @app.get('/api/movie-ladder/tmdb/person')
     def movie_ladder_tmdb_person():
         name = ' '.join(str(request.args.get('name', '')).split())
+        department = ' '.join(str(request.args.get('department', 'Acting')).split()) or 'Acting'
         if not name or len(name) > 160:
             raise ValueError('Person name is required.')
+        if department not in {'Acting', 'Directing'}:
+            raise ValueError('Choose Acting or Directing for person lookup.')
         payload = tmdb_get('/search/person', params={
             'query': name,
             'include_adult': 'false',
@@ -421,12 +424,13 @@ def create_app(config=None, *, allow_demo=False):
         if not results:
             abort(404, 'TMDb could not find that person.')
         item = next(
-            (candidate for candidate in results if candidate.get('known_for_department') == 'Acting'),
+            (candidate for candidate in results if candidate.get('known_for_department') == department),
             results[0],
         )
         return jsonify(
             id=item.get('id'),
             name=item.get('name'),
+            department=item.get('known_for_department'),
             profile=tmdb_image(item.get('profile_path'), 'w185'),
         )
 
