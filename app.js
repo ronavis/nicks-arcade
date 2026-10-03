@@ -736,7 +736,9 @@ function renderArcadeGames() {
     actions.setAttribute('role', 'group'); actions.setAttribute('aria-label', `${game.title} actions`);
     const assign = node('button', 'secondary', 'Assigned cabinets');
     assign.addEventListener('click', () => openCabinetAssignment(game));
-    actions.append(view, manage, changeArt, assign, eligibility); card.append(art, info, actions); return card;
+    const rename = node('button', 'secondary', 'Edit name');
+    rename.addEventListener('click', () => openGameName(game));
+    actions.append(view, manage, rename, changeArt, assign, eligibility); card.append(art, info, actions); return card;
   }));
   if (!games.length) $('arcade-games-list').append(node('p', 'admin-empty', 'No games match this filter.'));
 }
@@ -856,3 +858,22 @@ async function saveMarquee(reset = false) {
 }
 $('marquee-form').addEventListener('submit', event => { event.preventDefault(); saveMarquee(); });
 $('marquee-reset').addEventListener('click', () => saveMarquee(true));
+
+let renamingGame=null;
+function openGameName(game){
+  renamingGame={id:game.id,title:game.title};
+  $('game-name-input').value=game.title;$('game-name-message').textContent='';
+  $('game-name-dialog').showModal();$('game-name-input').focus();
+}
+$('cancel-game-name').addEventListener('click',()=>$('game-name-dialog').close());
+$('game-name-dialog').addEventListener('cancel',event=>{if($('save-game-name').disabled)event.preventDefault();});
+$('game-name-form').addEventListener('submit',async event=>{
+  event.preventDefault();if(!state.user?.admin||!renamingGame)return;
+  $('save-game-name').disabled=true;$('cancel-game-name').disabled=true;
+  try{
+    const result=await api(`/admin/games/${encodeURIComponent(renamingGame.id)}/name`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:$('game-name-input').value,expectedTitle:renamingGame.title})});
+    $('game-name-dialog').close();$('arcade-games-search').value='';await refreshBoard();
+    $('games-feedback').textContent=`Game renamed to ${result.title}. Scores and cabinet assignments were kept.`;
+  }catch(error){$('game-name-message').textContent=error.message;}
+  finally{$('save-game-name').disabled=false;$('cancel-game-name').disabled=false;}
+});

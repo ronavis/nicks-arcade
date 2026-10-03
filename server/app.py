@@ -614,6 +614,28 @@ def create_app(config=None, *, allow_demo=False):
             db.execute('UPDATE games SET eligible=? WHERE id=?', (int(payload['eligible']), game_id))
         return jsonify(ok=True)
 
+    @app.patch('/api/admin/games/<game_id>/name')
+    @authenticated(admin=True)
+    def rename_game(game_id):
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict) or not isinstance(payload.get('title'), str):
+            raise ValueError('Enter a game name.')
+        title = ' '.join(payload['title'].split())
+        key = game_key(title)
+        if not 2 <= len(title) <= 250 or not key or any(unicodedata.category(c).startswith('C') for c in title):
+            raise ValueError('Enter a game name between 2 and 250 characters.')
+        with get_db() as db:
+            db.execute('BEGIN IMMEDIATE')
+            current = db.execute('SELECT title FROM games WHERE id=?', (game_id,)).fetchone()
+            if not current:
+                abort(404)
+            if payload.get('expectedTitle') != current['title']:
+                abort(409, 'This game was renamed on another device. Reopen it before saving.')
+            if db.execute('SELECT 1 FROM games WHERE search_key=? AND id!=?', (key, game_id)).fetchone():
+                abort(409, 'A game with that name already exists. Renaming does not merge games.')
+            db.execute('UPDATE games SET title=?,search_key=? WHERE id=?', (title, key, game_id))
+        return jsonify(ok=True, title=title)
+
     @app.patch('/api/admin/games/<game_id>/leaderboard')
     @authenticated(admin=True)
     def set_leaderboard_visibility(game_id):
@@ -650,6 +672,8 @@ def create_app(config=None, *, allow_demo=False):
                 game_id = existing['id']
             else:
                 game_id = 'custom-' + hashlib.sha256(key.encode()).hexdigest()[:24]
+                if db.execute('SELECT 1 FROM games WHERE id=?', (game_id,)).fetchone():
+                    game_id = 'custom-' + uuid.uuid4().hex[:24]
                 db.execute('INSERT INTO games (id,title,search_key,image,kind,sort_order) VALUES (?,?,?,?,?,?)', (game_id, title, key, 'images/new-game.svg', kind, 1000))
             db.execute('UPDATE games SET eligible=1 WHERE id=?', (game_id,))
             if picked:
