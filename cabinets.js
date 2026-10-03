@@ -184,18 +184,51 @@ function renderFeaturedCabinets(game) {
     const im=cabinetImage(c);im.loading='eager';
     const crop=node('div','cabinet-crop');crop.dataset.cabinet=c.code||'';
     crop.append(im);button.append(crop,node('span','',c.name.replace(/ Cabinet$/,'')));
-    button.setAttribute('aria-label',`Find ${game.title} on ${c.name}`);row.append(button);
+    button.setAttribute('aria-label',`View ${game.title} history and ${c.name}`);row.append(button);
   }
   target.append(row);
   if(assigned.length>4)target.append(cabinetButton(`View all ${assigned.length} cabinets`,()=>openWhereToPlay(game),'cabinet-strip-more'));
 }
-function openWhereToPlay(game) {
-  $('where-to-play-heading').textContent=`Where to play ${game.title}`;
-  $('where-to-play-list').replaceChildren(...game.cabinets.map(c=>{
+let gameOverviewRequest=0;
+async function openWhereToPlay(game) {
+  const request=++gameOverviewRequest;
+  $('where-to-play-heading').textContent=game.title;
+  $('game-overview-art').src=artworkUrl(game);$('game-overview-art').alt=`${game.title} marquee`;
+  $('game-overview-current').textContent='Loading current record…';
+  $('game-overview-history').replaceChildren();$('game-overview-message').textContent='Loading record history…';
+  $('where-to-play-list').replaceChildren(...(game.cabinets||[]).map(c=>{
     const card=node('div','where-cabinet');card.append(cabinetImage(c),node('strong','',c.name));return card;
   }));
-  $('where-to-play-dialog').showModal();
+  if(!game.cabinets?.length)$('where-to-play-list').append(node('p','small','No cabinet assigned yet.'));
+  if(!$('where-to-play-dialog').open)$('where-to-play-dialog').showModal();
+  try{
+    const result=await api(`/games/${encodeURIComponent(game.id)}/history`);
+    if(request!==gameOverviewRequest||!$('where-to-play-dialog').open)return;
+    $('where-to-play-heading').textContent=result.game.title;
+    const current=result.currentRecord;
+    $('game-overview-current').textContent=current?`${current.score} · ${current.initials}`:'Be the first to set a record';
+    $('game-overview-message').textContent=result.hasMore?'Showing the latest 100 record milestones.':result.recordHistory.length?'Record-setting submissions, newest first. Removed entries are not shown.':'No recorded milestones yet. Set the first record!';
+    $('game-overview-history').replaceChildren(...result.recordHistory.map(entry=>{
+      const item=node('li','game-history-item');
+      item.append(node('strong','game-history-score',`${entry.score} · ${entry.initials}`));
+      const date=node('time','small',entry.createdAt?new Date(entry.createdAt*1000).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'}):'Imported arcade record · original date unknown');
+      if(entry.createdAt)date.dateTime=new Date(entry.createdAt*1000).toISOString();
+      item.append(date);
+      if(entry.id===current?.id&&!entry.corrected)item.append(node('span','admin-score-status','Current record'));
+      if(entry.corrected)item.append(node('p','small','Original record as submitted; later corrected by an admin.'));
+      return item;
+    }));
+  }catch(error){if(request===gameOverviewRequest){$('game-overview-current').textContent='Record unavailable';$('game-overview-message').textContent='Could not load history. Close and reopen this game to try again.';}}
 }
+$('where-to-play-dialog').addEventListener('close',()=>{++gameOverviewRequest;});
+$('hero-title').setAttribute('role','button');$('hero-title').tabIndex=0;
+$('hero-title').setAttribute('aria-label','Open featured game history');
+$('hero-title').addEventListener('click',()=>{const game=gameById(state.featured);if(game)openWhereToPlay(game);});
+$('hero-title').addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();$('hero-title').click();}});
+$('hero-marquee').setAttribute('role','button');$('hero-marquee').tabIndex=0;
+$('hero-marquee').setAttribute('aria-label','Open featured game history');
+$('hero-marquee').addEventListener('click',()=>{const game=gameById(state.featured);if(game)openWhereToPlay(game);});
+$('hero-marquee').addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();$('hero-marquee').click();}});
 $('close-where-to-play').addEventListener('click',()=>$('where-to-play-dialog').close());
 
 // Crop in image coordinates so touch, mouse and keyboard controls save the same frame.
