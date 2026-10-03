@@ -701,14 +701,14 @@ def create_app(config=None, *, allow_demo=False):
         run_id = canonical_uuid(raw.get('runId'), 'Run id')
 
         question_id = str(raw.get('questionId', '')).strip()
-        if not re.fullmatch(r'(?:csv-[a-f0-9]{20}|builtin-rung-(?:10|[1-9])-\\d+)', question_id):
+        if not re.fullmatch(r'(?:csv-[a-f0-9]{20}|builtin-rung-(?:10|[1-9])-\d+)', question_id):
             raise ValueError('Question id is not recognized.')
 
         rung = raw.get('rung')
         if type(rung) is not int or not 1 <= rung <= 10:
             raise ValueError('rung must be between 1 and 10.')
 
-        builtin_match = re.fullmatch(r'builtin-rung-(10|[1-9])-\\d+', question_id)
+        builtin_match = re.fullmatch(r'builtin-rung-(10|[1-9])-\d+', question_id)
         if builtin_match and int(builtin_match.group(1)) != rung:
             raise ValueError('Built-in question rung does not match its id.')
 
