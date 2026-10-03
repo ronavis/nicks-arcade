@@ -1,0 +1,30 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs'),vm=require('node:vm');
+const source=fs.readFileSync(require('node:path').join(__dirname,'../app.js'),'utf8');
+test('admin games include new scoreless and hidden games alphabetically, preserve selection and avoid poll churn',()=>{
+ let replacements=0;
+ const select={value:'z',dataset:{},replaceChildren(...options){this.options=options;replacements++;}};
+ const state={selected:'z',allGames:[{id:'z',title:'Zaxxon',record:{}},{id:'a',title:'Asteroids',record:null,showOnLeaderboard:0}]};
+ const context=vm.createContext({$:()=>select,state,node:(_tag,_class,text)=>({text})});
+ vm.runInContext(source.slice(source.indexOf('function renderAdminGameOptions()'),source.indexOf('async function fetchBoard()')),context);
+ vm.runInContext('renderAdminGameOptions()',context);
+ assert.deepEqual(Array.from(select.options,x=>x.value),['a','z']);assert.equal(select.value,'z');
+ vm.runInContext('renderAdminGameOptions()',context);assert.equal(replacements,1);
+ state.allGames.push({id:'d',title:"Dragon’s Lair II",record:null});
+ vm.runInContext('renderAdminGameOptions()',context);
+ assert.deepEqual(Array.from(select.options,x=>x.value),['a','d','z']);assert.equal(select.value,'z');
+ state.allGames=state.allGames.filter(g=>g.id!=='z');vm.runInContext('renderAdminGameOptions()',context);assert.equal(select.value,'a');
+});
+test('adding during a pending poll awaits a fresh follow-up before completing',async()=>{
+ const pending=[];let requests=0;
+ const context=vm.createContext({fetchBoard:()=>{requests++;return new Promise(resolve=>pending.push(resolve));}});
+ vm.runInContext('let boardRefreshing=null,boardRefreshAgain=false;'+source.slice(source.indexOf('function refreshBoard()'),source.indexOf('function renderAdminGameOptions()')),context);
+ const first=vm.runInContext('refreshBoard()',context);
+ const afterAdd=vm.runInContext('refreshBoard()',context);
+ assert.equal(first,afterAdd);assert.equal(requests,1);
+ pending.shift()();await new Promise(setImmediate);assert.equal(requests,2);
+ let done=false;afterAdd.then(()=>done=true);await Promise.resolve();assert.equal(done,false);
+ pending.shift()();await afterAdd;assert.equal(done,true);
+ const next=vm.runInContext('refreshBoard()',context);assert.equal(requests,3);pending.shift()();await next;
+});
