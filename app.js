@@ -71,10 +71,10 @@ function renderBoard() {
   $('around-list').dataset.rendered=aroundSignature;
   $('around-list').replaceChildren(...around.filter(Boolean).map(other => {
     const button = node('button', 'around-row');
-    button.setAttribute('aria-label', `Feature ${other.title}, ${scoreText(other)}, ${initialsText(other)}`);
+    button.setAttribute('aria-label', `View ${other.title} history, ${scoreText(other)}, ${initialsText(other)}`);
     const image = node('img'); image.src = artworkUrl(other); image.alt = other.title;
     const info = node('div'); info.append(node('strong', scoreText(other).length > 8 ? 'long' : '', other.record ? scoreText(other) : 'OPEN RECORD'), node('span', '', other.record ? initialsText(other) : 'Be the first'));
-    button.append(image, info); button.addEventListener('click', () => feature(other.id)); return button;
+    button.append(image, info); button.addEventListener('click', () => { feature(other.id); openWhereToPlay(other); }); return button;
   }));
   }
   warmArtwork(around.map(artworkUrl));

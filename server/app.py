@@ -717,6 +717,29 @@ def create_app(config=None, *, allow_demo=False):
         g.pop('catalog', None)
         return jsonify(game=catalog()[game_id], alreadyExists=bool(existing)), 200 if existing else 201
 
+    @app.get('/api/games/<game_id>/history')
+    def game_history(game_id):
+        game = catalog().get(game_id)
+        if not game:
+            abort(404)
+        db = get_db()
+        current = winner(db, game_id)
+        history_rows = db.execute("""SELECT s.*, a.is_record,
+            (SELECT before_json FROM audit WHERE score_id=s.id AND action='correct' ORDER BY id LIMIT 1) AS original_json
+            FROM scores s LEFT JOIN activity a ON a.score_id=s.id
+            WHERE s.game_id=? AND s.deleted_at IS NULL AND (a.is_record=1 OR s.created_at=0)
+            ORDER BY s.created_at DESC, a.id DESC, s.id DESC LIMIT 101""", (game_id,)).fetchall()
+        history = []
+        for row in history_rows[:100]:
+            original = json.loads(row['original_json']) if row['original_json'] else dict(row)
+            history.append({'id':row['id'], 'score':display_score(original['value'], game['kind']),
+                'initials':original['initials'], 'createdAt':row['created_at'] or None,
+                'imported':row['created_at']==0, 'corrected':bool(row['original_json'])})
+        record = None if not current else {'id':current['id'], 'score':display_score(current['value'], game['kind']),
+            'initials':current['initials'], 'createdAt':current['created_at'] or None}
+        return jsonify(game={'id':game_id,'title':game['title'],'kind':game['kind']}, currentRecord=record,
+                       recordHistory=history, hasMore=len(history_rows)>100)
+
     @app.get('/api/admin/scores')
     @authenticated(admin=True)
     def admin_scores():

@@ -12,7 +12,7 @@ test('score polling retains cabinet DOM; changed photo, assignments and featured
  const element=()=>({dataset:{},style:{setProperty(){}},classList:{toggle(){}},append(){},setAttribute(){}});
  const target=element();target.replaceChildren=()=>replacements++;
  const context=vm.createContext({$:()=>target,node:element,cabinetButton:element,cabinetImage:element,cabinetPicture:c=>c.photoId||c.code,window:{},openWhereToPlay(){}});
- vm.runInContext(source.slice(source.indexOf('function renderFeaturedCabinets('),source.indexOf('function openWhereToPlay(')),context);
+ vm.runInContext(source.slice(source.indexOf('function renderFeaturedCabinets('),source.indexOf('let gameOverviewRequest=')),context);
  const game={id:'galaga',title:'Galaga',cabinets:[{id:'pac',name:'Pac-Man',code:'PAC',photoId:'one'}]};
  context.renderFeaturedCabinets(game);assert.equal(replacements,1);
  context.renderFeaturedCabinets(JSON.parse(JSON.stringify(game)));assert.equal(replacements,1);
