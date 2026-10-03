@@ -222,3 +222,8 @@
 .record-age:not(:empty){background:#e0f1e9;border:1px solid #8abdb4;box-shadow:calc(var(--u)*.35) calc(var(--u)*.35) 0 #bfd9cf}
 .record-age .record-age-value{font-weight:400;color:#075c62;text-transform:uppercase}
 .record-age .record-age-date{font:calc(var(--u)*1.9)/1 Arial,sans-serif;color:#486362;border-left:1px solid #94bab1;padding-left:calc(var(--u)*1)}
+
+#cabinet-crop-preview{display:block;width:100%;max-width:360px;height:auto;aspect-ratio:5/4;touch-action:none;cursor:grab;border:2px solid var(--cyan);border-radius:8px;background:var(--cream);margin:auto}
+#cabinet-crop-preview:active{cursor:grabbing}
+#cabinet-crop-editor input[type=range]{width:100%;min-height:32px;padding:0}
+#cabinet-crop-editor{margin:18px 0}
