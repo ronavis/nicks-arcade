@@ -121,3 +121,39 @@ def test_reference_images_cover_seeded_cabinets():
         with Image.open(root/reference['image']) as im:
             im.verify()
         assert reference['source'].startswith('https://')
+
+
+def test_remove_cabinet_roles_conflicts_preservation_and_restart(app):
+    import json
+    c=app.test_client()
+    cid=c.post('/api/admin/cabinets',json={'name':'Accidental cabinet'},headers=headers('admin')).json['id']
+    body={'revision':1,'expectedGameIds':[]}
+    assert c.delete('/api/admin/cabinets/'+cid,json=body).status_code==401
+    assert c.delete('/api/admin/cabinets/'+cid,json=body,headers=headers()).status_code==403
+    assert c.delete('/api/admin/cabinets/'+cid,json={**body,'revision':0},headers=headers('admin')).status_code==409
+    assert c.delete('/api/admin/cabinets/'+cid,json={'revision':1},headers=headers('admin')).status_code==400
+    old=['nick-pac','nick-pcm','nick-ckt']
+    c.put('/api/admin/games/galaga/cabinets',json={'expectedCabinetIds':old,'cabinetIds':old+[cid]},headers=headers('admin'))
+    assert c.delete('/api/admin/cabinets/'+cid,json=body,headers=headers('admin')).status_code==409
+    dbpath=str(app.config['DATA_DIR'])+'/arcade.sqlite3'
+    with sqlite3.connect(dbpath) as db:
+        games=db.execute('SELECT * FROM games ORDER BY id').fetchall()
+        scores=db.execute('SELECT * FROM scores ORDER BY id').fetchall()
+    result=c.delete('/api/admin/cabinets/'+cid,json={'revision':1,'expectedGameIds':['galaga']},headers=headers('admin'))
+    assert result.status_code==200
+    assert all(r['id']!=cid for r in result.json['cabinets'])
+    with sqlite3.connect(dbpath) as db:
+        assert db.execute('SELECT * FROM games ORDER BY id').fetchall()==games
+        assert db.execute('SELECT * FROM scores ORDER BY id').fetchall()==scores
+        assert {r[0] for r in db.execute("SELECT cabinet_id FROM cabinet_games WHERE game_id='galaga'")}==set(old)
+        audit=json.loads(db.execute("SELECT before_json FROM cabinet_audit WHERE action='remove'").fetchone()[0])
+        assert audit['gameIds']==['galaga'] and audit['name']=='Accidental cabinet'
+    reopened=create_app(dict(app.config)).test_client()
+    assert all(r['id']!=cid for r in reopened.get('/api/admin/cabinets',headers=headers('admin')).json['cabinets'])
+    assert c.delete('/api/admin/cabinets/'+cid,json=body,headers=headers('admin')).status_code==404
+
+
+def test_remove_empty_cabinet(app):
+    c=app.test_client()
+    cid=c.post('/api/admin/cabinets',json={'name':'Empty mistake'},headers=headers('admin')).json['id']
+    assert c.delete('/api/admin/cabinets/'+cid,json={'revision':1,'expectedGameIds':[]},headers=headers('admin')).status_code==200

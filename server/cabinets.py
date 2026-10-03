@@ -107,6 +107,25 @@ def register(app, get_db, authenticated, data, game_key):
             audit(db,'save',before,{'id':cid,'name':name})
         return jsonify(cabinets=rows(),id=cid)
 
+    @app.delete('/api/admin/cabinets/<cid>')
+    @authenticated(admin=True)
+    def remove_cabinet(cid):
+        p = payload()
+        expected = p.get('expectedGameIds')
+        if not isinstance(expected, list) or any(not isinstance(v, str) for v in expected):
+            raise ValueError('Reopen the cabinet before removing it.')
+        with get_db() as db:
+            db.execute('BEGIN IMMEDIATE')
+            before = current(db, cid, p.get('revision'))
+            assigned = sorted(r[0] for r in db.execute('SELECT game_id FROM cabinet_games WHERE cabinet_id=?', (cid,)))
+            if assigned != sorted(expected):
+                abort(409, 'Cabinet assignments changed on another device. Reopen it before removing.')
+            before['gameIds'] = assigned
+            db.execute('DELETE FROM cabinet_games WHERE cabinet_id=?', (cid,))
+            db.execute('DELETE FROM cabinets WHERE id=?', (cid,))
+            audit(db, 'remove', before, {'id': cid, 'removed': True})
+        return jsonify(cabinets=rows())
+
     @app.put('/api/admin/games/<gid>/cabinets')
     @authenticated(admin=True)
     def assign_game(gid):

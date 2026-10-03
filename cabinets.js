@@ -23,6 +23,7 @@ function renderCabinets() {
   const actions=node('div','cabinet-actions'); actions.append(cabinetButton('Edit cabinet',()=>openCabinetEditor(c)),cabinetButton('Add games',()=>openCabinetGames(c),'primary'));
   panel.append(back,heading);
   if(!c.photoId&&window.ARCADE_CABINET_ART?.[c.code]?.note)panel.append(node('p','small',window.ARCADE_CABINET_ART[c.code].note));
+  actions.append(cabinetButton('Remove cabinet',()=>openRemoveCabinet(c),'secondary danger'));
   panel.append(actions,node('h4','','Games on this cabinet'));
   const games=c.gameIds.map(gameById).filter(Boolean);
   if(!games.length)panel.append(node('p','cabinet-empty','No games assigned yet. Add games from your collection or the marquee catalog.'));
@@ -258,3 +259,23 @@ async function croppedCabinetFile(){
 }
 
 $('cabinet-crop-enabled').addEventListener('change',drawCabinetCrop);
+
+let removingCabinet=null;
+function openRemoveCabinet(c){
+  removingCabinet={...c,gameIds:[...c.gameIds]};
+  $('remove-cabinet-summary').textContent=`Remove “${c.name}”? ${c.gameIds.length ? `It will be unlinked from ${c.gameIds.length} game${c.gameIds.length===1?'':'s'}.` : 'This cabinet has no assigned games.'} Games, scores, leaderboard visibility and other cabinets will stay unchanged.`;
+  $('remove-cabinet-message').textContent='';$('remove-cabinet-dialog').showModal();
+}
+$('cancel-remove-cabinet').addEventListener('click',()=>$('remove-cabinet-dialog').close());
+$('remove-cabinet-dialog').addEventListener('cancel',event=>{if($('confirm-remove-cabinet').disabled)event.preventDefault();});
+$('confirm-remove-cabinet').addEventListener('click',async()=>{
+  if(!removingCabinet||!state.user?.admin)return;
+  const button=$('confirm-remove-cabinet');button.disabled=true;$('cancel-remove-cabinet').disabled=true;
+  try{
+    const c=removingCabinet;
+    cabinets=(await api(`/admin/cabinets/${encodeURIComponent(c.id)}`,cabinetJSON('DELETE',{revision:c.revision,expectedGameIds:c.gameIds}))).cabinets;
+    selectedCabinet=null;renderCabinets();$('remove-cabinet-dialog').close();removingCabinet=null;
+    await refreshBoard();$('cabinet-message').textContent=`${c.name} removed. Games and scores were kept.`;
+  }catch(error){$('remove-cabinet-message').textContent=error.message;}
+  finally{button.disabled=false;$('cancel-remove-cabinet').disabled=false;}
+});
