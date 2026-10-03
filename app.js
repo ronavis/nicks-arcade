@@ -64,8 +64,7 @@ function renderBoard() {
   $('hero-initials').classList.toggle('empty-record', !game.record);
   $('hero-initials').textContent = game.record ? initialsText(game) : 'YOUR INITIALS HERE'; renderImprovement('hero-improvement', game.record);
   const index = state.boardGames.indexOf(game);
-  const preferred = game.id === 'galaga' ? ['donkeykong', 'mspacman', 'tetris'].map(id => state.boardGames.find(other => other.id === id)).filter(Boolean) : [];
-  const around = [...preferred, ...[1, 2, 3].map(offset => state.boardGames[(index + offset) % state.boardGames.length])].filter((other, i, games) => other && other.id !== game.id && games.findIndex(entry => entry?.id === other.id) === i).slice(0, 3);
+  const around = [1, 2, 3].map(offset => state.boardGames[(index + offset) % state.boardGames.length]).filter((other, i, games) => other && other.id !== game.id && games.findIndex(entry => entry?.id === other.id) === i);
   const aroundSignature=JSON.stringify(around.map(other=>[other.id,other.title,artworkUrl(other),other.record?.score,other.record?.initials]));
   if ($('around-list').dataset.rendered !== aroundSignature) {
   $('around-list').dataset.rendered=aroundSignature;
@@ -148,6 +147,8 @@ function renderSession() {
   $('account-button').hidden = false;
   $('account-button').setAttribute('aria-label', signed ? 'My account' : 'My account · sign in');
   $('account-admin').hidden = !state.user?.admin;
+  $('account-management').hidden = !state.user?.admin;
+  $('arcade-settings-disclosure').hidden = !state.user?.admin;
   $('admin-link').hidden = !state.user?.admin;
   $('tv-admin-button').hidden = !state.user?.admin;
   $('tv-setup-button').hidden = !state.user?.admin; $('account-tv-setup').hidden = !state.user?.admin;
@@ -412,13 +413,22 @@ function renderAdminGameOptions() {
   select.value = games.some(game => game.id === previous) ? previous : games.some(game => game.id === state.selected) ? state.selected : games[0]?.id || '';
 }
 
+function sortLeaderboard(games, order = 'alphabetical') {
+  return [...games].sort((a, b) => {
+    const dateDifference = order === 'newest' ? (Number(b.record?.createdAt) || 0) - (Number(a.record?.createdAt) || 0) : 0;
+    return dateDifference || a.title.localeCompare(b.title, undefined, {numeric: true, sensitivity: 'base'}) || a.id.localeCompare(b.id);
+  });
+}
 async function fetchBoard() {
   try {
     const result = await api('/leaderboard');
     const visibleGames = result.games.filter(game => game.eligible !== 0 || result.displaySettings?.bypassGamesRestriction);
-    const boardGames = visibleGames.filter(game => game.showOnLeaderboard === 1);
+    const boardGames = sortLeaderboard(visibleGames.filter(game => game.showOnLeaderboard === 1), result.displaySettings?.leaderboardOrder);
     const celebrations = observeRecords({...result, games:boardGames});
     if (!$('display-panel').hidden && !document.hidden && !document.querySelector('dialog[open]')) celebrationQueue.push(...celebrations.slice(0, 5 - celebrationQueue.length));
+    const order = result.displaySettings?.leaderboardOrder || 'alphabetical';
+    if (state.leaderboardOrder !== order && boardGames.length) state.featured = boardGames[0].id;
+    state.leaderboardOrder = order;
     state.allGames = result.games; state.games = visibleGames; state.boardGames = boardGames;
     if (!state.games.some(game => game.id === state.selected) && !state.pendingGame) state.selected = state.games[0]?.id;
     state.connected = true; applyDisplaySettings(result.displaySettings);
@@ -601,7 +611,7 @@ async function loadAccount(view = state.accountView) {
       $('mark-read').disabled = !result.events.length;
     } else {
       const account = await api('/account'); if (token !== state.token) return; state.account = account;
-      if (view === 'settings') { $('default-initials').value = account.initials; $('default-taunt').value = account.defaultTaunt || ''; $('taunt-enabled').checked = Boolean(account.tauntEnabled); $('display-settings-form').hidden = !state.user.admin; $('rotation-seconds').value = account.displaySettings.rotationSeconds; $('bypass-games-restriction').checked = Boolean(account.displaySettings.bypassGamesRestriction); $('display-settings-message').textContent = ''; }
+      if (view === 'settings') { $('default-initials').value = account.initials; $('default-taunt').value = account.defaultTaunt || ''; $('taunt-enabled').checked = Boolean(account.tauntEnabled); $('display-settings-form').hidden = !state.user.admin; $('rotation-seconds').value = account.displaySettings.rotationSeconds; $('leaderboard-order').value = account.displaySettings.leaderboardOrder || 'alphabetical'; $('bypass-games-restriction').checked = Boolean(account.displaySettings.bypassGamesRestriction); $('display-settings-message').textContent = ''; }
       else {
         const visibleScores = account.scores.filter(score => !score.deleted);
         $('my-scores-list').replaceChildren(...visibleScores.map(score => {
@@ -648,10 +658,10 @@ $('mark-read').addEventListener('click', async () => {
 $('display-settings-form').addEventListener('submit', async event => {
   event.preventDefault(); $('save-display-settings').disabled = true;
   try {
-    const result = await api('/admin/display-settings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rotationSeconds: Number($('rotation-seconds').value), bypassGamesRestriction: $('bypass-games-restriction').checked }) });
+    const result = await api('/admin/display-settings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rotationSeconds: Number($('rotation-seconds').value), leaderboardOrder: $('leaderboard-order').value, bypassGamesRestriction: $('bypass-games-restriction').checked }) });
     applyDisplaySettings(result.displaySettings);
     await refreshBoard();
-    $('display-settings-message').textContent = `${result.displaySettings.bypassGamesRestriction ? 'Open game submissions enabled.' : 'Only Nick’s arcade games can accept scores.'} Saved: ${result.displaySettings.rotationSeconds} seconds per game. Open scoreboards pick this up within five seconds. Paused boards stay paused.`;
+    $('display-settings-message').textContent = `${result.displaySettings.bypassGamesRestriction ? 'Open game submissions enabled.' : 'Only Nick’s arcade games can accept scores.'} Saved: ${result.displaySettings.rotationSeconds} seconds per game, ${result.displaySettings.leaderboardOrder === 'newest' ? 'newest record first' : 'alphabetical order'}. Open scoreboards pick this up within five seconds. Paused boards stay paused.`;
   } catch (error) { $('display-settings-message').textContent = error.message; }
   finally { $('save-display-settings').disabled = false; }
 });

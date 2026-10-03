@@ -295,7 +295,8 @@ def create_app(config=None, *, allow_demo=False):
     def display_settings():
         row = get_db().execute("SELECT value FROM metadata WHERE key='rotation_seconds'").fetchone()
         bypass = get_db().execute("SELECT value FROM metadata WHERE key='bypass_games_restriction'").fetchone()
-        return {'rotationSeconds': int(row['value']) if row else 15, 'bypassGamesRestriction': bool(bypass and bypass['value'] == '1')}
+        order = get_db().execute("SELECT value FROM metadata WHERE key='leaderboard_order'").fetchone()
+        return {'leaderboardOrder': order['value'] if order else 'alphabetical', 'rotationSeconds': int(row['value']) if row else 15, 'bypassGamesRestriction': bool(bypass and bypass['value'] == '1')}
 
     @app.patch('/api/admin/display-settings')
     @authenticated(admin=True)
@@ -306,8 +307,12 @@ def create_app(config=None, *, allow_demo=False):
             raise ValueError('Choose on or off for the game restriction bypass.')
         if type(seconds) is not int or not 5 <= seconds <= 120:
             raise ValueError('Choose a whole number from 5 to 120 seconds.')
+        if 'leaderboardOrder' in payload and payload['leaderboardOrder'] not in ('alphabetical', 'newest'):
+            raise ValueError('Choose alphabetical or newest record first.')
         with get_db() as db:
             db.execute("BEGIN IMMEDIATE")
+            if 'leaderboardOrder' in payload:
+                db.execute("INSERT INTO metadata(key,value) VALUES ('leaderboard_order',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", (payload['leaderboardOrder'],))
             db.execute("INSERT INTO metadata(key,value) VALUES ('rotation_seconds',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", (str(seconds),))
             if 'bypassGamesRestriction' in payload:
                 db.execute("INSERT INTO metadata(key,value) VALUES ('bypass_games_restriction',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", ('1' if payload['bypassGamesRestriction'] else '0',))
