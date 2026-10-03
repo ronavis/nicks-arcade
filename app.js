@@ -342,7 +342,7 @@ $('score-form').addEventListener('submit', async event => {
     if (result.game) { state.selected = result.game.id; state.pendingGame = null; if (!gameById(result.game.id)) { state.allGames.push(result.game); state.games.push(result.game); } }
     $('score-form').hidden = true; $('record-preview').hidden = true; $('success-panel').hidden = false;
     $('success-title').textContent = result.isRecord ? 'NEW HIGH SCORE!' : 'SCORE POSTED!';
-    $('success-detail').textContent = `${result.record.initials} · ${result.record.score} on ${gameById(state.selected).title}. ${result.isRecord ? 'Your record is on the board.' : 'Your score is saved in the game’s history.'}`;
+    $('success-detail').textContent = `${result.record.initials} · ${result.record.score} on ${gameById(state.selected).title}. ${result.isRecord ? result.game?.showOnLeaderboard === 1 ? 'Your record is on the board.' : 'Your record is saved. This game is hidden from the TV leaderboard; an admin can enable Show on leaderboard in Manage games.' : 'Your score is saved in the game’s history.'}`;
     state.featured = state.selected; state.requestId = crypto.randomUUID(); await refreshBoard(); await refreshAccount();
   } catch (error) { setMessage(error.message, true); }
   finally { state.posting = false; renderSession(); $('submit-score').textContent = 'Post score'; }
