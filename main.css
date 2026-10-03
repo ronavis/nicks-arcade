@@ -217,8 +217,8 @@
 
 
 
-/* A compact record-age badge; preserve the existing reserved row height. */
-.record-age{display:flex;align-items:center;justify-content:center;gap:calc(var(--u)*1);height:calc(var(--u)*3);min-height:calc(var(--u)*3);line-height:1;white-space:nowrap;border-radius:calc(var(--u)*.55);font:calc(var(--u)*2.35)/1 var(--display);letter-spacing:calc(var(--u)*.06);color:#155960;padding:0 calc(var(--u)*1.2)}
+/* Give the date badge breathing room without changing its reserved height. */
+.record-age{margin:calc(var(--u)*1.2) 0 calc(var(--u)*1);display:flex;align-items:center;justify-content:center;gap:calc(var(--u)*1);height:calc(var(--u)*3);min-height:calc(var(--u)*3);line-height:1;white-space:nowrap;border-radius:calc(var(--u)*.55);font:calc(var(--u)*2.35)/1 var(--display);letter-spacing:calc(var(--u)*.06);color:#155960;padding:0 calc(var(--u)*1.2)}
 .record-age:not(:empty){background:#e0f1e9;border:1px solid #8abdb4;box-shadow:calc(var(--u)*.35) calc(var(--u)*.35) 0 #bfd9cf}
 .record-age .record-age-value{font-weight:400;color:#075c62;text-transform:uppercase}
 .record-age .record-age-date{font:calc(var(--u)*1.9)/1 Arial,sans-serif;color:#486362;border-left:1px solid #94bab1;padding-left:calc(var(--u)*1)}
