@@ -351,7 +351,7 @@ $('play-again').addEventListener('click', () => { $('success-panel').hidden = tr
 
 const observeRecords = ArcadeCelebrations.createObserver();
 const celebrationQueue = [];
-let celebrationTimer, celebrationActive = false, boardRefreshing = false;
+let celebrationTimer, celebrationActive = false, boardRefreshing = null, boardRefreshAgain = false;
 function closeCelebration(clearQueue = false) {
   clearTimeout(celebrationTimer); celebrationActive = false;
   $('record-celebration').hidden = true;
@@ -377,9 +377,28 @@ $('dismiss-celebration').addEventListener('click', () => closeCelebration());
 window.addEventListener('hashchange', () => closeCelebration(true));
 document.addEventListener('visibilitychange', () => { if (document.hidden) closeCelebration(true); });
 
-async function refreshBoard() {
-  if (boardRefreshing) return;
-  boardRefreshing = true;
+// A mutation arriving during a poll needs a subsequent request, not the old response.
+function refreshBoard() {
+  boardRefreshAgain = true;
+  if (boardRefreshing) return boardRefreshing;
+  boardRefreshing = (async () => {
+    do { boardRefreshAgain = false; await fetchBoard(); } while (boardRefreshAgain);
+  })().finally(() => { boardRefreshing = null; });
+  return boardRefreshing;
+}
+
+function renderAdminGameOptions() {
+  const select = $('admin-game'), previous = select.value;
+  const games = [...state.allGames].sort((a, b) => a.title.localeCompare(b.title, undefined, {numeric:true, sensitivity:'base'}));
+  // Do not replace native options on every poll while an operator is choosing.
+  const signature = JSON.stringify(games.map(game => [game.id, game.title]));
+  if (select.dataset.games === signature) return;
+  select.replaceChildren(...games.map(game => { const option = node('option', '', game.title); option.value = game.id; return option; }));
+  select.dataset.games = signature;
+  select.value = games.some(game => game.id === previous) ? previous : games.some(game => game.id === state.selected) ? state.selected : games[0]?.id || '';
+}
+
+async function fetchBoard() {
   try {
     const result = await api('/leaderboard');
     const visibleGames = result.games.filter(game => game.eligible !== 0 || result.displaySettings?.bypassGamesRestriction);
@@ -389,14 +408,12 @@ async function refreshBoard() {
     state.allGames = result.games; state.games = visibleGames; state.boardGames = boardGames;
     if (!state.games.some(game => game.id === state.selected) && !state.pendingGame) state.selected = state.games[0]?.id;
     state.connected = true; applyDisplaySettings(result.displaySettings);
-    const adminSelection = $('admin-game').value;
-    $('admin-game').replaceChildren(...state.allGames.map(game => { const option = node('option', '', game.title); option.value = game.id; return option; }));
-    $('admin-game').value = adminSelection || state.selected;
+    renderAdminGameOptions();
     $('connection').hidden = true; renderBoard(); renderEntry(); if ($('games-dialog').open) renderArcadeGames(); showNextCelebration();
   } catch (error) {
     state.connected = false; $('connection').hidden = false;
     $('connection').textContent = state.games.length ? 'Connection lost · showing the last received records. Reconnecting…' : 'The scoreboard service is unavailable. Please check the connection.';
-  } finally { boardRefreshing = false; }
+  }
 }
 setInterval(() => { if (!document.hidden) refreshBoard(); }, 5000);
 window.addEventListener('online', refreshBoard);
@@ -643,8 +660,7 @@ async function init() {
     $('qr-link').addEventListener('click', event => { event.preventDefault(); location.hash = '#tv'; });
     await ArcadeQR.toCanvas($('qr-code'), submitUrl.toString(), { width: 240, margin: 1, errorCorrectionLevel: 'M', color: { dark: '#071418', light: '#ffffff' } });
     await refreshBoard();
-    $('admin-game').replaceChildren(...state.allGames.map(game => { const option = node('option', '', game.title); option.value = game.id; return option; }));
-    $('admin-game').value = state.selected;
+    renderAdminGameOptions();
     loadGoogle();
     try { const token = sessionStorage.getItem('arcade_session'); if (token) await signIn(token, { goToBoard: false }); } catch (_) { signOut(false); }
     renderSession(); route();
@@ -739,7 +755,7 @@ $('admin-add-game').addEventListener('submit', async event => {
   try {
     const result = await api('/admin/games', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({title:$('admin-game-title-input').value,kind:$('admin-game-kind').value})});
     await refreshBoard();
-    $('games-feedback').textContent = result.alreadyExists ? `${result.game.title} is already in your arcade.` : `${result.game.title} added. It is on the TV rotation and ready for its first score.`;
+    $('games-feedback').textContent = result.alreadyExists ? `${result.game.title} is already in your arcade.` : `${result.game.title} added and ready for its first score. Enable Show on leaderboard to include it on the TV.`;
     $('admin-game-title-input').value = ''; $('arcade-games-search').value = ''; renderArcadeGames();
   } catch (error) { $('games-feedback').textContent = error.message; }
   finally { $('save-arcade-game').disabled = false; }
