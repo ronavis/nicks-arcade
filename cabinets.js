@@ -44,6 +44,7 @@ async function openCabinets(){
   try{await refreshCabinets();selectedCabinet=null;renderCabinets();$('cabinet-message').textContent='';}catch(e){$('cabinet-message').textContent=e.message;}
 }
 function openCabinetEditor(c=null){
+  resetCabinetCrop();
   editingCabinet=c?{...c}:null;
   $('cabinet-editor-heading').textContent=c?'Edit cabinet':'Add cabinet';
   $('cabinet-name').value=c?.name||'';$('cabinet-file').value='';$('cabinet-editor-message').textContent='';
@@ -51,9 +52,11 @@ function openCabinetEditor(c=null){
 }
 $('cabinet-form').addEventListener('submit',async event=>{
   event.preventDefault(); const button=$('save-cabinet');button.disabled=true;$('close-cabinet-editor').disabled=true;
-  const file=$('cabinet-file').files[0];
+  let file=$('cabinet-file').files[0];
   try{
+    if(cabinetCropLoading)throw new Error('Please wait for the photo preview to load.');
     if(file&&file.size>40*1024*1024)throw new Error('Choose a photo under 40 MB.');
+    if(file&&cabinetCropImage)file=await croppedCabinetFile();
     const r=await api(`/admin/cabinets${editingCabinet?'/'+encodeURIComponent(editingCabinet.id):''}`,cabinetJSON(editingCabinet?'PATCH':'POST',{name:$('cabinet-name').value,revision:editingCabinet?.revision}));
     cabinets=r.cabinets;selectedCabinet=r.id;$('cabinet-search').value='';editingCabinet={...cabinets.find(c=>c.id===r.id)};
     if(file){
@@ -62,7 +65,7 @@ $('cabinet-form').addEventListener('submit',async event=>{
       try{cabinets=(await api(`/admin/cabinets/${r.id}/photo`,{method:'POST',body})).cabinets;}
       catch(e){renderCabinets();throw new Error(`Cabinet name saved; photo was not saved. ${e.message}`);}
     }
-    renderCabinets();$('cabinet-editor').close();$('cabinet-message').textContent='Cabinet saved.';
+    renderCabinets();$('cabinet-editor').close();await refreshBoard();$('cabinet-message').textContent='Cabinet saved.';
   }catch(e){$('cabinet-editor-message').textContent=e.message;}finally{button.disabled=false;$('close-cabinet-editor').disabled=false;}
 });
 $('cabinet-editor').addEventListener('cancel',e=>{if($('save-cabinet').disabled)e.preventDefault();});
@@ -166,15 +169,18 @@ $('commit-inventory-import').addEventListener('click',async()=>{
 });
 
 function renderFeaturedCabinets(game) {
-  const target=$('featured-cabinets'); target.replaceChildren();
+  const target=$('featured-cabinets');
   const assigned=game?.cabinets||[];
+  const signature=JSON.stringify([game?.id,game?.title,assigned.map(c=>[c.id,c.name,c.code,c.photoId,cabinetPicture(c)])]);
+  if(target.dataset.rendered===signature)return;
+  target.dataset.rendered=signature;target.replaceChildren();
   target.classList.toggle('unassigned',!assigned.length);
   if(!assigned.length)return;
   target.append(node('p','cabinet-strip-label','PLAY IT ON'));
   const row=node('div','cabinet-strip-row');
   for(const c of assigned.slice(0,4)){
     const button=cabinetButton('',()=>openWhereToPlay(game),'featured-cabinet');
-    const im=cabinetImage(c);im.loading='eager';
+    const im=cabinetImage(c);im.loading='eager';if(c.photoId)im.style.objectFit='contain';
     const crop=node('div','cabinet-crop');crop.dataset.cabinet=c.code||'';
     const framing=!c.photoId&&window.ARCADE_CABINET_ART?.[c.code]?.crop;
     if(framing){crop.style.setProperty('--cabinet-fit',framing.fit);crop.style.setProperty('--cabinet-scale',framing.scale);crop.style.setProperty('--cabinet-origin-y',`${framing.originY}%`);}
@@ -192,3 +198,60 @@ function openWhereToPlay(game) {
   $('where-to-play-dialog').showModal();
 }
 $('close-where-to-play').addEventListener('click',()=>$('where-to-play-dialog').close());
+
+// Crop in image coordinates so touch, mouse and keyboard controls save the same frame.
+let cabinetCropImage=null, cabinetCropURL=null, cabinetCropVersion=0, cabinetCropLoading=false;
+let cabinetCrop={zoom:1,x:50,y:50}, cabinetCropDrag=null;
+function resetCabinetCrop(){
+  ++cabinetCropVersion;cabinetCropLoading=false;cabinetCropImage=null;cabinetCropDrag=null;
+  if(cabinetCropURL)URL.revokeObjectURL(cabinetCropURL);cabinetCropURL=null;
+  cabinetCrop={zoom:1,x:50,y:50};$('cabinet-crop-editor').hidden=true;
+}
+function cabinetCropRect(width,height,zoom,x,y){
+  const ratio=5/4,baseWidth=Math.min(width,height*ratio),w=baseWidth/zoom,h=w/ratio;
+  return {x:(width-w)*x/100,y:(height-h)*y/100,w,h};
+}
+function drawCabinetCrop(){
+  if(!cabinetCropImage)return;
+  for(const key of ['zoom','x','y'])$('cabinet-crop-'+key).value=cabinetCrop[key];
+  const canvas=$('cabinet-crop-preview'),ctx=canvas.getContext('2d');
+  const r=cabinetCropRect(cabinetCropImage.naturalWidth,cabinetCropImage.naturalHeight,cabinetCrop.zoom,cabinetCrop.x,cabinetCrop.y);
+  ctx.fillStyle='#fffbed';ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(cabinetCropImage,r.x,r.y,r.w,r.h,0,0,canvas.width,canvas.height);
+}
+$('cabinet-file').addEventListener('change',async()=>{
+  resetCabinetCrop();const file=$('cabinet-file').files[0];if(!file)return;
+  const version=cabinetCropVersion;
+  if(file.size>40*1024*1024){$('cabinet-editor-message').textContent='Choose a photo under 40 MB.';return;}
+  cabinetCropLoading=true;$('cabinet-editor-message').textContent='Loading crop preview…';
+  cabinetCropURL=URL.createObjectURL(file);const image=new Image();image.src=cabinetCropURL;
+  try{
+    await image.decode();if(version!==cabinetCropVersion)return;
+    if(image.naturalWidth*image.naturalHeight>64000000)throw new Error('size');
+    cabinetCropImage=image;$('cabinet-crop-editor').hidden=false;drawCabinetCrop();
+    $('cabinet-editor-message').textContent='Move the photo or use the sliders. Save cabinet applies this crop.';
+  }catch(error){if(version===cabinetCropVersion)$('cabinet-editor-message').textContent=error.message==='size'?'Choose a photo under 64 megapixels.':'This browser cannot preview this photo format. You can still save the original photo, including iPhone HEIC, without a crop.';}
+  finally{if(version===cabinetCropVersion)cabinetCropLoading=false;}
+});
+for(const key of ['zoom','x','y'])$('cabinet-crop-'+key).addEventListener('input',()=>{cabinetCrop[key]=Number($('cabinet-crop-'+key).value);drawCabinetCrop();});
+$('cabinet-crop-reset').addEventListener('click',()=>{cabinetCrop={zoom:1,x:50,y:50};drawCabinetCrop();});
+$('cabinet-crop-preview').addEventListener('pointerdown',event=>{
+  if(!cabinetCropImage)return;event.preventDefault();event.currentTarget.setPointerCapture(event.pointerId);
+  cabinetCropDrag={pointer:event.pointerId,x:event.clientX,y:event.clientY,start:{...cabinetCrop}};
+});
+$('cabinet-crop-preview').addEventListener('pointermove',event=>{
+  if(!cabinetCropDrag||cabinetCropDrag.pointer!==event.pointerId)return;
+  const image=cabinetCropImage,d=cabinetCropDrag,r=cabinetCropRect(image.naturalWidth,image.naturalHeight,d.start.zoom,d.start.x,d.start.y),box=event.currentTarget.getBoundingClientRect();
+  const clamp=n=>Math.max(0,Math.min(100,n));
+  cabinetCrop.x=image.naturalWidth>r.w?clamp(d.start.x-(event.clientX-d.x)*r.w/box.width/(image.naturalWidth-r.w)*100):50;
+  cabinetCrop.y=image.naturalHeight>r.h?clamp(d.start.y-(event.clientY-d.y)*r.h/box.height/(image.naturalHeight-r.h)*100):50;
+  drawCabinetCrop();
+});
+for(const name of ['pointerup','pointercancel','lostpointercapture'])$('cabinet-crop-preview').addEventListener(name,()=>{cabinetCropDrag=null;});
+$('cabinet-editor').addEventListener('close',resetCabinetCrop);
+async function croppedCabinetFile(){
+  drawCabinetCrop();
+  const blob=await new Promise(resolve=>$('cabinet-crop-preview').toBlob(resolve,'image/jpeg',0.92));
+  if(!blob)throw new Error('The cropped photo could not be prepared. Please choose the photo again.');
+  return new File([blob],'cabinet-crop.jpg',{type:'image/jpeg'});
+}
