@@ -5,6 +5,7 @@ on:
     branches:
       - codex/movie-ladder-csv-import
       - codex/movie-ladder-run-history
+      - codex/movie-ladder-question-analytics
 
 jobs:
   backend:
