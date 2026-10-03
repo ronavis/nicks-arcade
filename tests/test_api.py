@@ -1243,3 +1243,128 @@ def test_movie_ladder_run_history_rejects_bad_payloads(app, payload, expected):
     result = c.post('/api/movie-ladder/runs', headers=headers(), json=payload)
     assert result.status_code == 400
     assert expected in result.json['error']
+
+
+def movie_ladder_event(*, run_id=None, event_id=None, question_id='builtin-rung-1-1',
+                       rung=1, question='Who played Indiana Jones?',
+                       answers=None, selected=None, correct=None, answer_type='actor'):
+    return {
+        'id': event_id or str(uuid.uuid4()),
+        'runId': run_id or str(uuid.uuid4()),
+        'questionId': question_id,
+        'rung': rung,
+        'answerType': answer_type,
+        'question': question,
+        'answers': answers or ['Harrison Ford', 'Kurt Russell', 'Tom Selleck', 'Michael Douglas'],
+        'selected': [0] if selected is None else selected,
+        'correct': [0] if correct is None else correct,
+    }
+
+
+def test_movie_ladder_question_events_are_anonymous_idempotent_and_aggregated(app):
+    c = app.test_client()
+    run_id = str(uuid.uuid4())
+
+    correct = movie_ladder_event(run_id=run_id)
+    result = c.post('/api/movie-ladder/question-events', json={'events': [correct]})
+    assert result.status_code == 201
+    assert result.json == {'ok': True, 'received': 1, 'inserted': 1}
+
+    retry = c.post('/api/movie-ladder/question-events', json={'events': [correct]})
+    assert retry.status_code == 200
+    assert retry.json == {'ok': True, 'received': 1, 'inserted': 0}
+
+    wrong = movie_ladder_event(
+        run_id=str(uuid.uuid4()),
+        event_id=str(uuid.uuid4()),
+        selected=[1],
+    )
+    assert c.post('/api/movie-ladder/question-events', json={'events': [wrong]}).status_code == 201
+
+    assert c.get('/api/movie-ladder/admin/question-stats').status_code == 401
+    assert c.get('/api/movie-ladder/admin/question-stats', headers=headers()).status_code == 403
+
+    stats = c.get('/api/movie-ladder/admin/question-stats', headers=headers('admin'))
+    assert stats.status_code == 200
+    assert stats.json['summary'] == {
+        'questionsSeen': 1,
+        'attempts': 2,
+        'correct': 1,
+        'wrong': 1,
+        'accuracyPercent': 50.0,
+    }
+    item = stats.json['questions'][0]
+    assert item['questionId'] == 'builtin-rung-1-1'
+    assert item['rung'] == 1
+    assert item['answerType'] == 'actor'
+    assert item['attempts'] == 2
+    assert item['correct'] == 1
+    assert item['wrong'] == 1
+    assert item['accuracyPercent'] == 50.0
+
+
+def test_movie_ladder_question_events_validate_imported_question_snapshot(app):
+    c = app.test_client()
+    imported = c.post(
+        '/api/movie-ladder/admin/questions/import',
+        headers=headers('admin'),
+        json={'csv': MOVIE_LADDER_CSV, 'mode': 'replace'},
+    )
+    assert imported.status_code == 200
+
+    question = c.get('/api/movie-ladder/questions').json['questions'][0]
+    event = movie_ladder_event(
+        question_id=question['id'],
+        rung=question['rung'],
+        question=question['question'],
+        answers=question['answers'],
+        selected=[question['correct']],
+        correct=[question['correct']],
+        answer_type='actor',
+    )
+    saved = c.post('/api/movie-ladder/question-events', json={'events': [event]})
+    assert saved.status_code == 201
+
+    tampered = dict(event)
+    tampered['id'] = str(uuid.uuid4())
+    tampered['runId'] = str(uuid.uuid4())
+    tampered['question'] = 'Different question text'
+    rejected = c.post('/api/movie-ladder/question-events', json={'events': [tampered]})
+    assert rejected.status_code == 400
+    assert 'does not match the active bank' in rejected.json['error']
+
+
+def test_movie_ladder_question_events_support_ordered_timeline_answers(app):
+    c = app.test_client()
+    event = movie_ladder_event(
+        question_id='builtin-rung-5-5',
+        rung=5,
+        question='Tap these movies in release order.',
+        answers=['The Godfather', 'Chinatown', 'Taxi Driver', 'Network'],
+        selected=[0, 1, 2, 3],
+        correct=[0, 1, 2, 3],
+        answer_type='timeline',
+    )
+    saved = c.post('/api/movie-ladder/question-events', json={'events': [event]})
+    assert saved.status_code == 201
+
+    stats = c.get('/api/movie-ladder/admin/question-stats', headers=headers('admin')).json
+    assert stats['questions'][0]['answerType'] == 'timeline'
+    assert stats['questions'][0]['accuracyPercent'] == 100.0
+
+
+@pytest.mark.parametrize('mutator, expected', [
+    (lambda event: event.update(questionId='not-real'), 'Question id is not recognized'),
+    (lambda event: event.update(rung=11), 'rung must be between 1 and 10'),
+    (lambda event: event.update(answerType='producer'), 'answerType must be text, actor, director, movie, or timeline'),
+    (lambda event: event.update(selected=[4]), 'selected answer indexes must be 0 through 3'),
+    (lambda event: event.update(selected=[0, 0, 1, 2]), 'selected ordered indexes must be unique'),
+    (lambda event: event.update(selected=[0], correct=[0, 1, 2, 3]), 'selected and correct must use the same answer format'),
+])
+def test_movie_ladder_question_events_reject_bad_payloads(app, mutator, expected):
+    c = app.test_client()
+    event = movie_ladder_event()
+    mutator(event)
+    result = c.post('/api/movie-ladder/question-events', json={'events': [event]})
+    assert result.status_code == 400
+    assert expected in result.json['error']
