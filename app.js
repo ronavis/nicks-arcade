@@ -49,7 +49,7 @@ function renderBoard() {
     $('hero-title').textContent = 'Nick’s Arcade'; $('record-label').textContent = 'LEADERBOARD';
     $('hero-score').textContent = 'COMING SOON'; $('hero-score').className = 'hero-score empty-record';
     $('hero-initials').textContent = ''; $('record-age').textContent = '';
-    renderImprovement('hero-improvement', null); $('around-list').replaceChildren(); $('page-dots').replaceChildren();
+    renderImprovement('hero-improvement', null); $('around-list').replaceChildren(); delete $('around-list').dataset.rendered; $('page-dots').replaceChildren();
     return;
   }
   state.featured = game.id; renderFeaturedCabinets(game);
