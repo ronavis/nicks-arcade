@@ -25,8 +25,8 @@ Click a screenshot to open it. The scoreboard is a live 390 × 844 capture; marq
 
 ## How to play
 
-1. Scan the QR code or open the main site to see the shared scoreboard on your phone or TV.
-2. Use **Menu → My account** to sign in with Google. After sign-in you return to the main scoreboard. Choose **Menu → Enter a score** when you are ready to post. Your email does not appear on the public scoreboard.
+1. Scan the QR code to open **Enter a score** on your phone. The main site still opens the shared scoreboard.
+2. Sign in with Google if needed; signing in from score entry keeps you there to post. Signing in through **My account** still returns to the main scoreboard. Your email does not appear on the public scoreboard.
 3. Choose one of Nick’s approved arcade games. If a cabinet is missing, ask Nick or Ron to add it through **Manage games**. Admins can enable **Bypass my games restriction** to allow submissions for other games.
 4. Enter your score and tap three letters on the arcade alphabet keypad. Use **DEL** to correct an initial.
 5. Optionally attach a photo, then choose **Post score**.
@@ -37,7 +37,7 @@ Ron and Nick are the arcade administrators. Admin controls allow score correctio
 
 ## Your account, notifications and friendly rivalry
 
-**My account** is visible near the top of score entry and in the TV controls. When signed out, it takes you to Google sign-in; successful sign-in returns to the shared scoreboard. When already signed in, it opens your account. Reloading an existing signed-in score-entry or admin page preserves that page. It provides:
+**My account** is visible near the top of score entry and in the TV controls. When signed out, it takes you to Google sign-in; sign-in through My account returns to the shared scoreboard, while signing in to enter a score preserves score entry. When already signed in, it opens your account. Reloading an existing signed-in score-entry or admin page preserves that page. It provides:
 
 - **Notifications:** game marquee artwork with recent score submissions, first records and record breaks, with a red unread badge on both phone and TV **My account** buttons, and **Mark all read**. A player whose account held the previous record sees **Your record was broken**, the new score, previous record and challenger’s optional taunt.
 - **My scores:** your recent submissions and linked imported records with game artwork, current-record status and attached proof photos. Removed entries are hidden here and retained in admin history.
@@ -189,7 +189,7 @@ Each game now has a newest-first record timeline above its submission controls. 
 
 Admins can open **Menu → TV setup** or **My account → Settings → TV monitor setup**. Choose 0°, 90°, 180° or 270°, then **Save for this TV**. The choice is stored in this browser, survives reopening with normal browser storage, and affects only its scoreboard—not entry/admin pages or other devices. The existing Rotate action cycles these four angles and remembers the choice too.
 
-To prepare a TV from a phone, choose an angle and **Copy TV link**, without saving it on the phone. Bookmark that link or configure it as the TV browser’s startup page. The explicit `?tvRotation=90#tv` (or 0/180/270) angle takes priority over a stored preference and works without sign-in or persistent browser storage. The board’s QR code always opens the normal scoreboard URL on visitors’ phones. This configures page orientation; it does not turn on hardware, launch the browser or bypass browser restrictions on automatic fullscreen.
+To prepare a TV from a phone, choose an angle and **Copy TV link**, without saving it on the phone. Bookmark that link or configure it as the TV browser’s startup page. The explicit `?tvRotation=90#tv` (or 0/180/270) angle takes priority over a stored preference and works without sign-in or persistent browser storage. The board’s QR code opens normal, unrotated score entry on visitors’ phones. This configures page orientation; it does not turn on hardware, launch the browser or bypass browser restrictions on automatic fullscreen.
 
 ### Manage cabinets (October 1)
 

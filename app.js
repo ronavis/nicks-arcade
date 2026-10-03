@@ -161,9 +161,10 @@ function applySavedTaunt() {
   $('taunt-input').value = state.automaticTaunt ? state.account.defaultTaunt : '';
   state.requestId = crypto.randomUUID();
 }
-async function signIn(token, { goToBoard = true } = {}) {
+async function signIn(token, { goToBoard = state.accountSignIn || location.hash !== '#play' } = {}) {
   state.token = token;
   state.user = await api('/session');
+  state.accountSignIn = false;
   try { sessionStorage.setItem('arcade_session', token); } catch (_) { /* Private browsing can disable browser storage. */ }
   renderSession(); setMessage(); await refreshAccount(); applySavedTaunt();
   if (!state.initials && state.account?.initials) { state.initials = state.account.initials; renderInitials(); }
@@ -606,7 +607,7 @@ async function loadAccount(view = state.accountView) {
   } catch (error) { $('account-message').textContent = error.message; }
 }
 function openAccount() {
-  if (!state.user) { location.hash = '#play'; route(); $('login-panel').scrollIntoView({ block: 'start' }); setMessage('Sign in with Google to open your account, scores and settings.'); return; }
+  if (!state.user) { state.accountSignIn = true; location.hash = '#play'; route(); $('login-panel').scrollIntoView({ block: 'start' }); setMessage('Sign in with Google to open your account, scores and settings.'); return; }
   $('account-identity').textContent = `${state.user.email} · ${state.user.admin ? 'Arcade admin' : 'Player'}`;
   $('account-dialog').showModal(); loadAccount();
 }
@@ -654,10 +655,10 @@ async function init() {
     state.config = await api('/config');
     $('preview-note').hidden = !state.config.demo;
     new ResizeObserver(() => document.documentElement.style.setProperty('--preview-height', `${$('preview-note').getBoundingClientRect().height}px`)).observe($('preview-note'));
-    const submitUrl = new URL(state.config.publicUrl); submitUrl.hash = 'tv';
+    const submitUrl = new URL(state.config.publicUrl); submitUrl.hash = 'play';
     $('qr-link').href = submitUrl.toString();
-    // Both clicking and scanning the QR open the main scoreboard.
-    $('qr-link').addEventListener('click', event => { event.preventDefault(); location.hash = '#tv'; });
+    // Both clicking and scanning the QR open score entry.
+    $('qr-link').addEventListener('click', event => { event.preventDefault(); state.accountSignIn = false; location.hash = '#play'; });
     await ArcadeQR.toCanvas($('qr-code'), submitUrl.toString(), { width: 240, margin: 1, errorCorrectionLevel: 'M', color: { dark: '#071418', light: '#ffffff' } });
     await refreshBoard();
     renderAdminGameOptions();
