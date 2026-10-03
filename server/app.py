@@ -133,6 +133,8 @@ def create_app(config=None, *, allow_demo=False):
           CREATE TABLE IF NOT EXISTS activity (id INTEGER PRIMARY KEY AUTOINCREMENT, score_id TEXT NOT NULL UNIQUE REFERENCES scores(id), previous_sub TEXT, previous_initials TEXT, previous_value INTEGER, is_record INTEGER NOT NULL);
           CREATE TABLE IF NOT EXISTS marquee_audit (id INTEGER PRIMARY KEY, game_id TEXT NOT NULL, actor TEXT NOT NULL, previous_id TEXT, next_id TEXT, created_at INTEGER NOT NULL);
           CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+          CREATE TABLE IF NOT EXISTS arcade_sessions (token_hash TEXT PRIMARY KEY, identity_json TEXT NOT NULL, expires_at INTEGER NOT NULL);
+          CREATE INDEX IF NOT EXISTS arcade_sessions_expiry ON arcade_sessions(expires_at);
         ''')
         if 'taunt' not in {row[1] for row in db.execute('PRAGMA table_info(scores)')}:
             db.execute("ALTER TABLE scores ADD COLUMN taunt TEXT NOT NULL DEFAULT ''")
@@ -199,7 +201,8 @@ def create_app(config=None, *, allow_demo=False):
             response.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
             response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, PATCH, DELETE, OPTIONS'
         if request.path.startswith('/api/'):
-            response.headers['Cache-Control'] = 'no-store'
+            public_art = request.path.startswith(('/api/marquees/', '/api/cabinet-photos/'))
+            response.headers['Cache-Control'] = 'public, max-age=31536000, immutable' if public_art and response.status_code in (200, 304) else 'no-store'
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['Referrer-Policy'] = 'no-referrer'
         response.headers['Cross-Origin-Opener-Policy'] = 'same-origin-allow-popups'
@@ -225,7 +228,15 @@ def create_app(config=None, *, allow_demo=False):
                     abort(401, 'Sign in with Google to continue.')
                 token = auth[7:]
                 try:
-                    if app.config['DEMO'] and token in demo_tokens:
+                    if token.startswith('arcade_'):
+                        # Arcade device sessions do not grant access to other hosted apps.
+                        if request.path.startswith('/api/movie-ladder/'):
+                            abort(401, 'Sign in to Movie Ladder separately.')
+                        saved = get_db().execute('SELECT identity_json,expires_at FROM arcade_sessions WHERE token_hash=?', (hashlib.sha256(token.encode()).hexdigest(),)).fetchone()
+                        if not saved or saved['expires_at'] <= time.time():
+                            raise ValueError('Expired session')
+                        who = json.loads(saved['identity_json'])
+                    elif app.config['DEMO'] and token in demo_tokens:
                         who = demo_tokens[token]
                         if who['exp'] <= time.time():
                             raise ValueError('Expired')
@@ -239,6 +250,7 @@ def create_app(config=None, *, allow_demo=False):
                     abort(503, 'Google sign-in verification is temporarily unavailable. Please try again.')
                 except (ValueError, KeyError, GoogleAuthError):
                     abort(401, 'Your sign-in has expired or could not be verified. Please sign in again.')
+                g.verified_identity = who
                 authoritative_email = who['email'].lower().endswith('@gmail.com') or bool(who.get('hd'))
                 g.user = {'sub': who['sub'], 'email': who['email'].lower(), 'admin': authoritative_email and who['email'].lower() in app.config['ADMIN_EMAILS']}
                 if admin and not g.user['admin']:
@@ -329,6 +341,30 @@ def create_app(config=None, *, allow_demo=False):
             assigned = [dict(c) for c in db.execute('SELECT c.id,c.name,c.code,c.photo_id AS photoId FROM cabinets c JOIN cabinet_games cg ON cg.cabinet_id=c.id WHERE cg.game_id=? ORDER BY c.name COLLATE NOCASE', (game['id'],))]
             output.append({k: game[k] for k in ['id', 'title', 'image', 'kind', 'order', 'eligible', 'marqueeId', 'showOnLeaderboard']} | {'record': record, 'cabinets': assigned})
         return jsonify(games=output, updatedAt=int(time.time()), displaySettings=display_settings())
+
+    @app.post('/api/session')
+    @authenticated()
+    def create_device_session():
+        if request.headers.get('Authorization', '').startswith('Bearer arcade_'):
+            abort(400, 'Sign in with Google to start a new session.')
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict) or type(payload.get('remember')) is not bool:
+            raise ValueError('Choose whether to remember this device.')
+        token = 'arcade_' + secrets.token_urlsafe(32)
+        expires = int(time.time()) + (30 * 86400 if payload['remember'] else 86400)
+        identity = {key: g.verified_identity[key] for key in ('sub', 'email', 'email_verified', 'hd') if key in g.verified_identity}
+        with get_db() as db:
+            db.execute('DELETE FROM arcade_sessions WHERE expires_at<=?', (int(time.time()),))
+            db.execute('INSERT INTO arcade_sessions VALUES (?,?,?)', (hashlib.sha256(token.encode()).hexdigest(), json.dumps(identity), expires))
+        return jsonify(token=token, expiresAt=expires, user=g.user)
+
+    @app.delete('/api/session')
+    @authenticated()
+    def revoke_device_session():
+        token = request.headers['Authorization'][7:]
+        with get_db() as db:
+            db.execute('DELETE FROM arcade_sessions WHERE token_hash=?', (hashlib.sha256(token.encode()).hexdigest(),))
+        return jsonify(ok=True)
 
     @app.get('/api/session')
     @authenticated()

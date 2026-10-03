@@ -21,7 +21,7 @@ async function api(path, options = {}) {
       let message = 'The arcade could not save that change. Please try again.';
       try { message = (await response.json()).error || message; } catch (_) { /* Use the readable fallback. */ }
       if (response.status === 401) signOut(false);
-      throw new Error(message);
+      const error = new Error(message); error.status = response.status; throw error;
     }
     return options.blob ? response.blob() : response.json();
   } catch (error) {
@@ -53,7 +53,7 @@ function renderBoard() {
     return;
   }
   state.featured = game.id; renderFeaturedCabinets(game);
-  $('hero-marquee').src = artworkUrl(game);
+  if ($('hero-marquee').getAttribute('src') !== artworkUrl(game)) $('hero-marquee').src = artworkUrl(game);
   $('hero-marquee').alt = `${game.title} marquee`;
   $('hero-title').textContent = game.title;
   $('record-label').textContent = !game.record ? 'SET THE FIRST RECORD' : game.kind === 'time' ? 'TIME TO BEAT' : 'RECORD TO BEAT';
@@ -66,6 +66,9 @@ function renderBoard() {
   const index = state.boardGames.indexOf(game);
   const preferred = game.id === 'galaga' ? ['donkeykong', 'mspacman', 'tetris'].map(id => state.boardGames.find(other => other.id === id)).filter(Boolean) : [];
   const around = [...preferred, ...[1, 2, 3].map(offset => state.boardGames[(index + offset) % state.boardGames.length])].filter((other, i, games) => other && other.id !== game.id && games.findIndex(entry => entry?.id === other.id) === i).slice(0, 3);
+  const aroundSignature=JSON.stringify(around.map(other=>[other.id,other.title,artworkUrl(other),other.record?.score,other.record?.initials]));
+  if ($('around-list').dataset.rendered !== aroundSignature) {
+  $('around-list').dataset.rendered=aroundSignature;
   $('around-list').replaceChildren(...around.filter(Boolean).map(other => {
     const button = node('button', 'around-row');
     button.setAttribute('aria-label', `Feature ${other.title}, ${scoreText(other)}, ${initialsText(other)}`);
@@ -73,6 +76,8 @@ function renderBoard() {
     const info = node('div'); info.append(node('strong', scoreText(other).length > 8 ? 'long' : '', other.record ? scoreText(other) : 'OPEN RECORD'), node('span', '', other.record ? initialsText(other) : 'Be the first'));
     button.append(image, info); button.addEventListener('click', () => feature(other.id)); return button;
   }));
+  }
+  warmArtwork(around.map(artworkUrl));
   const positions = Array.from({ length: Math.min(5, state.boardGames.length) }, (_, offset) => (index + offset) % state.boardGames.length);
   $('page-dots').replaceChildren(...positions.map((position, offset) => {
     const dot = node('button', `page-dot${offset === 0 ? ' active' : ''}`);
@@ -161,19 +166,27 @@ function applySavedTaunt() {
   $('taunt-input').value = state.automaticTaunt ? state.account.defaultTaunt : '';
   state.requestId = crypto.randomUUID();
 }
-async function signIn(token, { goToBoard = state.accountSignIn || location.hash !== '#play' } = {}) {
+async function signIn(token, { goToBoard = state.accountSignIn || location.hash !== '#play', restore = false } = {}) {
   state.token = token;
-  state.user = await api('/session');
+  if (!restore && !state.config?.demo) {
+    const session = await api('/session', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({remember:$('remember-device').checked})});
+    state.token = session.token; state.user = session.user;
+    try { localStorage.removeItem('arcade_session');sessionStorage.removeItem('arcade_session');($('remember-device').checked ? localStorage : sessionStorage).setItem('arcade_session',state.token); } catch (_) { try { sessionStorage.setItem('arcade_session',state.token); } catch (_) {} }
+  } else { state.user = await api('/session'); if (!restore) try { sessionStorage.setItem('arcade_session',token); } catch (_) {} }
   state.accountSignIn = false;
-  try { sessionStorage.setItem('arcade_session', token); } catch (_) { /* Private browsing can disable browser storage. */ }
   renderSession(); setMessage(); await refreshAccount(); applySavedTaunt();
   if (!state.initials && state.account?.initials) { state.initials = state.account.initials; renderInitials(); }
   if (goToBoard) { $('account-dialog').close(); location.hash = '#tv'; route(); }
 }
-function signOut(announce = true) {
+async function signOut(announce = true) {
+  if (announce && state.token?.startsWith('arcade_')) {
+    try { await api('/session', {method:'DELETE'}); }
+    catch (error) { if (error.status !== 401) { setMessage('Could not sign out on the server. Check your connection and try again.',true);$('account-message').textContent='Could not sign out. Check your connection and try again.';return; } }
+  }
   $('taunt-input').value = ''; state.automaticTaunt = false;
   state.user = null; state.token = ''; state.account = null; $('account-dialog').close(); $('unread-count').hidden = true; $('tv-unread-count').hidden = true; $('menu-unread-count').hidden = true; $('display-menu-toggle').setAttribute('aria-label', 'Scoreboard menu'); $('activity-list').replaceChildren(); $('my-scores-list').replaceChildren();
-  try { sessionStorage.removeItem('arcade_session'); } catch (_) { /* Optional storage. */ }
+  try { sessionStorage.removeItem('arcade_session'); } catch (_) {}
+  try { localStorage.removeItem('arcade_session'); } catch (_) {}
   window.google?.accounts.id.disableAutoSelect(); renderSession();
   if (announce) setMessage('Signed out. Your unfinished entry stays on this screen.');
 }
@@ -663,7 +676,10 @@ async function init() {
     await refreshBoard();
     renderAdminGameOptions();
     loadGoogle();
-    try { const token = sessionStorage.getItem('arcade_session'); if (token) await signIn(token, { goToBoard: false }); } catch (_) { signOut(false); }
+    let savedToken='';
+    try { savedToken=localStorage.getItem('arcade_session')||''; } catch (_) {}
+    if(!savedToken)try { savedToken=sessionStorage.getItem('arcade_session')||''; } catch (_) {}
+    if(savedToken)try { await signIn(savedToken,{goToBoard:false,restore:true}); } catch(error) { if(error.status===401)signOut(false);else {state.token='';state.user=null;setMessage('Your saved sign-in could not be checked. Please reload when the connection returns.',true);} }
     renderSession(); route();
   } catch (error) { $('connection').hidden = false; $('connection').textContent = error.message; $('login-help').textContent = 'The score service must be connected before sign-in is available.'; }
 }
@@ -877,3 +893,10 @@ $('game-name-form').addEventListener('submit',async event=>{
   }catch(error){$('game-name-message').textContent=error.message;}
   finally{$('save-game-name').disabled=false;$('cancel-game-name').disabled=false;}
 });
+
+window.addEventListener('storage',event=>{if(event.key==='arcade_session'&&!event.newValue&&state.user){try{if(!localStorage.getItem('arcade_session'))signOut(false);}catch(_){}}});
+
+const artworkWarmCache=new Map();
+function warmArtwork(urls){
+  for(const url of urls){if(artworkWarmCache.has(url))continue;const image=new Image();image.src=url;artworkWarmCache.set(url,image);if(artworkWarmCache.size>100)artworkWarmCache.delete(artworkWarmCache.keys().next().value);}
+}
