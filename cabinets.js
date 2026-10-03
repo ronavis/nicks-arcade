@@ -56,7 +56,7 @@ $('cabinet-form').addEventListener('submit',async event=>{
   try{
     if(cabinetCropLoading)throw new Error('Please wait for the photo preview to load.');
     if(file&&file.size>40*1024*1024)throw new Error('Choose a photo under 40 MB.');
-    if(file&&cabinetCropImage)file=await croppedCabinetFile();
+    if(file&&cabinetCropImage&&$('cabinet-crop-enabled').checked)file=await croppedCabinetFile();
     const r=await api(`/admin/cabinets${editingCabinet?'/'+encodeURIComponent(editingCabinet.id):''}`,cabinetJSON(editingCabinet?'PATCH':'POST',{name:$('cabinet-name').value,revision:editingCabinet?.revision}));
     cabinets=r.cabinets;selectedCabinet=r.id;$('cabinet-search').value='';editingCabinet={...cabinets.find(c=>c.id===r.id)};
     if(file){
@@ -180,10 +180,8 @@ function renderFeaturedCabinets(game) {
   const row=node('div','cabinet-strip-row');
   for(const c of assigned.slice(0,4)){
     const button=cabinetButton('',()=>openWhereToPlay(game),'featured-cabinet');
-    const im=cabinetImage(c);im.loading='eager';if(c.photoId)im.style.objectFit='contain';
+    const im=cabinetImage(c);im.loading='eager';
     const crop=node('div','cabinet-crop');crop.dataset.cabinet=c.code||'';
-    const framing=!c.photoId&&window.ARCADE_CABINET_ART?.[c.code]?.crop;
-    if(framing){crop.style.setProperty('--cabinet-fit',framing.fit);crop.style.setProperty('--cabinet-scale',framing.scale);crop.style.setProperty('--cabinet-origin-y',`${framing.originY}%`);}
     crop.append(im);button.append(crop,node('span','',c.name.replace(/ Cabinet$/,'')));
     button.setAttribute('aria-label',`Find ${game.title} on ${c.name}`);row.append(button);
   }
@@ -205,7 +203,7 @@ let cabinetCrop={zoom:1,x:50,y:50}, cabinetCropDrag=null;
 function resetCabinetCrop(){
   ++cabinetCropVersion;cabinetCropLoading=false;cabinetCropImage=null;cabinetCropDrag=null;
   if(cabinetCropURL)URL.revokeObjectURL(cabinetCropURL);cabinetCropURL=null;
-  cabinetCrop={zoom:1,x:50,y:50};$('cabinet-crop-editor').hidden=true;
+  cabinetCrop={zoom:1,x:50,y:50};$('cabinet-crop-enabled').checked=false;$('cabinet-crop-editor').hidden=true;
 }
 function cabinetCropRect(width,height,zoom,x,y){
   const ratio=5/4,baseWidth=Math.min(width,height*ratio),w=baseWidth/zoom,h=w/ratio;
@@ -213,11 +211,14 @@ function cabinetCropRect(width,height,zoom,x,y){
 }
 function drawCabinetCrop(){
   if(!cabinetCropImage)return;
-  for(const key of ['zoom','x','y'])$('cabinet-crop-'+key).value=cabinetCrop[key];
+  const cropping=$('cabinet-crop-enabled').checked;
+  for(const key of ['zoom','x','y']){$('cabinet-crop-'+key).value=cabinetCrop[key];$('cabinet-crop-'+key).disabled=!cropping;}
+  $('cabinet-crop-reset').disabled=!cropping;
   const canvas=$('cabinet-crop-preview'),ctx=canvas.getContext('2d');
   const r=cabinetCropRect(cabinetCropImage.naturalWidth,cabinetCropImage.naturalHeight,cabinetCrop.zoom,cabinetCrop.x,cabinetCrop.y);
   ctx.fillStyle='#fffbed';ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.drawImage(cabinetCropImage,r.x,r.y,r.w,r.h,0,0,canvas.width,canvas.height);
+  if(cropping)ctx.drawImage(cabinetCropImage,r.x,r.y,r.w,r.h,0,0,canvas.width,canvas.height);
+  else {const scale=Math.min(canvas.width/cabinetCropImage.naturalWidth,canvas.height/cabinetCropImage.naturalHeight);const w=cabinetCropImage.naturalWidth*scale,h=cabinetCropImage.naturalHeight*scale;ctx.drawImage(cabinetCropImage,(canvas.width-w)/2,canvas.height-h,w,h);}
 }
 $('cabinet-file').addEventListener('change',async()=>{
   resetCabinetCrop();const file=$('cabinet-file').files[0];if(!file)return;
@@ -229,14 +230,14 @@ $('cabinet-file').addEventListener('change',async()=>{
     await image.decode();if(version!==cabinetCropVersion)return;
     if(image.naturalWidth*image.naturalHeight>64000000)throw new Error('size');
     cabinetCropImage=image;$('cabinet-crop-editor').hidden=false;drawCabinetCrop();
-    $('cabinet-editor-message').textContent='Move the photo or use the sliders. Save cabinet applies this crop.';
+    $('cabinet-editor-message').textContent='The whole photo will be saved. Enable cropping only if you want to trim it.';
   }catch(error){if(version===cabinetCropVersion)$('cabinet-editor-message').textContent=error.message==='size'?'Choose a photo under 64 megapixels.':'This browser cannot preview this photo format. You can still save the original photo, including iPhone HEIC, without a crop.';}
   finally{if(version===cabinetCropVersion)cabinetCropLoading=false;}
 });
 for(const key of ['zoom','x','y'])$('cabinet-crop-'+key).addEventListener('input',()=>{cabinetCrop[key]=Number($('cabinet-crop-'+key).value);drawCabinetCrop();});
 $('cabinet-crop-reset').addEventListener('click',()=>{cabinetCrop={zoom:1,x:50,y:50};drawCabinetCrop();});
 $('cabinet-crop-preview').addEventListener('pointerdown',event=>{
-  if(!cabinetCropImage)return;event.preventDefault();event.currentTarget.setPointerCapture(event.pointerId);
+  if(!cabinetCropImage||!$('cabinet-crop-enabled').checked)return;event.preventDefault();event.currentTarget.setPointerCapture(event.pointerId);
   cabinetCropDrag={pointer:event.pointerId,x:event.clientX,y:event.clientY,start:{...cabinetCrop}};
 });
 $('cabinet-crop-preview').addEventListener('pointermove',event=>{
@@ -255,3 +256,5 @@ async function croppedCabinetFile(){
   if(!blob)throw new Error('The cropped photo could not be prepared. Please choose the photo again.');
   return new File([blob],'cabinet-crop.jpg',{type:'image/jpeg'});
 }
+
+$('cabinet-crop-enabled').addEventListener('change',drawCabinetCrop);
