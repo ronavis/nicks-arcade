@@ -250,3 +250,25 @@
 #arcade-settings-disclosure[open]>summary i{transform:rotate(180deg)}
 #leaderboard-order{margin-bottom:6px}
 @media(max-width:400px){#account-dialog{padding:18px}#account-dialog .account-tabs button{font-size:21px}#account-dialog .account-management-link,#arcade-settings-disclosure>summary{font-size:24px}}
+
+/* Marquee library: games first, focused editing in a separate dialog. */
+#games-dialog{width:700px;padding:24px}#games-dialog .dialog-heading h2{font-size:32px}
+.games-tabs{display:flex;gap:6px;border-bottom:2px solid var(--cyan);margin:22px 0}
+.games-tabs button{font:26px/1.1 var(--display);min-height:48px;padding:12px 20px;border-radius:6px 6px 0 0}
+.games-tabs [aria-pressed=true],.games-filters [aria-pressed=true]{background:var(--cyan)}
+.games-toolbar{display:flex;gap:16px;align-items:center}.games-toolbar input{flex:1;min-width:0}.games-toolbar button{font:23px/1.1 var(--display);min-height:46px;flex-shrink:0}
+.games-filters{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 12px}.games-filters button{font:22px/1.1 var(--display);min-height:44px;padding:10px 14px}
+#arcade-games-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+#games-dialog .arcade-game-card{display:flex;flex-direction:column;align-items:stretch;gap:10px;padding:12px;background:transparent;min-width:0}
+#games-dialog .arcade-game-card img{width:100%;height:auto;aspect-ratio:2.8;object-fit:contain;flex:none}
+#games-dialog .arcade-game-info{display:flex;flex-direction:column;flex:1}
+#games-dialog .arcade-game-card h3{font:25px/1.05 var(--display);min-height:1.05em;margin:0 0 4px}
+#games-dialog .arcade-game-card .admin-removed-toggle{font-size:14px;margin:10px 0 0;gap:8px}
+#games-dialog .arcade-game-card .game-edit-button{font:24px/1.1 var(--display);width:100%;min-height:44px;background:transparent}
+.games-footnote{border-top:1px solid var(--line);margin:22px 0 0;padding-top:16px;text-align:center}
+#games-feedback:empty{display:none}#games-dialog .catalog-browser{margin-top:0}#games-dialog .admin-empty{grid-column:1/-1}
+#game-detail-dialog{width:520px;padding:24px}#game-detail-dialog h2{font-size:30px}.game-detail-art{width:100%;height:140px;object-fit:contain;background:var(--ink);border-radius:6px}
+#game-detail-dialog .arcade-game-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:20px}
+#game-detail-dialog .arcade-game-actions button{font:24px/1.1 var(--display);min-height:48px}
+@media(max-width:480px){#games-dialog{padding:16px}.games-toolbar{flex-wrap:wrap;gap:12px}.games-toolbar input{flex-basis:100%}.games-tabs button{flex:1;font-size:24px;padding:12px 8px}#arcade-games-list{gap:10px}#games-dialog .arcade-game-card{padding:9px}#games-dialog .arcade-game-card h3{font-size:22px}#games-dialog .arcade-game-card .admin-removed-toggle{font-size:12px;gap:5px;align-items:center}.games-filters button{font-size:20px;padding:8px 10px}#game-detail-dialog{padding:18px}}
+@media(max-width:340px){#arcade-games-list{grid-template-columns:1fr}}
