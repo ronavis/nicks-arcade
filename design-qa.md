@@ -63,3 +63,14 @@ Browser interactions: record/all-submission tabs, search, show-removed, edit-and
 No actionable P0/P1/P2 findings remain. Follow-up: optional pagination beyond the existing latest-200 submission window is outside this visual redesign.
 
 final result: passed
+
+# Public game profile timeline — October 3, 2026
+
+Reference: user Crystal Castles profile screenshot `/var/folders/xx/6tpmrqn15mb5zhg76493sgpm0000gn/T/codex-clipboard-cb86e17d-9863-4c78-ad1b-671155df306a.png` and the selected Manage Scores timeline implemented above.
+Captures: `docs/screenshots/game-profile-timeline.jpg` at 760×1180 and `docs/screenshots/game-profile-phone.jpg` at 390×844, density 1. State: local Crystal Castles public profile with imported record and Centipede Cabinet assignment.
+
+Full view and focused timeline/cabinet review passed: cream/cyan/ink colors, Jersey headings and ScoreDots scores match the adopted design; artwork and cabinet photos retain contain sizing; timeline labels precede scores and dates. Duplicate current-record summary hidden only when the same uncorrected record is already present. Corrected current value and empty-game summary remain visible. Phone layout has no horizontal overflow or clipped controls. Public metadata contains no email or administrator actions.
+
+Browser checks: ordinary imported record, corrected record (separate current summary), empty game, open/close and both screen sizes passed. Console: zero errors/warnings. All 23 frontend tests pass, including exact duplicate detection and correction/empty-history cases. No backend changes or live data mutations.
+
+final result: passed

@@ -291,3 +291,17 @@
 .submission-actions{display:flex;gap:10px;margin:20px 0 10px}.submission-actions button{flex:1;font:25px/1.1 var(--display);min-height:48px}.submission-actions .danger{border-color:#c8958b}
 #submission-message:empty{display:none}
 @media(max-width:500px){.score-tabs{gap:6px}.score-tabs button{font-size:23px;padding:12px 6px}.admin-game-summary{flex-direction:row;gap:12px;padding:12px}.admin-game-summary img{width:42%;height:70px}.admin-game-summary h2{font-size:26px}.admin-game-summary p{font-size:12px}.record-history-score,.submission-score{font-size:28px}#record-history-list{padding-left:20px}.record-history-item::before{left:-28px}#submission-dialog{padding:18px}}
+
+/* Public game profiles share the record timeline without management controls. */
+#where-to-play-dialog{padding:24px}#where-to-play-heading{font-size:30px;line-height:1.1}
+#where-to-play-dialog h3{font-size:26px;margin:24px 0 12px}
+#game-overview-history{list-style:none;margin:22px 0 0 8px;padding:0 0 0 24px;border-left:2px solid var(--cyan)}
+.game-history-item{position:relative;display:flex;align-items:flex-start;gap:7px;padding:0 0 24px;border:0}
+.game-history-item:last-child{padding-bottom:4px}
+.game-history-item::before{content:'';position:absolute;left:-32px;top:2px;width:12px;height:12px;border:2px solid var(--cyan);border-radius:50%;background:var(--cream)}
+.game-history-item.current::before{background:var(--cyan)}
+.game-history-score{font:400 30px/1.25 var(--score);font-variation-settings:"ELSH" 0,"ELXP" 0,"CRSV" 0;overflow-wrap:anywhere;max-width:100%;margin:3px 0}
+.game-history-item time,.game-history-item p{font-size:14px;line-height:1.5;color:#516263;margin:0}
+.game-profile-cabinets{border-top:1px solid var(--line);margin-top:24px}
+#where-to-play-dialog .where-cabinet:last-child{border-bottom:0}
+@media(max-width:420px){#where-to-play-dialog{padding:18px}#where-to-play-heading{font-size:28px}.game-history-score{font-size:27px}.where-cabinet{gap:14px;padding:10px 0}.where-cabinet img{width:88px;height:115px}}
