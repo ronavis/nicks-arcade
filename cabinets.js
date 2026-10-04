@@ -194,6 +194,7 @@ async function openWhereToPlay(game) {
   const request=++gameOverviewRequest;
   $('where-to-play-heading').textContent=game.title;
   $('game-overview-art').src=artworkUrl(game);$('game-overview-art').alt=`${game.title} marquee`;
+  $('game-overview-record').hidden=false;
   $('game-overview-current').textContent='Loading current record…';
   $('game-overview-history').replaceChildren();$('game-overview-message').textContent='Loading record history…';
   $('where-to-play-list').replaceChildren(...(game.cabinets||[]).map(c=>{
@@ -206,19 +207,22 @@ async function openWhereToPlay(game) {
     if(request!==gameOverviewRequest||!$('where-to-play-dialog').open)return;
     $('where-to-play-heading').textContent=result.game.title;
     const current=result.currentRecord;
+    $('game-overview-record').hidden=currentRecordInHistory(current,result.recordHistory);
     $('game-overview-current').textContent=current?`${current.score} · ${current.initials}`:'Be the first to set a record';
-    $('game-overview-message').textContent=result.hasMore?'Showing the latest 100 record milestones.':result.recordHistory.length?'Record-setting submissions, newest first. Removed entries are not shown.':'No recorded milestones yet. Set the first record!';
+    $('game-overview-message').textContent=result.hasMore?'Showing the latest 100 record milestones.':result.recordHistory.length?'Record milestones, newest first.':'No recorded milestones yet. Set the first record!';
     $('game-overview-history').replaceChildren(...result.recordHistory.map(entry=>{
       const item=node('li','game-history-item');
+      const isCurrent=entry.id===current?.id&&!entry.corrected;
+      item.classList.toggle('current',isCurrent);
+      item.append(node('span','admin-score-status',isCurrent?'Current record':entry.imported?'Imported starting record':'Previous record'));
       item.append(node('strong','game-history-score',`${entry.score} · ${entry.initials}`));
-      const date=node('time','small',entry.createdAt?new Date(entry.createdAt*1000).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'}):'Imported arcade record · original date unknown');
+      const date=node('time','small',entry.createdAt?new Date(entry.createdAt*1000).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'}):'Original date not recorded');
       if(entry.createdAt)date.dateTime=new Date(entry.createdAt*1000).toISOString();
       item.append(date);
-      if(entry.id===current?.id&&!entry.corrected)item.append(node('span','admin-score-status','Current record'));
       if(entry.corrected)item.append(node('p','small','Original record as submitted; later corrected by an admin.'));
       return item;
     }));
-  }catch(error){if(request===gameOverviewRequest){$('game-overview-current').textContent='Record unavailable';$('game-overview-message').textContent='Could not load history. Close and reopen this game to try again.';}}
+  }catch(error){if(request===gameOverviewRequest){$('game-overview-record').hidden=false;$('game-overview-current').textContent='Record unavailable';$('game-overview-message').textContent='Could not load history. Close and reopen this game to try again.';}}
 }
 $('where-to-play-dialog').addEventListener('close',()=>{++gameOverviewRequest;});
 $('hero-title').setAttribute('role','button');$('hero-title').tabIndex=0;
@@ -312,3 +316,7 @@ $('confirm-remove-cabinet').addEventListener('click',async()=>{
   }catch(error){$('remove-cabinet-message').textContent=error.message;}
   finally{button.disabled=false;$('cancel-remove-cabinet').disabled=false;}
 });
+
+function currentRecordInHistory(current, history) {
+  return Boolean(current && history.some(entry => entry.id === current.id && !entry.corrected && entry.score === current.score && entry.initials === current.initials));
+}
