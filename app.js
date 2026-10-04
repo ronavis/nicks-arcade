@@ -384,6 +384,13 @@ function showNextCelebration() {
   $('celebration-score').textContent = record.score;
   $('celebration-score').classList.toggle('long', record.score.length > 9);
   $('celebration-initials').textContent = record.initials; renderImprovement('celebration-improvement', record);
+  $('celebration-status').textContent = 'New record';
+  $('celebration-date').textContent = ArcadeCelebrations.recordAge(record);
+  const previous = game.previousRecord;
+  $('celebration-previous').hidden = !previous;
+  $('celebration-previous-score').textContent = previous ? `${previous.score} · ${previous.initials}` : '';
+  $('celebration-previous-date').textContent = previous ? ArcadeCelebrations.recordAge(previous) : '';
+  renderFeaturedCabinets(game, 'celebration-cabinets');
   $('celebration-taunt').textContent = record.taunt || ''; $('celebration-taunt').hidden = !record.taunt;
   $('record-celebration').hidden = false;
   celebrationTimer = setTimeout(() => closeCelebration(), 10000);
