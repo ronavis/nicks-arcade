@@ -1,5 +1,7 @@
 """Nick's Arcade: Google-verified submissions, durable SQLite records and proof photos."""
+import csv
 import hashlib
+import io
 import unicodedata
 import json
 import os
@@ -70,6 +72,7 @@ def create_app(config=None, *, allow_demo=False):
         DATA_DIR=os.environ.get('ARCADE_DATA_DIR'),
         GOOGLE_CLIENT_ID=os.environ.get('GOOGLE_CLIENT_ID', CLIENT_ID),
         ADMIN_EMAILS={x.strip().lower() for x in os.environ.get('ARCADE_ADMIN_EMAILS', 'ronavis@gmail.com').split(',') if x.strip()},
+        MOVIE_LADDER_ADMIN_EMAILS={x.strip().lower() for x in os.environ.get('MOVIE_LADDER_ADMIN_EMAILS', 'ronavis@gmail.com').split(',') if x.strip()},
         ALLOWED_ORIGINS={x.strip().rstrip('/') for x in os.environ.get('ARCADE_ALLOWED_ORIGINS', 'https://ronavis.github.io').split(',') if x.strip()},
         PUBLIC_URL=os.environ.get('ARCADE_PUBLIC_URL', 'https://ronavis.github.io/nicks-arcade/'),
         MAX_CONTENT_LENGTH=41 * 1024 * 1024,
@@ -135,6 +138,38 @@ def create_app(config=None, *, allow_demo=False):
           CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);
           CREATE TABLE IF NOT EXISTS arcade_sessions (token_hash TEXT PRIMARY KEY, identity_json TEXT NOT NULL, expires_at INTEGER NOT NULL);
           CREATE INDEX IF NOT EXISTS arcade_sessions_expiry ON arcade_sessions(expires_at);
+          CREATE TABLE IF NOT EXISTS movie_ladder_runs (
+            id TEXT PRIMARY KEY,
+            user_sub TEXT NOT NULL,
+            user_email TEXT NOT NULL,
+            score INTEGER NOT NULL CHECK(score>=0),
+            rung_reached INTEGER NOT NULL CHECK(rung_reached BETWEEN 1 AND 10),
+            completed INTEGER NOT NULL CHECK(completed IN (0,1)),
+            rank TEXT NOT NULL,
+            lives_remaining INTEGER NOT NULL CHECK(lives_remaining BETWEEN 0 AND 3),
+            correct_count INTEGER NOT NULL CHECK(correct_count BETWEEN 0 AND 10),
+            wrong_count INTEGER NOT NULL CHECK(wrong_count BETWEEN 0 AND 10),
+            max_streak INTEGER NOT NULL CHECK(max_streak BETWEEN 0 AND 10),
+            created_at INTEGER NOT NULL
+          );
+          CREATE INDEX IF NOT EXISTS movie_ladder_runs_user
+            ON movie_ladder_runs(user_sub, created_at DESC);
+          CREATE TABLE IF NOT EXISTS movie_ladder_question_events (
+            id TEXT PRIMARY KEY,
+            run_id TEXT NOT NULL,
+            question_id TEXT NOT NULL,
+            rung INTEGER NOT NULL CHECK(rung BETWEEN 1 AND 10),
+            answer_type TEXT NOT NULL,
+            question_text TEXT NOT NULL,
+            answers_json TEXT NOT NULL,
+            selected_json TEXT NOT NULL,
+            correct_json TEXT NOT NULL,
+            is_correct INTEGER NOT NULL CHECK(is_correct IN (0,1)),
+            created_at INTEGER NOT NULL,
+            UNIQUE(run_id, question_id)
+          );
+          CREATE INDEX IF NOT EXISTS movie_ladder_question_events_question
+            ON movie_ladder_question_events(question_id, created_at DESC);
         ''')
         if 'taunt' not in {row[1] for row in db.execute('PRAGMA table_info(scores)')}:
             db.execute("ALTER TABLE scores ADD COLUMN taunt TEXT NOT NULL DEFAULT ''")
@@ -297,6 +332,730 @@ def create_app(config=None, *, allow_demo=False):
         bypass = get_db().execute("SELECT value FROM metadata WHERE key='bypass_games_restriction'").fetchone()
         order = get_db().execute("SELECT value FROM metadata WHERE key='leaderboard_order'").fetchone()
         return {'leaderboardOrder': order['value'] if order else 'alphabetical', 'rotationSeconds': int(row['value']) if row else 15, 'bypassGamesRestriction': bool(bypass and bypass['value'] == '1')}
+
+    def movie_ladder_admin_required():
+        if g.user['email'] not in app.config['MOVIE_LADDER_ADMIN_EMAILS']:
+            abort(403, 'Only the Movie Ladder administrator can manage Movie Ladder settings.')
+
+    def metadata_value(key):
+        row = get_db().execute('SELECT value FROM metadata WHERE key=?', (key,)).fetchone()
+        return row['value'] if row else None
+
+    def set_metadata_value(key, value):
+        get_db().execute(
+            'INSERT INTO metadata(key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value',
+            (key, str(value)),
+        )
+
+    def delete_metadata_values(*keys):
+        if not keys:
+            return
+        placeholders = ','.join('?' for _ in keys)
+        get_db().execute(f'DELETE FROM metadata WHERE key IN ({placeholders})', keys)
+
+    def movie_ladder_custom_questions():
+        raw = metadata_value('movie_ladder_custom_questions')
+        if not raw:
+            return []
+        try:
+            questions = json.loads(raw)
+        except (TypeError, ValueError):
+            return []
+        return questions if isinstance(questions, list) else []
+
+    def movie_ladder_csv_cell(row, key, *, limit=500):
+        value = ' '.join(str(row.get(key, '') or '').strip().split())
+        if len(value) > limit:
+            raise ValueError(f'{key} is too long.')
+        return value
+
+    def movie_ladder_csv_year(row, key):
+        value = movie_ladder_csv_cell(row, key, limit=4)
+        if not value:
+            return None
+        if not re.fullmatch(r'\d{4}', value):
+            raise ValueError(f'{key} must be a four-digit year.')
+        return int(value)
+
+    def parse_movie_ladder_csv(csv_text):
+        if not isinstance(csv_text, str):
+            raise ValueError('Choose a CSV file to import.')
+        if len(csv_text.encode('utf-8')) > 1_000_000:
+            raise ValueError('Keep Movie Ladder CSV imports under 1 MB.')
+
+        csv_text = csv_text.lstrip('\ufeff')
+        reader = csv.DictReader(io.StringIO(csv_text))
+        if not reader.fieldnames:
+            raise ValueError('The CSV needs a header row.')
+
+        normalized_headers = [str(name or '').strip().lower() for name in reader.fieldnames]
+        required = {'rung', 'question', 'answer_type', 'answer1', 'answer2', 'answer3', 'answer4', 'correct'}
+        missing = sorted(required - set(normalized_headers))
+        if missing:
+            raise ValueError('Missing CSV column(s): ' + ', '.join(missing))
+
+        difficulties = {
+            1: 'Warm-up',
+            2: 'Warm-up',
+            3: 'Easy',
+            4: 'Movie buff',
+            5: 'Movie buff',
+            6: 'Movie buff',
+            7: 'Film nerd',
+            8: 'Film nerd',
+            9: 'Deep cut',
+            10: 'Cinemaster',
+        }
+
+        questions = []
+        seen_ids = set()
+
+        for row_number, original_row in enumerate(reader, start=2):
+            if row_number > 502:
+                raise ValueError('Import at most 500 questions at a time.')
+
+            row = {
+                str(key or '').strip().lower(): value
+                for key, value in original_row.items()
+                if key is not None
+            }
+
+            if not any(str(value or '').strip() for value in row.values()):
+                continue
+
+            try:
+                rung_text = movie_ladder_csv_cell(row, 'rung', limit=2)
+                if not re.fullmatch(r'(?:10|[1-9])', rung_text):
+                    raise ValueError('rung must be 1 through 10.')
+                rung = int(rung_text)
+
+                question = movie_ladder_csv_cell(row, 'question', limit=500)
+                if not question:
+                    raise ValueError('question is required.')
+
+                answer_type = movie_ladder_csv_cell(row, 'answer_type', limit=20).lower()
+                if answer_type not in {'text', 'actor', 'director', 'movie'}:
+                    raise ValueError('answer_type must be text, actor, director, or movie.')
+
+                answers = [
+                    movie_ladder_csv_cell(row, f'answer{i}', limit=240)
+                    for i in range(1, 5)
+                ]
+                if any(not answer for answer in answers):
+                    raise ValueError('answer1 through answer4 are required.')
+                if len({answer.casefold() for answer in answers}) != 4:
+                    raise ValueError('answer1 through answer4 must be different.')
+
+                correct_text = movie_ladder_csv_cell(row, 'correct', limit=1)
+                if correct_text not in {'1', '2', '3', '4'}:
+                    raise ValueError('correct must be 1, 2, 3, or 4.')
+                correct = int(correct_text) - 1
+
+                explanation = movie_ladder_csv_cell(row, 'explanation', limit=800)
+                if not explanation:
+                    explanation = f'The correct answer is {answers[correct]}.'
+
+                points_text = movie_ladder_csv_cell(row, 'points', limit=6)
+                if points_text:
+                    if not re.fullmatch(r'\d{1,6}', points_text):
+                        raise ValueError('points must be a whole number.')
+                    points = int(points_text)
+                    if not 1 <= points <= 100000:
+                        raise ValueError('points must be between 1 and 100000.')
+                else:
+                    points = rung * 100
+
+                difficulty = movie_ladder_csv_cell(row, 'difficulty', limit=60) or difficulties[rung]
+                display_title = movie_ladder_csv_cell(row, 'display_title', limit=160)
+                display_year = movie_ladder_csv_year(row, 'display_year')
+                genre = movie_ladder_csv_cell(row, 'genre', limit=100) or 'Trivia'
+                hero_movie = movie_ladder_csv_cell(row, 'hero_movie', limit=160)
+                hero_year = movie_ladder_csv_year(row, 'hero_year')
+
+                if not display_title:
+                    display_title = hero_movie or ('Movie Choices' if answer_type == 'movie' else 'Movie Trivia')
+
+                normalized = {
+                    'rung': rung,
+                    'movie': display_title,
+                    'year': display_year,
+                    'genre': genre,
+                    'source': 'CSV Import',
+                    'difficulty': difficulty,
+                    'points': points,
+                    'question': question,
+                    'answers': answers,
+                    'correct': correct,
+                    'note': explanation,
+                    'tmdb': {'title': hero_movie, 'year': hero_year} if hero_movie else None,
+                }
+
+                if answer_type == 'actor':
+                    normalized['answerPeople'] = [[answer] for answer in answers]
+                    normalized['personDepartment'] = 'Acting'
+                elif answer_type == 'director':
+                    normalized['answerPeople'] = [[answer] for answer in answers]
+                    normalized['personDepartment'] = 'Directing'
+                elif answer_type == 'movie':
+                    normalized['answerMovies'] = [
+                        {
+                            'title': answer,
+                            'year': movie_ladder_csv_year(row, f'answer{i}_year'),
+                        }
+                        for i, answer in enumerate(answers, start=1)
+                    ]
+                    normalized['tmdb'] = None
+
+                fingerprint = hashlib.sha256(
+                    json.dumps(normalized, sort_keys=True, separators=(',', ':')).encode('utf-8')
+                ).hexdigest()[:20]
+                normalized['id'] = 'csv-' + fingerprint
+
+                if normalized['id'] in seen_ids:
+                    raise ValueError('duplicate question appears more than once in this CSV.')
+                seen_ids.add(normalized['id'])
+                questions.append(normalized)
+            except ValueError as error:
+                raise ValueError(f'CSV row {row_number}: {error}') from error
+
+        if not questions:
+            raise ValueError('The CSV does not contain any question rows.')
+
+        return questions
+
+    def tmdb_headers(token=None):
+        token = (token or metadata_value('movie_ladder_tmdb_token') or '').strip()
+        if not token:
+            abort(503, 'TMDb is not configured yet.')
+        return {'Authorization': f'Bearer {token}', 'accept': 'application/json'}
+
+    def tmdb_get(path, *, params=None, token=None):
+        try:
+            response = requests.get(
+                'https://api.themoviedb.org/3' + path,
+                headers=tmdb_headers(token),
+                params=params or {},
+                timeout=10,
+            )
+        except requests.RequestException:
+            abort(503, 'TMDb is temporarily unavailable.')
+        if response.status_code in {401, 403}:
+            abort(502, 'TMDb rejected the configured credential.')
+        if response.status_code == 404:
+            abort(404, 'TMDb could not find that movie.')
+        if not response.ok:
+            abort(502, f'TMDb returned HTTP {response.status_code}.')
+        try:
+            return response.json()
+        except ValueError:
+            abort(502, 'TMDb returned an unreadable response.')
+
+    def tmdb_image(path, size):
+        if not path or not re.fullmatch(r'/[A-Za-z0-9_.-]+', str(path)):
+            return None
+        return f'https://image.tmdb.org/t/p/{size}{path}'
+
+    def movie_ladder_result_rank(rung_reached, completed):
+        if completed:
+            return 'Cinemaster'
+        if rung_reached <= 1:
+            return 'Moviegoer'
+        if rung_reached <= 3:
+            return 'Video Store Clerk'
+        if rung_reached <= 5:
+            return 'Projectionist'
+        if rung_reached <= 7:
+            return 'Film Buff'
+        return 'Movie Scholar'
+
+    def public_movie_ladder_run(row):
+        return {
+            'id': row['id'],
+            'score': row['score'],
+            'rungReached': row['rung_reached'],
+            'completed': bool(row['completed']),
+            'rank': row['rank'],
+            'livesRemaining': row['lives_remaining'],
+            'correctCount': row['correct_count'],
+            'wrongCount': row['wrong_count'],
+            'maxStreak': row['max_streak'],
+            'createdAt': row['created_at'],
+        }
+
+    @app.post('/api/movie-ladder/runs')
+    @authenticated()
+    def movie_ladder_save_run():
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict):
+            raise ValueError('Run summary is required.')
+
+        run_id = str(payload.get('id', '')).strip().lower()
+        try:
+            parsed = uuid.UUID(run_id)
+        except (ValueError, AttributeError):
+            raise ValueError('Run id must be a UUID.')
+        if str(parsed) != run_id:
+            raise ValueError('Run id must be a canonical UUID.')
+
+        def whole(name, minimum, maximum):
+            value = payload.get(name)
+            if type(value) is not int or not minimum <= value <= maximum:
+                raise ValueError(f'{name} must be between {minimum} and {maximum}.')
+            return value
+
+        score = whole('score', 0, 1_000_000)
+        rung_reached = whole('rungReached', 1, 10)
+        lives_remaining = whole('livesRemaining', 0, 3)
+        correct_count = whole('correctCount', 0, 10)
+        wrong_count = whole('wrongCount', 0, 10)
+        max_streak = whole('maxStreak', 0, 10)
+        completed = payload.get('completed')
+        if type(completed) is not bool:
+            raise ValueError('completed must be true or false.')
+        if correct_count + wrong_count < rung_reached - 1 or correct_count + wrong_count > 10:
+            raise ValueError('Run answer counts are inconsistent.')
+        if completed and rung_reached != 10:
+            raise ValueError('A completed run must reach rung 10.')
+
+        rank = movie_ladder_result_rank(rung_reached, completed)
+        now = int(time.time())
+
+        with get_db() as db:
+            existing = db.execute(
+                'SELECT * FROM movie_ladder_runs WHERE id=? AND user_sub=?',
+                (run_id, g.user['sub']),
+            ).fetchone()
+            if existing:
+                return jsonify(run=public_movie_ladder_run(existing)), 200
+
+            db.execute('BEGIN IMMEDIATE')
+            db.execute(
+                '''INSERT INTO movie_ladder_runs
+                   (id,user_sub,user_email,score,rung_reached,completed,rank,lives_remaining,
+                    correct_count,wrong_count,max_streak,created_at)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''',
+                (
+                    run_id, g.user['sub'], g.user['email'], score, rung_reached,
+                    1 if completed else 0, rank, lives_remaining,
+                    correct_count, wrong_count, max_streak, now,
+                ),
+            )
+            row = db.execute('SELECT * FROM movie_ladder_runs WHERE id=?', (run_id,)).fetchone()
+        return jsonify(run=public_movie_ladder_run(row)), 201
+
+    @app.get('/api/movie-ladder/runs')
+    @authenticated()
+    def movie_ladder_runs():
+        raw_limit = str(request.args.get('limit', '20')).strip()
+        if not re.fullmatch(r'\d{1,2}', raw_limit):
+            raise ValueError('limit must be a whole number.')
+        limit = max(1, min(int(raw_limit), 50))
+
+        db = get_db()
+        recent = db.execute(
+            '''SELECT * FROM movie_ladder_runs
+               WHERE user_sub=?
+               ORDER BY created_at DESC, rowid DESC
+               LIMIT ?''',
+            (g.user['sub'], limit),
+        ).fetchall()
+        best = db.execute(
+            '''SELECT * FROM movie_ladder_runs
+               WHERE user_sub=?
+               ORDER BY score DESC, completed DESC, rung_reached DESC, created_at ASC
+               LIMIT 5''',
+            (g.user['sub'],),
+        ).fetchall()
+        summary = db.execute(
+            '''SELECT COUNT(*) AS total_runs,
+                      COALESCE(MAX(score),0) AS best_score,
+                      COALESCE(MAX(rung_reached),0) AS highest_rung,
+                      COALESCE(SUM(completed),0) AS clears
+               FROM movie_ladder_runs
+               WHERE user_sub=?''',
+            (g.user['sub'],),
+        ).fetchone()
+
+        return jsonify(
+            recent=[public_movie_ladder_run(row) for row in recent],
+            best=[public_movie_ladder_run(row) for row in best],
+            summary={
+                'totalRuns': summary['total_runs'],
+                'bestScore': summary['best_score'],
+                'highestRung': summary['highest_rung'],
+                'clears': summary['clears'],
+            },
+        )
+
+    def canonical_uuid(value, label):
+        value = str(value or '').strip().lower()
+        try:
+            parsed = uuid.UUID(value)
+        except (ValueError, AttributeError):
+            raise ValueError(f'{label} must be a UUID.')
+        if str(parsed) != value:
+            raise ValueError(f'{label} must be a canonical UUID.')
+        return value
+
+    def question_event_selection(value, label):
+        if not isinstance(value, list) or len(value) not in {1, 4}:
+            raise ValueError(f'{label} must contain either one answer index or four ordered indexes.')
+        if any(type(item) is not int or item < 0 or item > 3 for item in value):
+            raise ValueError(f'{label} answer indexes must be 0 through 3.')
+        if len(value) == 4 and len(set(value)) != 4:
+            raise ValueError(f'{label} ordered indexes must be unique.')
+        return value
+
+    def validate_movie_ladder_question_event(raw):
+        if not isinstance(raw, dict):
+            raise ValueError('Each question event must be an object.')
+
+        event_id = canonical_uuid(raw.get('id'), 'Event id')
+        run_id = canonical_uuid(raw.get('runId'), 'Run id')
+
+        question_id = str(raw.get('questionId', '')).strip()
+        if not re.fullmatch(r'(?:csv-[a-f0-9]{20}|builtin-rung-(?:10|[1-9])-\d+)', question_id):
+            raise ValueError('Question id is not recognized.')
+
+        rung = raw.get('rung')
+        if type(rung) is not int or not 1 <= rung <= 10:
+            raise ValueError('rung must be between 1 and 10.')
+
+        builtin_match = re.fullmatch(r'builtin-rung-(10|[1-9])-\d+', question_id)
+        if builtin_match and int(builtin_match.group(1)) != rung:
+            raise ValueError('Built-in question rung does not match its id.')
+
+        answer_type = str(raw.get('answerType', '')).strip().lower()
+        if answer_type not in {'text', 'actor', 'director', 'movie', 'timeline'}:
+            raise ValueError('answerType must be text, actor, director, movie, or timeline.')
+
+        question_text = ' '.join(str(raw.get('question', '') or '').strip().split())
+        if not question_text or len(question_text) > 500:
+            raise ValueError('question must be between 1 and 500 characters.')
+
+        answers = raw.get('answers')
+        if not isinstance(answers, list) or len(answers) != 4:
+            raise ValueError('answers must contain exactly four choices.')
+        answers = [' '.join(str(item or '').strip().split()) for item in answers]
+        if any(not item or len(item) > 240 for item in answers):
+            raise ValueError('Each answer must be between 1 and 240 characters.')
+
+        selected = question_event_selection(raw.get('selected'), 'selected')
+        correct = question_event_selection(raw.get('correct'), 'correct')
+        if len(selected) != len(correct):
+            raise ValueError('selected and correct must use the same answer format.')
+
+        if question_id.startswith('csv-'):
+            known = next(
+                (item for item in movie_ladder_custom_questions()
+                 if isinstance(item, dict) and str(item.get('id', '')) == question_id),
+                None,
+            )
+            if not known:
+                raise ValueError('Imported question is no longer in the active question bank.')
+            if int(known.get('rung', 0)) != rung:
+                raise ValueError('Imported question rung does not match the active bank.')
+            if ' '.join(str(known.get('question', '')).strip().split()) != question_text:
+                raise ValueError('Imported question text does not match the active bank.')
+            known_answers = [' '.join(str(item or '').strip().split()) for item in known.get('answers', [])]
+            if known_answers != answers:
+                raise ValueError('Imported question answers do not match the active bank.')
+
+        return {
+            'id': event_id,
+            'run_id': run_id,
+            'question_id': question_id,
+            'rung': rung,
+            'answer_type': answer_type,
+            'question_text': question_text,
+            'answers_json': json.dumps(answers, separators=(',', ':'), ensure_ascii=False),
+            'selected_json': json.dumps(selected, separators=(',', ':')),
+            'correct_json': json.dumps(correct, separators=(',', ':')),
+            'is_correct': 1 if selected == correct else 0,
+        }
+
+    @app.post('/api/movie-ladder/question-events')
+    def movie_ladder_question_events():
+        payload = request.get_json(silent=True)
+        events = payload.get('events') if isinstance(payload, dict) else None
+        if not isinstance(events, list) or not 1 <= len(events) <= 20:
+            raise ValueError('Send between 1 and 20 question events at a time.')
+
+        normalized = [validate_movie_ladder_question_event(item) for item in events]
+        by_run = {}
+        for event in normalized:
+            by_run.setdefault(event['run_id'], set()).add(event['question_id'])
+        if any(len(question_ids) > 10 for question_ids in by_run.values()):
+            raise ValueError('A Movie Ladder run can contain at most 10 question events.')
+
+        now = int(time.time())
+        inserted = 0
+        with get_db() as db:
+            db.execute('BEGIN IMMEDIATE')
+            for event in normalized:
+                existing_count = db.execute(
+                    'SELECT COUNT(*) FROM movie_ladder_question_events WHERE run_id=?',
+                    (event['run_id'],),
+                ).fetchone()[0]
+                existing_question = db.execute(
+                    'SELECT 1 FROM movie_ladder_question_events WHERE run_id=? AND question_id=?',
+                    (event['run_id'], event['question_id']),
+                ).fetchone()
+                if not existing_question and existing_count >= 10:
+                    raise ValueError('A Movie Ladder run can contain at most 10 question events.')
+
+                cursor = db.execute(
+                    '''INSERT OR IGNORE INTO movie_ladder_question_events
+                       (id,run_id,question_id,rung,answer_type,question_text,answers_json,
+                        selected_json,correct_json,is_correct,created_at)
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?)''',
+                    (
+                        event['id'], event['run_id'], event['question_id'], event['rung'],
+                        event['answer_type'], event['question_text'], event['answers_json'],
+                        event['selected_json'], event['correct_json'], event['is_correct'], now,
+                    ),
+                )
+                inserted += cursor.rowcount
+
+        return jsonify(ok=True, received=len(normalized), inserted=inserted), 201 if inserted else 200
+
+    @app.get('/api/movie-ladder/admin/question-stats')
+    @authenticated()
+    def movie_ladder_admin_question_stats():
+        movie_ladder_admin_required()
+
+        rows = get_db().execute(
+            '''SELECT question_id,
+                      MAX(rung) AS rung,
+                      MAX(answer_type) AS answer_type,
+                      MAX(question_text) AS question_text,
+                      COUNT(*) AS attempts,
+                      SUM(is_correct) AS correct_count,
+                      COUNT(*) - SUM(is_correct) AS wrong_count,
+                      MAX(created_at) AS last_seen
+               FROM movie_ladder_question_events
+               GROUP BY question_id
+               ORDER BY attempts DESC, wrong_count DESC, question_id'''
+        ).fetchall()
+
+        stats = []
+        for row in rows:
+            attempts = int(row['attempts'])
+            correct_count = int(row['correct_count'] or 0)
+            wrong_count = int(row['wrong_count'] or 0)
+            stats.append({
+                'questionId': row['question_id'],
+                'rung': row['rung'],
+                'answerType': row['answer_type'],
+                'question': row['question_text'],
+                'attempts': attempts,
+                'correct': correct_count,
+                'wrong': wrong_count,
+                'accuracyPercent': round(correct_count * 100 / attempts, 1) if attempts else None,
+                'lastSeen': row['last_seen'],
+            })
+
+        total_attempts = sum(item['attempts'] for item in stats)
+        total_correct = sum(item['correct'] for item in stats)
+        return jsonify(
+            summary={
+                'questionsSeen': len(stats),
+                'attempts': total_attempts,
+                'correct': total_correct,
+                'wrong': total_attempts - total_correct,
+                'accuracyPercent': round(total_correct * 100 / total_attempts, 1) if total_attempts else None,
+            },
+            questions=stats,
+        )
+
+    @app.get('/api/movie-ladder/questions')
+    def movie_ladder_questions():
+        questions = movie_ladder_custom_questions()
+        return jsonify(questions=questions, count=len(questions))
+
+    @app.get('/api/movie-ladder/admin/questions')
+    @authenticated()
+    def movie_ladder_admin_questions():
+        movie_ladder_admin_required()
+        questions = movie_ladder_custom_questions()
+        return jsonify(count=len(questions), questions=questions)
+
+    @app.post('/api/movie-ladder/admin/questions/validate')
+    @authenticated()
+    def movie_ladder_admin_questions_validate():
+        movie_ladder_admin_required()
+        payload = request.get_json(silent=True)
+        csv_text = payload.get('csv') if isinstance(payload, dict) else None
+        questions = parse_movie_ladder_csv(csv_text)
+        return jsonify(
+            valid=True,
+            count=len(questions),
+            preview=questions[:20],
+            truncated=len(questions) > 20,
+        )
+
+    @app.post('/api/movie-ladder/admin/questions/import')
+    @authenticated()
+    def movie_ladder_admin_questions_import():
+        movie_ladder_admin_required()
+        payload = request.get_json(silent=True)
+        csv_text = payload.get('csv') if isinstance(payload, dict) else None
+        mode = str(payload.get('mode', 'append')).strip().lower() if isinstance(payload, dict) else 'append'
+        if mode not in {'append', 'replace'}:
+            raise ValueError('Import mode must be append or replace.')
+
+        incoming = parse_movie_ladder_csv(csv_text)
+        existing = movie_ladder_custom_questions()
+
+        if mode == 'replace':
+            combined = incoming
+            added = len(incoming)
+            skipped = 0
+        else:
+            existing_ids = {str(item.get('id', '')) for item in existing if isinstance(item, dict)}
+            added_rows = [item for item in incoming if item['id'] not in existing_ids]
+            skipped = len(incoming) - len(added_rows)
+            combined = existing + added_rows
+            added = len(added_rows)
+
+        if len(combined) > 5000:
+            raise ValueError('Movie Ladder supports up to 5,000 imported questions.')
+
+        with get_db() as db:
+            db.execute('BEGIN IMMEDIATE')
+            set_metadata_value(
+                'movie_ladder_custom_questions',
+                json.dumps(combined, separators=(',', ':'), ensure_ascii=False),
+            )
+            set_metadata_value('movie_ladder_questions_updated_at', int(time.time()))
+
+        return jsonify(
+            ok=True,
+            mode=mode,
+            added=added,
+            skipped=skipped,
+            count=len(combined),
+        )
+
+    @app.delete('/api/movie-ladder/admin/questions')
+    @authenticated()
+    def movie_ladder_admin_questions_delete():
+        movie_ladder_admin_required()
+        with get_db() as db:
+            db.execute('BEGIN IMMEDIATE')
+            delete_metadata_values(
+                'movie_ladder_custom_questions',
+                'movie_ladder_questions_updated_at',
+            )
+        return jsonify(ok=True, count=0)
+
+    @app.get('/api/movie-ladder/admin/tmdb')
+    @authenticated()
+    def movie_ladder_tmdb_status():
+        movie_ladder_admin_required()
+        configured = bool(metadata_value('movie_ladder_tmdb_token'))
+        verified = metadata_value('movie_ladder_tmdb_verified_at')
+        return jsonify(
+            configured=configured,
+            lastVerifiedAt=int(verified) if verified and verified.isdigit() else None,
+        )
+
+    @app.put('/api/movie-ladder/admin/tmdb')
+    @authenticated()
+    def movie_ladder_tmdb_save():
+        movie_ladder_admin_required()
+        payload = request.get_json(silent=True)
+        token = str(payload.get('token', '')).strip() if isinstance(payload, dict) else ''
+        if len(token) < 20 or len(token) > 4096 or any(ch.isspace() for ch in token):
+            raise ValueError('Enter a valid TMDb API Read Access Token.')
+        tmdb_get('/configuration', token=token)
+        now = int(time.time())
+        with get_db() as db:
+            db.execute('BEGIN IMMEDIATE')
+            set_metadata_value('movie_ladder_tmdb_token', token)
+            set_metadata_value('movie_ladder_tmdb_verified_at', now)
+        return jsonify(configured=True, lastVerifiedAt=now)
+
+    @app.post('/api/movie-ladder/admin/tmdb/test')
+    @authenticated()
+    def movie_ladder_tmdb_test():
+        movie_ladder_admin_required()
+        tmdb_get('/configuration')
+        now = int(time.time())
+        with get_db() as db:
+            db.execute('BEGIN IMMEDIATE')
+            set_metadata_value('movie_ladder_tmdb_verified_at', now)
+        return jsonify(ok=True, configured=True, lastVerifiedAt=now)
+
+    @app.delete('/api/movie-ladder/admin/tmdb')
+    @authenticated()
+    def movie_ladder_tmdb_delete():
+        movie_ladder_admin_required()
+        with get_db() as db:
+            db.execute('BEGIN IMMEDIATE')
+            delete_metadata_values('movie_ladder_tmdb_token', 'movie_ladder_tmdb_verified_at')
+        return jsonify(configured=False)
+
+    @app.get('/api/movie-ladder/tmdb/search')
+    def movie_ladder_tmdb_search():
+        title = ' '.join(str(request.args.get('title', '')).split())
+        year = str(request.args.get('year', '')).strip()
+        if not title or len(title) > 160:
+            raise ValueError('Movie title is required.')
+        params = {'query': title, 'include_adult': 'false', 'language': 'en-US'}
+        if re.fullmatch(r'\d{4}', year):
+            params['year'] = year
+        payload = tmdb_get('/search/movie', params=params)
+        results = payload.get('results') or []
+        if not results:
+            abort(404, 'TMDb could not find that movie.')
+        item = results[0]
+        return jsonify(
+            id=item.get('id'),
+            title=item.get('title'),
+            releaseDate=item.get('release_date'),
+            poster=tmdb_image(item.get('poster_path'), 'w500'),
+            backdrop=tmdb_image(item.get('backdrop_path'), 'w780'),
+        )
+
+    @app.get('/api/movie-ladder/tmdb/person')
+    def movie_ladder_tmdb_person():
+        name = ' '.join(str(request.args.get('name', '')).split())
+        department = ' '.join(str(request.args.get('department', 'Acting')).split()) or 'Acting'
+        if not name or len(name) > 160:
+            raise ValueError('Person name is required.')
+        if department not in {'Acting', 'Directing'}:
+            raise ValueError('Choose Acting or Directing for person lookup.')
+        payload = tmdb_get('/search/person', params={
+            'query': name,
+            'include_adult': 'false',
+            'language': 'en-US',
+        })
+        results = payload.get('results') or []
+        if not results:
+            abort(404, 'TMDb could not find that person.')
+        item = next(
+            (candidate for candidate in results if candidate.get('known_for_department') == department),
+            results[0],
+        )
+        return jsonify(
+            id=item.get('id'),
+            name=item.get('name'),
+            department=item.get('known_for_department'),
+            profile=tmdb_image(item.get('profile_path'), 'w185'),
+        )
+
+    @app.get('/api/movie-ladder/tmdb/movie/<int:movie_id>')
+    def movie_ladder_tmdb_movie(movie_id):
+        payload = tmdb_get(f'/movie/{movie_id}', params={'language': 'en-US'})
+        return jsonify(
+            id=payload.get('id'),
+            title=payload.get('title'),
+            releaseDate=payload.get('release_date'),
+            genres=[item.get('name') for item in payload.get('genres', []) if item.get('name')],
+            poster=tmdb_image(payload.get('poster_path'), 'w500'),
+            backdrop=tmdb_image(payload.get('backdrop_path'), 'w780'),
+        )
 
     @app.patch('/api/admin/display-settings')
     @authenticated(admin=True)
