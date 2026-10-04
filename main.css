@@ -305,3 +305,27 @@
 .game-profile-cabinets{border-top:1px solid var(--line);margin-top:24px}
 #where-to-play-dialog .where-cabinet:last-child{border-bottom:0}
 @media(max-width:420px){#where-to-play-dialog{padding:18px}#where-to-play-heading{font-size:28px}.game-history-score{font-size:27px}.where-cabinet{gap:14px;padding:10px 0}.where-cabinet img{width:88px;height:115px}}
+
+/* The celebration carries the same milestone language as each game's history. */
+.record-celebration{gap:calc(var(--u)*1.8);padding:calc(var(--u)*4);justify-content:safe center}
+.record-celebration h2{font-size:calc(var(--u)*8)}
+.record-celebration>img{height:calc(var(--u)*18);flex-shrink:0}
+.celebration-timeline{box-sizing:border-box;list-style:none;width:100%;margin:calc(var(--u)*1) 0;padding:0 0 0 calc(var(--u)*4);border-left:2px solid var(--cyan);text-align:left}
+.celebration-milestone{position:relative;padding:0 0 calc(var(--u)*2)}
+.celebration-milestone:last-child{padding-bottom:0}
+.celebration-milestone:before{content:'';position:absolute;left:calc(var(--u)*-4 - 7px);top:3px;width:10px;height:10px;border:2px solid var(--cyan);border-radius:50%;background:var(--cream)}
+.celebration-milestone.current:before{background:var(--cyan)}
+.celebration-status{display:inline-block;color:#075b62;background:#def2ed;border-radius:4px;padding:3px 7px;font:bold calc(var(--u)*2.5)/1.3 Arial,sans-serif}
+.celebration-score{font-size:calc(var(--u)*10);margin-top:calc(var(--u)*1)}
+.celebration-initials{font-size:calc(var(--u)*6);letter-spacing:.12em}
+.record-celebration .initials-with-margin{margin:0;max-width:100%;display:flex;align-items:center;gap:calc(var(--u)*2);flex-wrap:wrap;width:100%}
+.record-celebration .record-improvement{position:relative;left:auto;top:auto;transform:none;max-width:100%;font-size:calc(var(--u)*2.7);min-height:0}
+.celebration-date{font:calc(var(--u)*2.3)/1.5 Arial,sans-serif;color:#516263;margin:calc(var(--u)*.8) 0 0}
+.celebration-date:empty{display:none}
+.celebration-previous-score{font:400 calc(var(--u)*4.2)/1.4 var(--score);overflow-wrap:anywhere;margin-top:calc(var(--u)*1)}
+#celebration-cabinets{height:auto;flex-shrink:0}
+#celebration-cabinets.unassigned{display:none}
+#celebration-cabinets .cabinet-crop{height:calc(var(--u)*13)}
+#celebration-cabinets .featured-cabinet{min-height:0}
+#celebration-cabinets .cabinet-photo{height:100%;background:transparent}
+#celebration-cabinets .featured-cabinet span{font-size:calc(var(--u)*2.4)}

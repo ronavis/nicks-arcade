@@ -76,3 +76,12 @@ Browser checks: ordinary imported record, corrected record (separate current sum
 final result: passed
 
 Public profile follow-up validation: rapid close/reopen exposed a queued-close-event race that left the replacement profile loading. The close handler now invalidates requests only while the dialog is actually closed. Added regression coverage, then repeated ordinary → corrected → empty-profile browser transitions successfully. All 24 frontend tests pass. Final result remains passed.
+
+
+# New-record celebration timeline — October 3, 2026
+
+The selected record-history design now carries into the TV takeover. The cyan timeline shows the new record, initials and known date, followed by a matching previously observed milestone. Marquee, winning margin, optional taunt, cabinet images and automatic ten-second return remain available. Unknown legacy dates stay blank. The previous milestone is omitted if polling skipped an intervening win and the observed value no longer matches the server's saved margin. This is a compact celebration, not the complete historical ledger.
+
+Captures: `docs/screenshots/celebration-timeline.jpg` (760×1180) and `docs/screenshots/celebration-phone.jpg` (390×844). These are local illustrative Centipede events; no scores were submitted to production. Reviewed actual rendered cream/cyan typography, timeline alignment, uncropped marquee and contained cabinet photo. Phone checks also covered a timed record, four cabinets, long taunt, first score, absent artwork assignments, dismissal button and the real ten-second automatic dismissal. No horizontal or vertical overflow in the four-cabinet test. Browser console: zero errors/warnings. All 26 frontend tests, syntax checks and build pass. No backend or stored-score changes.
+
+final result: passed

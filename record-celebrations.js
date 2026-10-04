@@ -6,6 +6,15 @@ const ArcadeCelebrations = (() => {
     const parts = String(score).split(':');
     return parts.length === 2 ? Number(parts[0]) * 60 + Number(parts[1]) : Number(score);
   }
+  // A poll can skip several wins. Only pair the saved winning margin with its
+  // matching observed baseline; otherwise omit the uncertain older milestone.
+  function previousMilestone(game, before) {
+    const improvement = game.record?.improvement;
+    if (!before || !improvement) return null;
+    const delta = game.kind === 'time' ? value(before.score, 'time') - value(game.record.score, 'time') : value(game.record.score, game.kind) - value(before.score, game.kind);
+    const amount = Number(String(improvement.amount).replaceAll(',', '').replace(/s$/, ''));
+    return delta > 0 && Math.abs(delta - amount) < 0.00001 ? { ...before } : null;
+  }
   function createObserver() {
     let previous = null, watermark = 0;
     return snapshot => {
@@ -16,7 +25,7 @@ const ArcadeCelebrations = (() => {
         if (!record || record.id === before?.id || record.revision !== 1 || !record.createdAt) continue;
         if (record.createdAt < Math.max(watermark, snapshot.updatedAt - 60)) continue;
         const better = !before || (game.kind === 'time' ? value(record.score, game.kind) < value(before.score, game.kind) : value(record.score, game.kind) > value(before.score, game.kind));
-        if (better) events.push({ ...game, record: { ...record } });
+        if (better) events.push({ ...game, record: { ...record }, previousRecord: previousMilestone(game, before) });
       }
       previous = current; watermark = Math.max(watermark, snapshot.updatedAt);
       return events;
@@ -34,6 +43,6 @@ const ArcadeCelebrations = (() => {
     if (record.revision > 1) return `Submitted ${date} · corrected`;
     return `${days === 0 ? 'Set today' : days === 1 ? 'Set 1 day ago' : `Set ${days} days ago`} · ${date}`;
   }
-  return { createObserver, recordAge };
+  return { createObserver, recordAge, previousMilestone };
 })();
 if (typeof module !== 'undefined') module.exports = ArcadeCelebrations;

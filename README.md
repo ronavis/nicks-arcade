@@ -151,7 +151,7 @@ Scores, initials and the main Nick’s Arcade / High Scores branding use locally
 
 ### New-record TV celebrations
 
-An open TV display checks the public leaderboard every five seconds. A newly submitted winning score triggers a silent, ten-second takeover with the marquee, initials, score, and optional taunt, then returns to the board. Faster times say “New record time.” The Back to scoreboard button dismisses it early. Existing records on initial load, admin corrections, and older fallback records do not trigger a takeover. Rotation waits during the celebration and an existing manual pause is preserved. Reduced-motion preferences disable the entrance animation.
+An open TV display checks the public leaderboard every five seconds. A newly submitted winning score triggers a silent, ten-second takeover using the same milestone timeline as the game profile: marquee, new score, initials, date, optional taunt and up to four cabinet photos. A previous observed record appears beneath it only when its value matches the saved winning margin; skipped or uncertain comparisons are omitted. The alert then returns to the board. Full record history remains in the game profile. Faster times say “New record time.” The Back to scoreboard button dismisses it early. Existing records on initial load, admin corrections, and older fallback records do not trigger a takeover. Rotation waits during the celebration and an existing manual pause is preserved. Reduced-motion preferences disable the entrance animation.
 
 This uses current winner snapshots: multiple games can queue, but intermediate records beaten between polls are not replayed. Events older than sixty seconds are skipped after a disconnection. No account is required on the TV.
 

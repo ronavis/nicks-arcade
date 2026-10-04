@@ -169,8 +169,8 @@ $('commit-inventory-import').addEventListener('click',async()=>{
   finally{controls.filter(id=>id!=='commit-inventory-import').forEach(id=>$(id).disabled=false);}
 });
 
-function renderFeaturedCabinets(game) {
-  const target=$('featured-cabinets');
+function renderFeaturedCabinets(game, targetId = 'featured-cabinets') {
+  const target=$(targetId);
   const assigned=game?.cabinets||[];
   const signature=JSON.stringify([game?.id,game?.title,assigned.map(c=>[c.id,c.name,c.code,c.photoId,cabinetPicture(c)])]);
   if(target.dataset.rendered===signature)return;

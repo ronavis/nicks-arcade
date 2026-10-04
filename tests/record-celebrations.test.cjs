@@ -54,3 +54,21 @@ test('open scoreboard refreshes age on its own timer and on resume without a net
  now=new Date(2026,9,1,0,0).getTime();events.visibilitychange();assert.match(label.textContent,/^Set 2 days ago/);
  state.boardGames=[];events.pageshow();assert.equal(label.textContent,'');
 });
+
+test('celebration preserves the actual last observed record, with no invented first-record history',()=>{
+ const o=createObserver(),before=game('a','900',{initials:'NIC',createdAt:0});
+ o(snapshot(before));
+ const event=o(snapshot(game('b','1,000',{initials:'RON',createdAt:101,improvement:{amount:'100'}}),101))[0];
+ assert.deepEqual(event.previousRecord,before.record);
+ before.record.initials='XXX';assert.equal(event.previousRecord.initials,'NIC');
+ const first=createObserver();first(snapshot({id:'galaga',record:null}));
+ assert.equal(first(snapshot(game('a','100'),101))[0].previousRecord,null);
+});
+
+test('skipped wins never pair a saved margin with the wrong previous player',()=>{
+ const {previousMilestone}=require('../record-celebrations.js');
+ const before={score:'100',initials:'NIC'};
+ assert.equal(previousMilestone(game('b','300',{improvement:{amount:'100'}}),before),null);
+ assert.equal(previousMilestone(game('b','300'),before),null);
+ assert.equal(previousMilestone({...game('b','1:01.20',{improvement:{amount:'1.10s'}}),kind:'time'},{score:'1:02.30',initials:'NIC'}).initials,'NIC');
+});
