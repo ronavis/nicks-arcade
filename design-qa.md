@@ -33,3 +33,18 @@ Full view checked against option 1; management group and personal-settings trans
 - Actual Fire Stick hardware not available for this validation.
 
 final result: passed
+
+# Manage Games grid — October 3, 2026
+
+Source visual truth: `/Users/studio/.codex/generated_images/01a0ed69-4bdd-71d2-b765-99cd8dd40c66/exec-92516510-e94a-408e-90db-9a0b80fe235d.png` (second displayed Manage Games mockup, selected by Ron).
+Implementation: `docs/screenshots/manage-games-grid.jpg`, `docs/screenshots/manage-games-phone.jpg`, `docs/screenshots/manage-game-editor.jpg`.
+Viewports: 725×1180 and 390×844 CSS px, density 1. Source is a generated 966×1629 screen; compare its approximately 700px-wide panel to the 700px implementation dialog. Actual dialog retains 90dvh scrolling, so fewer rows appear at once than in the full concept image.
+State: local demo admin, Your games selected; separate game editor for Asteroids. Demo data differs from production names/counts/artwork. No live scores or images were changed for validation.
+
+Fidelity: existing cream/cyan/ink tokens and Jersey 10 display typography retained. Two equal grid columns, aligned marquee slots using contain (no stretching), sans-serif record details, visible checkbox and single Edit game per tile. Search and import stack on phones. No invented artwork; original game assets preserved. Mock's one-line collection count moves below filters for readability. Existing modal header and source-game records remain accurate to local data.
+
+Iteration: P2 excess reserved title whitespace reduced from 2.1em to 1.05em; desktop and phone recaptured. Full view and individual cards/editor inspected. Lazy images were decoded before final desktop capture. No remaining actionable P0/P1/P2 findings.
+
+Browser validation: tabs, catalog search, No scores filter, leaderboard checkbox off/on, spreadsheet import open/close, editor rename/marquee/assignment open/close, Manage scores routing to correct game, and regular-player admin-control hiding passed. Console reported zero errors and warnings. Existing 21 frontend tests and syntax/build checks passed. Backend unchanged; no backend redeployment needed.
+
+final result: passed

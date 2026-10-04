@@ -156,7 +156,7 @@ function renderSession() {
   $('tv-cabinets-button').hidden = !state.user?.admin; $('account-cabinets').hidden = !state.user?.admin;
   if (!state.user?.admin) for (const id of ['cabinets-dialog','cabinet-editor','assignment-dialog','cabinet-add-dialog']) $(id).close();
   $('tv-games-button').hidden = !state.user?.admin; $('account-games').hidden = !state.user?.admin;
-  if (!state.user?.admin) { $('games-dialog').close(); $('arcade-games-list').replaceChildren(); }
+  if (!state.user?.admin) { $('games-dialog').close(); $('game-detail-dialog').close(); $('arcade-games-list').replaceChildren(); delete $('arcade-games-list').dataset.rendered; }
   if (!state.user?.admin) { $('admin-list').replaceChildren(); $('admin-feedback').textContent = ''; }
   $('account-label').textContent = signed ? state.config?.demo ? `Preview account · ${state.user.admin ? 'admin' : 'player'}` : 'Signed in with Google' : 'Sign in to join the board';
   if (state.config?.demo && signed) $('account-label').title = 'Local test account. This is not a Google sign-in.';
@@ -720,64 +720,97 @@ document.addEventListener('keydown', event => {
 });
 
 
-function renderArcadeGames() {
+let arcadeGameFilter = 'all', editingArcadeGame = null;
+function setGamesTab(tab) {
+  $('games-library').hidden = tab !== 'library'; $('games-add').hidden = tab !== 'add';
+  $('games-library-tab').setAttribute('aria-pressed', String(tab === 'library'));
+  $('games-add-tab').setAttribute('aria-pressed', String(tab === 'add'));
+  if (tab === 'add') renderCatalogSearch('admin', $('catalog-search').value);
+}
+function openGameDetail(id) {
   if (!state.user?.admin) return;
-  const query = $('arcade-games-search').value.trim().toLowerCase();
-  const games = state.allGames.filter(game => game.title.toLowerCase().includes(query) && (!$('games-open-only').checked || !game.record));
-  $('games-count').textContent = `${state.allGames.filter(game => game.eligible).length} games in Nick’s arcade · ${state.allGames.filter(game => game.eligible && !game.record).length} waiting for a first score`;
-  $('arcade-games-list').replaceChildren(...games.map(game => {
-    const card = node('article', 'arcade-game-card');
-    const art = node('img'); art.src = artworkUrl(game); art.alt = `${game.title} artwork`; art.loading = 'lazy';
-    const info = node('div', 'arcade-game-info'); info.append(node('h3', '', game.title), node('p', game.record ? 'small' : 'open-record-label', game.record ? `${game.record.score} · ${game.record.initials}` : 'FIRST SCORE WANTED'));
-    const visibility = node('label', 'admin-removed-toggle');
-    const checkbox = node('input'); checkbox.type = 'checkbox'; checkbox.checked = game.showOnLeaderboard === 1;
-    checkbox.setAttribute('aria-label', `Show ${game.title} on leaderboard`);
-    visibility.append(checkbox, document.createTextNode('Show on leaderboard')); info.append(visibility);
-    checkbox.addEventListener('change', async () => {
-      checkbox.disabled = true;
-      try { await api(`/admin/games/${encodeURIComponent(game.id)}/leaderboard`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({showOnLeaderboard:checkbox.checked})}); await refreshBoard(); }
-      catch (error) { checkbox.checked = game.showOnLeaderboard === 1; checkbox.disabled = false; $('games-feedback').textContent = error.message; }
-    });
+  editingArcadeGame = id; $('game-detail-message').textContent = ''; renderGameDetail();
+  $('game-detail-dialog').showModal();
+}
+function renderGameDetail() {
+  const game = gameById(editingArcadeGame); if (!game || !state.user?.admin) return;
+  $('game-detail-heading').textContent = game.title;
+  const art = node('img', 'game-detail-art'); art.src = artworkUrl(game); art.alt = `${game.title} marquee`;
+  const score = node('p', '', game.record ? `${game.record.score} · ${game.record.initials}` : 'No score yet');
+  const status = node('p', 'small', `${game.showOnLeaderboard ? 'On leaderboard' : 'Hidden from leaderboard'}${game.marqueeId ? ' · Custom marquee' : ''}`);
     const view = node('button', 'secondary', 'Show on TV');
-    view.addEventListener('click', () => { $('games-dialog').close(); feature(game.id); location.hash = '#tv'; });
+    view.addEventListener('click', () => { $('game-detail-dialog').close(); $('games-dialog').close(); feature(game.id); location.hash = '#tv'; });
     const manage = node('button', 'secondary', game.record ? 'Manage scores' : 'Enter first score');
     manage.addEventListener('click', () => {
-      $('games-dialog').close();
+      $('game-detail-dialog').close(); $('games-dialog').close();
       if (game.record) { $('admin-game').value = game.id; if (location.hash === '#admin') loadAdmin(); else location.hash = '#admin'; }
       else { state.pendingGame = null; state.selected = game.id; state.requestId = crypto.randomUUID(); $('score-input').value = ''; clearPhoto(); applySavedTaunt(); $('score-form').hidden = false; $('record-preview').hidden = false; $('success-panel').hidden = true; renderEntry(); setMessage(); location.hash = '#play'; }
     });
     const eligibility = node('button', game.eligible ? 'secondary arcade-remove' : 'secondary', game.eligible ? 'Remove from arcade' : 'Add to Nick’s arcade');
     eligibility.addEventListener('click', async () => {
       eligibility.disabled = true;
-      try { await api(`/admin/games/${encodeURIComponent(game.id)}`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({eligible:!game.eligible})}); await refreshBoard(); $('games-feedback').textContent = game.eligible ? `${game.title} removed from the eligible list. Score history is preserved.` : `${game.title} added to Nick’s arcade.`; }
-      catch (error) { $('games-feedback').textContent = error.message; eligibility.disabled = false; }
+      try { await api(`/admin/games/${encodeURIComponent(game.id)}`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({eligible:!game.eligible})}); await refreshBoard(); $('game-detail-dialog').close(); $('games-feedback').textContent = game.eligible ? `${game.title} removed from the eligible list. Score history is preserved.` : `${game.title} added to Nick’s arcade.`; }
+      catch (error) { $('game-detail-message').textContent = error.message; eligibility.disabled = false; }
     });
-    if (!game.eligible) info.append(node('p', 'small', 'Outside Nick’s arcade'));
     view.hidden = !game.showOnLeaderboard || (!game.eligible && !state.bypassGamesRestriction);
     manage.hidden = !game.record && !game.eligible && !state.bypassGamesRestriction;
     const changeArt = node('button', 'secondary', game.marqueeId ? 'Change marquee' : 'Upload marquee');
     changeArt.addEventListener('click', () => openMarquee(game));
-    if (game.marqueeId) info.append(node('p', 'small', 'Custom marquee'));
     const actions = node('div', 'arcade-game-actions');
     actions.setAttribute('role', 'group'); actions.setAttribute('aria-label', `${game.title} actions`);
     const assign = node('button', 'secondary', 'Assigned cabinets');
     assign.addEventListener('click', () => openCabinetAssignment(game));
     const rename = node('button', 'secondary', 'Edit name');
     rename.addEventListener('click', () => openGameName(game));
-    actions.append(view, manage, rename, changeArt, assign, eligibility); card.append(art, info, actions); return card;
+  actions.append(manage, rename, changeArt, assign, view, eligibility);
+  $('game-detail-content').replaceChildren(art, score, status, actions);
+}
+$('close-game-detail').addEventListener('click', () => $('game-detail-dialog').close());
+$('games-library-tab').addEventListener('click', () => setGamesTab('library'));
+$('games-add-tab').addEventListener('click', () => setGamesTab('add'));
+for (const button of document.querySelectorAll('[data-game-filter]')) button.addEventListener('click', () => {
+  arcadeGameFilter = button.dataset.gameFilter;
+  for (const item of document.querySelectorAll('[data-game-filter]')) item.setAttribute('aria-pressed', String(item === button));
+  renderArcadeGames();
+});
+function renderArcadeGames() {
+  if (!state.user?.admin) return;
+  const query = $('arcade-games-search').value.trim().toLowerCase();
+  const games = state.allGames.filter(game => game.title.toLowerCase().includes(query) && (arcadeGameFilter === 'all' || (arcadeGameFilter === 'leaderboard' ? game.showOnLeaderboard === 1 : !game.record)));
+  $('games-count').textContent = `${state.allGames.filter(game => game.eligible).length} games in Nick’s arcade · ${state.allGames.filter(game => game.eligible && !game.record).length} waiting for a first score`;
+  const signature = JSON.stringify(games.map(game => [game.id,game.title,game.record,game.eligible,game.showOnLeaderboard,artworkUrl(game)]));
+  if ($('arcade-games-list').dataset.rendered === signature) return;
+  $('arcade-games-list').dataset.rendered = signature;
+  $('arcade-games-list').replaceChildren(...games.map(game => {
+    const card = node('article', 'arcade-game-card');
+    const art = node('img'); art.src = artworkUrl(game); art.alt = `${game.title} artwork`; art.loading = 'lazy';
+    const info = node('div', 'arcade-game-info'); info.append(node('h3', '', game.title), node('p', game.record ? 'small' : 'open-record-label', game.record ? `${game.record.score} · ${game.record.initials}` : 'No score yet'));
+    const visibility = node('label', 'admin-removed-toggle');
+    const checkbox = node('input'); checkbox.type = 'checkbox'; checkbox.checked = game.showOnLeaderboard === 1;
+    checkbox.setAttribute('aria-label', `Show ${game.title} on leaderboard`);
+    visibility.append(checkbox, document.createTextNode('On leaderboard')); info.append(visibility);
+    checkbox.addEventListener('change', async () => {
+      checkbox.disabled = true;
+      try { await api(`/admin/games/${encodeURIComponent(game.id)}/leaderboard`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({showOnLeaderboard:checkbox.checked})}); await refreshBoard(); }
+      catch (error) { checkbox.checked = game.showOnLeaderboard === 1; checkbox.disabled = false; $('games-feedback').textContent = error.message; }
+    });
+    if (!game.eligible) info.append(node('p', 'small', 'Outside Nick’s arcade'));
+    const edit = node('button', 'secondary game-edit-button', 'Edit game');
+    edit.setAttribute('aria-label', `Edit ${game.title}`);
+    edit.addEventListener('click', () => openGameDetail(game.id));
+    card.append(art, info, edit); return card;
   }));
   if (!games.length) $('arcade-games-list').append(node('p', 'admin-empty', 'No games match this filter.'));
 }
 async function openArcadeGames() {
   if (!state.user?.admin) return;
   if (document.fullscreenElement) await document.exitFullscreen();
-  $('account-dialog').close(); $('games-feedback').textContent = ''; renderArcadeGames(); $('games-dialog').showModal(); renderCatalogSearch('admin', $('catalog-search').value);
+  $('account-dialog').close(); $('games-feedback').textContent = ''; renderArcadeGames(); setGamesTab('library'); $('games-dialog').showModal();
 }
 $('tv-games-button').addEventListener('click', openArcadeGames);
 $('account-games').addEventListener('click', openArcadeGames);
 $('close-games').addEventListener('click', () => $('games-dialog').close());
 $('arcade-games-search').addEventListener('input', renderArcadeGames);
-$('games-open-only').addEventListener('change', renderArcadeGames);
 $('admin-add-game').addEventListener('submit', async event => {
   event.preventDefault(); if (!state.user?.admin) return;
   $('save-arcade-game').disabled = true;
@@ -898,7 +931,7 @@ $('game-name-form').addEventListener('submit',async event=>{
   $('save-game-name').disabled=true;$('cancel-game-name').disabled=true;
   try{
     const result=await api(`/admin/games/${encodeURIComponent(renamingGame.id)}/name`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:$('game-name-input').value,expectedTitle:renamingGame.title})});
-    $('game-name-dialog').close();$('arcade-games-search').value='';await refreshBoard();
+    $('game-name-dialog').close();$('arcade-games-search').value='';await refreshBoard();if($('game-detail-dialog').open)renderGameDetail();
     $('games-feedback').textContent=`Game renamed to ${result.title}. Scores and cabinet assignments were kept.`;
   }catch(error){$('game-name-message').textContent=error.message;}
   finally{$('save-game-name').disabled=false;$('cancel-game-name').disabled=false;}
@@ -910,3 +943,9 @@ const artworkWarmCache=new Map();
 function warmArtwork(urls){
   for(const url of urls){if(artworkWarmCache.has(url))continue;const image=new Image();image.src=url;artworkWarmCache.set(url,image);if(artworkWarmCache.size>100)artworkWarmCache.delete(artworkWarmCache.keys().next().value);}
 }
+
+$('game-name-dialog').addEventListener('close', () => { if ($('game-detail-dialog').open) renderGameDetail(); });
+
+$('marquee-dialog').addEventListener('close', () => { if ($('game-detail-dialog').open) renderGameDetail(); });
+
+$('assignment-dialog').addEventListener('close', () => { if ($('game-detail-dialog').open) renderGameDetail(); });
