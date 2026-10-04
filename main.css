@@ -366,3 +366,15 @@
 @media(min-width:761px){#cabinets-dialog:not(.cabinet-profile-open)>.dialog-heading{padding-right:230px}#add-cabinet{position:absolute;top:26px;right:88px;margin:0}}
 @media(max-width:760px){#cabinets-dialog{padding:20px;width:calc(100vw - 20px)}#cabinet-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.cabinet-tile{padding:10px}.cabinet-tile .cabinet-photo{height:190px}.cabinet-tile strong{font-size:24px}.cabinet-tile-action{font-size:22px}.cabinet-detail-top{gap:18px;grid-template-columns:minmax(100px,.65fr) minmax(0,1fr)}.cabinet-detail-top .cabinet-photo{height:220px}.cabinet-detail-top h3{font-size:34px}#cabinet-detail .cabinet-actions{grid-template-columns:1fr;gap:8px;margin-top:14px}#cabinet-detail .cabinet-actions button{font-size:23px}.cabinet-games-heading h4{font-size:28px}.cabinet-games-heading button{padding:12px;font-size:24px}#cabinet-assigned-games .cabinet-game-row{grid-template-columns:110px minmax(0,1fr);gap:10px}#cabinet-assigned-games .cabinet-game-row button{grid-column:1/-1;width:100%}#cabinet-assigned-games .cabinet-game-row img{height:62px}}
 @media(max-width:400px){.cabinet-tile .cabinet-photo{height:155px}.cabinet-tile strong{font-size:21px;min-height:68px}.cabinet-tile small{font-size:12px}.cabinet-tile-action{font-size:20px}.cabinet-detail-top h3{font-size:30px}.cabinet-count{font-size:14px}.cabinet-games-heading{align-items:flex-start}.cabinet-games-heading h4{max-width:55%}}
+
+/* Keep mobile carousel controls inside the spotlight, clear of the next divider. */
+@media(max-width:500px){
+ .spotlight .hero-marquee{height:calc(var(--u)*14)}
+ .spotlight>.featured-cabinets{height:calc(var(--u)*24);flex-shrink:1;min-height:0;display:flex;flex-direction:column}
+ .spotlight .cabinet-strip-label{flex-shrink:0}
+ .spotlight .cabinet-strip-row{flex:1;min-height:0}
+ .spotlight .featured-cabinet{display:flex;flex-direction:column;align-items:center}
+ .spotlight .cabinet-crop{flex:1;min-height:0;height:auto;width:100%}
+ .spotlight .featured-cabinet span{flex-shrink:0}
+ .spotlight .rotation{padding-block:calc(var(--u)*1);margin-bottom:calc(var(--u)*1.5)}
+}
