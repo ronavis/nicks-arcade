@@ -5,51 +5,80 @@ const cabinetJSON = (method, body) => ({method,headers:{'Content-Type':'applicat
 async function refreshCabinets() { cabinets = (await api('/admin/cabinets')).cabinets; }
 function cabinetImage(c) { const im=node('img','cabinet-photo'); im.src=cabinetPicture(c); im.alt=c.name; im.loading='lazy'; return im; }
 function cabinetButton(text, action, style='secondary') { const b=node('button',style,text); b.type='button'; b.addEventListener('click',action); return b; }
+let cabinetGalleryScroll = 0, cabinetGameQuery = '';
+function selectCabinet(id) {
+  cabinetGalleryScroll = $('cabinets-dialog').scrollTop;
+  selectedCabinet = id; cabinetGameQuery = ''; renderCabinets();
+  $('cabinets-dialog').scrollTop = 0;
+  $('cabinet-detail-heading').focus({preventScroll:true});
+}
+function backToCabinets() {
+  const previous = selectedCabinet;
+  selectedCabinet = null; renderCabinets();
+  const tile = [...$('cabinet-grid').children].find(el=>el.dataset.cabinetId===previous);
+  (tile || $('cabinet-search')).focus({preventScroll:true});
+  $('cabinets-dialog').scrollTop = cabinetGalleryScroll;
+}
+function renderCabinetGames(c) {
+  const target=$('cabinet-assigned-games');
+  const games=c.gameIds.map(gameById).filter(Boolean);
+  const matching=games.filter(game=>game.title.toLowerCase().includes(cabinetGameQuery.trim().toLowerCase()));
+  target.replaceChildren();
+  if(!matching.length)target.append(node('p','cabinet-empty',games.length?'No matching games on this cabinet.':'No games assigned yet. Add games from your collection or the marquee catalog.'));
+  for(const game of matching){
+    const row=node('div','cabinet-game-row'),art=node('img');art.src=artworkUrl(game);art.alt='';art.loading='lazy';
+    const info=node('div');const other=cabinets.filter(other=>other.id!==c.id&&other.gameIds.includes(game.id)).length;
+    info.append(node('strong','',game.title),node('small','',other?`Also on ${other} other cabinet${other===1?'':'s'}`:'Only on this cabinet'));
+    if(!game.eligible)info.append(node('small','','Outside eligible game collection'));
+    const manage=cabinetButton('Assign cabinets',()=>openCabinetAssignment(game));
+    manage.setAttribute('aria-label',`Assign cabinets for ${game.title}`);
+    row.append(art,info,manage);target.append(row);
+  }
+}
 function renderCabinets() {
   const query=$('cabinet-search').value.trim().toLowerCase();
   const filtered=cabinets.filter(c=>`${c.name} ${c.code}`.toLowerCase().includes(query));
   $('cabinet-grid').replaceChildren(...filtered.map(c=>{
-    const b=cabinetButton('',()=>{selectedCabinet=c.id; renderCabinets(); $('cabinets-dialog').scrollTop=0; $('cabinet-detail-heading').focus({preventScroll:true});},'cabinet-tile');
-    b.setAttribute('aria-pressed',String(c.id===selectedCabinet));
-    b.append(cabinetImage(c),node('strong','',c.name),node('small','',`${c.gameIds.length} assigned game${c.gameIds.length===1?'':'s'}`)); return b;
+    const b=cabinetButton('',()=>selectCabinet(c.id),'cabinet-tile');
+    b.dataset.cabinetId=c.id;b.setAttribute('aria-label',`Manage ${c.name}`);
+    b.append(cabinetImage(c),node('strong','',c.name),node('small','',`${c.gameIds.length} assigned game${c.gameIds.length===1?'':'s'}`),node('span','cabinet-tile-action','Manage cabinet'));return b;
   }));
   if (!filtered.length) $('cabinet-grid').append(node('p','','No cabinets match. Try another name or add a cabinet.'));
   const c=cabinets.find(c=>c.id===selectedCabinet);
   $('cabinet-layout').classList.toggle('has-selection',!!c);
+  $('cabinets-dialog').classList.toggle('cabinet-profile-open',!!c);
+  $('cabinets-dialog').setAttribute('aria-labelledby',c?'cabinet-detail-heading':'cabinets-heading');
+  $('cabinet-library-heading').hidden=!!c;$('add-cabinet').hidden=!!c;
   const panel=$('cabinet-detail'); panel.hidden=!c; panel.replaceChildren(); if(!c)return;
-  const back=cabinetButton('Back to cabinets',()=>{selectedCabinet=null;renderCabinets();$('cabinet-search').focus();},'text-button cabinet-back');
+  const back=cabinetButton('All cabinets',backToCabinets,'text-button cabinet-back');
+  const arrow=node('i','ph-bold ph-arrow-left');arrow.setAttribute('aria-hidden','true');back.prepend(arrow);
   const title=node('h3','',c.name); title.id='cabinet-detail-heading'; title.tabIndex=-1;
-  const heading=node('div','cabinet-detail-top'); heading.append(cabinetImage(c),title);
-  const actions=node('div','cabinet-actions'); actions.append(cabinetButton('Edit cabinet',()=>openCabinetEditor(c)),cabinetButton('Add games',()=>openCabinetGames(c),'primary'));
-  panel.append(back,heading);
-  if(!c.photoId&&window.ARCADE_CABINET_ART?.[c.code]?.note)panel.append(node('p','small',window.ARCADE_CABINET_ART[c.code].note));
-  actions.append(cabinetButton('Remove cabinet',()=>openRemoveCabinet(c),'secondary danger'));
-  panel.append(actions,node('h4','','Games on this cabinet'));
-  const games=c.gameIds.map(gameById).filter(Boolean);
-  if(!games.length)panel.append(node('p','cabinet-empty','No games assigned yet. Add games from your collection or the marquee catalog.'));
-  for(const game of games){
-    const row=node('div','cabinet-game-row'),art=node('img');art.src=artworkUrl(game);art.alt='';
-    const info=node('div');const other=cabinets.filter(other=>other.id!==c.id&&other.gameIds.includes(game.id)).length;
-    info.append(node('strong','',game.title),node('small','',other?`Also on ${other} other cabinet${other===1?'':'s'}`:'Only on this cabinet'));
-    if(!game.record)info.append(node('small','','Be the first to set a record'));
-    if(!game.eligible)info.append(node('small','','Outside eligible game collection'));
-    const manage=cabinetButton('Assign cabinets',()=>openCabinetAssignment(game),'text-button');
-    row.append(art,info,manage);panel.append(row);
-  }
-  panel.append(node('p','small','Assignments do not change scores or game eligibility.'));
+  const heading=node('div','cabinet-detail-top'),info=node('div','cabinet-profile-info');
+  const actions=node('div','cabinet-actions');
+  actions.append(cabinetButton('Edit name',()=>openCabinetEditor(c,'name')),cabinetButton('Change photo',()=>openCabinetEditor(c,'photo')));
+  info.append(title,node('p','cabinet-count',`${c.gameIds.length} assigned game${c.gameIds.length===1?'':'s'}`),actions);
+  heading.append(cabinetImage(c),info);panel.append(back,heading);
+  const gameHeading=node('div','cabinet-games-heading');gameHeading.append(node('h4','','Games on this cabinet'),cabinetButton('Add games',()=>openCabinetGames(c),'primary'));
+  const label=node('label','visually-hidden','Search assigned games');label.htmlFor='cabinet-assigned-search';
+  const search=node('input');search.id='cabinet-assigned-search';search.type='search';search.placeholder='Search assigned games…';search.value=cabinetGameQuery;
+  search.addEventListener('input',()=>{cabinetGameQuery=search.value;renderCabinetGames(c);});
+  const list=node('div');list.id='cabinet-assigned-games';panel.append(gameHeading,label,search,list);renderCabinetGames(c);
+  const footer=node('div','cabinet-remove-area');footer.append(cabinetButton('Remove cabinet',()=>openRemoveCabinet(c),'text-button danger'),node('p','small','Games and scores are kept.'));
+  panel.append(footer);
 }
 async function openCabinets(){
   if(!state.user?.admin)return;
   if(document.fullscreenElement)await document.exitFullscreen();
   $('account-dialog').close(); $('cabinet-message').textContent='Loading cabinets…'; $('cabinets-dialog').showModal();
-  try{await refreshCabinets();selectedCabinet=null;renderCabinets();$('cabinet-message').textContent='';}catch(e){$('cabinet-message').textContent=e.message;}
+  try{await refreshCabinets();selectedCabinet=null;cabinetGalleryScroll=0;cabinetGameQuery='';renderCabinets();$('cabinets-dialog').scrollTop=0;$('cabinet-message').textContent='';}catch(e){$('cabinet-message').textContent=e.message;}
 }
-function openCabinetEditor(c=null){
+function openCabinetEditor(c=null,focusField='name'){
   resetCabinetCrop();
   editingCabinet=c?{...c}:null;
   $('cabinet-editor-heading').textContent=c?'Edit cabinet':'Add cabinet';
   $('cabinet-name').value=c?.name||'';$('cabinet-file').value='';$('cabinet-editor-message').textContent='';
   $('cabinet-editor').showModal();
+  $(focusField==='photo'?'cabinet-file':'cabinet-name').focus();
 }
 $('cabinet-form').addEventListener('submit',async event=>{
   event.preventDefault(); const button=$('save-cabinet');button.disabled=true;$('close-cabinet-editor').disabled=true;
@@ -59,7 +88,7 @@ $('cabinet-form').addEventListener('submit',async event=>{
     if(file&&file.size>40*1024*1024)throw new Error('Choose a photo under 40 MB.');
     if(file&&cabinetCropImage&&$('cabinet-crop-enabled').checked)file=await croppedCabinetFile();
     const r=await api(`/admin/cabinets${editingCabinet?'/'+encodeURIComponent(editingCabinet.id):''}`,cabinetJSON(editingCabinet?'PATCH':'POST',{name:$('cabinet-name').value,revision:editingCabinet?.revision}));
-    cabinets=r.cabinets;selectedCabinet=r.id;$('cabinet-search').value='';editingCabinet={...cabinets.find(c=>c.id===r.id)};
+    cabinets=r.cabinets;selectedCabinet=r.id;if(!editingCabinet){$('cabinet-search').value='';cabinetGameQuery='';}editingCabinet={...cabinets.find(c=>c.id===r.id)};
     if(file){
       const body=new FormData();body.set('photo',file);body.set('revision',editingCabinet.revision);
       $('cabinet-editor-message').textContent='Cabinet saved. Uploading photo…';

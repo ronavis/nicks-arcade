@@ -329,3 +329,40 @@
 #celebration-cabinets .featured-cabinet{min-height:0}
 #celebration-cabinets .cabinet-photo{height:100%;background:transparent}
 #celebration-cabinets .featured-cabinet span{font-size:calc(var(--u)*2.4)}
+
+/* Cabinet gallery opens a dedicated full-width profile on every screen. */
+#cabinets-dialog{width:min(1040px,calc(100vw - 32px));padding:32px;position:relative}
+#cabinets-dialog .dialog-heading{padding-right:46px;margin-bottom:12px}
+#close-cabinets{position:absolute;right:20px;top:20px}
+#add-cabinet{width:auto;margin:8px 0 22px;padding:12px 20px}
+#cabinet-message:empty{display:none}
+#cabinet-layout,#cabinet-layout.has-selection{display:block}
+#cabinet-layout.has-selection .cabinet-library{display:none}
+#cabinet-grid{gap:16px;margin-top:18px}
+.cabinet-tile{background:transparent;padding:14px;gap:8px;justify-content:flex-start}
+.cabinet-tile .cabinet-photo{height:240px;width:100%;object-fit:contain}
+.cabinet-tile strong{font:26px/1.12 var(--display);min-height:58px;display:flex;align-items:center;justify-content:center}
+.cabinet-tile small{font-size:14px}
+.cabinet-tile-action{display:block;width:100%;border:1px solid #008c98;border-radius:6px;padding:11px 5px;font:24px/1.1 var(--display);margin-top:6px}
+.cabinet-tile:hover .cabinet-tile-action{background:#e0f4ee}
+#cabinet-detail{border:0;padding:0}
+.cabinet-profile-open>.dialog-heading{margin:0;padding:0;height:0}
+.cabinet-back{display:flex;align-items:center;gap:8px;margin:0 45px 18px 0;font:16px/1.4 Arial,sans-serif;min-height:44px;padding:0}
+.cabinet-detail-top{display:grid;grid-template-columns:minmax(150px,.65fr) minmax(0,1fr);gap:32px;padding:0 0 22px;border-bottom:2px solid var(--cyan)}
+.cabinet-detail-top .cabinet-photo{height:300px;width:100%;object-fit:contain}
+.cabinet-detail-top h3{font:46px/1.08 var(--display);margin:0;overflow-wrap:anywhere}
+.cabinet-count{font:16px/1.5 Arial,sans-serif;color:#52686d;margin:14px 0}
+#cabinet-detail .cabinet-actions{margin:22px 0 0;gap:10px;display:grid;grid-template-columns:1fr 1fr}
+#cabinet-detail .cabinet-actions button{font:25px/1.1 var(--display);padding:12px}
+.cabinet-games-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:24px 0 16px}
+.cabinet-games-heading h4{font:32px/1.1 var(--display);margin:0}
+.cabinet-games-heading button{width:auto;flex-shrink:0;padding:12px 24px}
+#cabinet-assigned-games .cabinet-game-row{grid-template-columns:minmax(140px,1fr) minmax(0,1fr) auto;gap:18px;padding:18px 0}
+#cabinet-assigned-games .cabinet-game-row img{width:100%;height:80px;object-fit:contain}
+#cabinet-assigned-games .cabinet-game-row button{font:22px/1.1 var(--display);padding:12px}
+.cabinet-remove-area{margin-top:28px;padding-top:20px;border-top:1px solid var(--line)}
+.cabinet-remove-area button{color:#ac2525;padding-left:0;text-decoration:underline}
+.cabinet-remove-area p{margin:4px 0 0}
+@media(min-width:761px){#cabinets-dialog:not(.cabinet-profile-open)>.dialog-heading{padding-right:230px}#add-cabinet{position:absolute;top:26px;right:88px;margin:0}}
+@media(max-width:760px){#cabinets-dialog{padding:20px;width:calc(100vw - 20px)}#cabinet-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.cabinet-tile{padding:10px}.cabinet-tile .cabinet-photo{height:190px}.cabinet-tile strong{font-size:24px}.cabinet-tile-action{font-size:22px}.cabinet-detail-top{gap:18px;grid-template-columns:minmax(100px,.65fr) minmax(0,1fr)}.cabinet-detail-top .cabinet-photo{height:220px}.cabinet-detail-top h3{font-size:34px}#cabinet-detail .cabinet-actions{grid-template-columns:1fr;gap:8px;margin-top:14px}#cabinet-detail .cabinet-actions button{font-size:23px}.cabinet-games-heading h4{font-size:28px}.cabinet-games-heading button{padding:12px;font-size:24px}#cabinet-assigned-games .cabinet-game-row{grid-template-columns:110px minmax(0,1fr);gap:10px}#cabinet-assigned-games .cabinet-game-row button{grid-column:1/-1;width:100%}#cabinet-assigned-games .cabinet-game-row img{height:62px}}
+@media(max-width:400px){.cabinet-tile .cabinet-photo{height:155px}.cabinet-tile strong{font-size:21px;min-height:68px}.cabinet-tile small{font-size:12px}.cabinet-tile-action{font-size:20px}.cabinet-detail-top h3{font-size:30px}.cabinet-count{font-size:14px}.cabinet-games-heading{align-items:flex-start}.cabinet-games-heading h4{max-width:55%}}
