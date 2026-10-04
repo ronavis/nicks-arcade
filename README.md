@@ -252,3 +252,8 @@ Manage scores opens on **Record history**, a newest-first timeline of recorded m
 Use **All submissions** to search initials, email or score, including scores that did not break a record. **Show removed entries** includes removed submissions. The existing latest-200 submission limit remains; older timeline milestones outside that set retain their original details and are available in the export. Unknown legacy dates are not invented, and historical winning margins are not inferred from neighboring entries that may have been corrected or removed.
 
 Individual game profiles use the same dot-matrix record timeline as Manage scores, with a current-record marker and the **Play it on** cabinet list below. An unchanged current record appears once in the timeline. A separate current-value summary remains when history contains an older corrected value, when the current record is absent from the milestone list, or when a game has no score. Public profiles remain read-only and do not expose player email addresses or removed entries.
+
+
+### Cabinet gallery and profiles
+
+Manage cabinets opens a responsive photo gallery (three columns on desktop, two on phones). Select any cabinet to open its dedicated profile with its name, photo and searchable assigned-game list. **All cabinets** returns to the gallery, retaining the search and restoring the selected cabinet's scroll position. **Edit name** and **Change photo** focus the corresponding field in the existing cabinet editor. **Add games**, multi-cabinet assignments and the existing removal confirmation are available from the profile; removing a cabinet keeps the games and scores.

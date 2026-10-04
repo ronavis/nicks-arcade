@@ -85,3 +85,16 @@ The selected record-history design now carries into the TV takeover. The cyan ti
 Captures: `docs/screenshots/celebration-timeline.jpg` (760×1180) and `docs/screenshots/celebration-phone.jpg` (390×844). These are local illustrative Centipede events; no scores were submitted to production. Reviewed actual rendered cream/cyan typography, timeline alignment, uncropped marquee and contained cabinet photo. Phone checks also covered a timed record, four cabinets, long taunt, first score, absent artwork assignments, dismissal button and the real ten-second automatic dismissal. No horizontal or vertical overflow in the four-cabinet test. Browser console: zero errors/warnings. All 26 frontend tests, syntax checks and build pass. No backend or stored-score changes.
 
 final result: passed
+
+
+# Cabinet gallery and dedicated profile — October 3, 2026
+
+Selected references: gallery `exec-93c13cd8-1930-42fb-b5be-8554f1464b29.png`, profile `exec-d6f8a0de-d4e3-4a7c-98ad-2a58b0245032.png`; user explicitly chose gallery 1 opening profile 3. Combined flow `exec-e7ff9dd2-8e1e-44f9-9de4-45394560323c.png`. Existing real cabinet assets and stored game assignments were retained rather than replacing them with generated artwork.
+
+In-app-browser captures at 1000×1180 and 390×844: `docs/screenshots/cabinet-gallery.png`, `cabinet-profile.png`, `cabinet-gallery-phone.png`, `cabinet-profile-phone.png`. Source and rendered gallery/profile images were opened together in one comparison. Full composition and readable control/typography regions reviewed. Actual cabinet roster/photo differences from mock data are intentional. The real list scrolls beyond the first six cabinets and first four assigned games.
+
+Initial P1: inherited full-width primary-button styling overlapped the desktop gallery heading. Fixed Add cabinet and Add games widths, rebuilt and captured again. Final review: three-column gallery, two-column phone gallery, separate full-width profile, contained cabinet photos, cream/cyan styling, consistent outlined controls and readable game rows match the selected flow. Phone buttons stack and remain reachable without horizontal clipping.
+
+Browser checks passed: gallery → profile → gallery; filtered search retained; return focus/scroll restored to selected cabinet; assigned-game filtering and empty results; assignment dialog; edit-name focus; photo-input focus; add-games flow; removal confirmation opened and cancelled. No production records were mutated. Console had zero warnings/errors. Syntax checks, 26 existing frontend tests and static build passed. Backend unchanged; upload/scoring algorithms were not re-tested because their implementation did not change.
+
+final result: passed
