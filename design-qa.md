@@ -98,3 +98,12 @@ Initial P1: inherited full-width primary-button styling overlapped the desktop g
 Browser checks passed: gallery → profile → gallery; filtered search retained; return focus/scroll restored to selected cabinet; assigned-game filtering and empty results; assignment dialog; edit-name focus; photo-input focus; add-games flow; removal confirmation opened and cancelled. No production records were mutated. Console had zero warnings/errors. Syntax checks, 26 existing frontend tests and static build passed. Backend unchanged; upload/scoring algorithms were not re-tested because their implementation did not change.
 
 final result: passed
+
+
+# Mobile carousel clearance — October 3, 2026
+
+User screenshot showed rotation dots/arrows crossing the cyan border above Around the arcade. Reproduced at 390px: rotation bottom 484.64 vs divider top 481.69. Scoped the fix to <=500px: reserve bottom clearance, increase control-row padding, slightly reduce marquee allocation, and let the cabinet artwork row shrink proportionally when vertical space is tight. Score and initials typography unchanged. Date row keeps its existing reserved height even for undated legacy records.
+
+In-app browser checks at 320×568, 390×844, 430×932. Initial fixed-size attempt still overlapped at 320; flexible cabinet-row sizing resolved that (4.27px control-box-to-divider gap). At 430 the gap is 6.44px. Final 390 screenshot confirms Dig Dug, three cabinet images/labels, carousel and next section are separated. Screenshot: docs/screenshots/mobile-carousel-fixed.png. No console warnings/errors. 26 frontend tests passed; build and diff check passed. Desktop CSS outside the mobile query is unchanged. Physical iPhone Safari not directly tested.
+
+final result: passed
