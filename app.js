@@ -157,7 +157,7 @@ function renderSession() {
   if (!state.user?.admin) for (const id of ['cabinets-dialog','cabinet-editor','assignment-dialog','cabinet-add-dialog']) $(id).close();
   $('tv-games-button').hidden = !state.user?.admin; $('account-games').hidden = !state.user?.admin;
   if (!state.user?.admin) { $('games-dialog').close(); $('game-detail-dialog').close(); $('arcade-games-list').replaceChildren(); delete $('arcade-games-list').dataset.rendered; }
-  if (!state.user?.admin) { $('admin-list').replaceChildren(); $('admin-feedback').textContent = ''; }
+  if (!state.user?.admin) { $('submission-dialog').close(); $('edit-dialog').close(); $('submission-detail').replaceChildren(); $('record-history-list').replaceChildren(); $('admin-list').replaceChildren(); $('admin-feedback').textContent = ''; }
   $('account-label').textContent = signed ? state.config?.demo ? `Preview account · ${state.user.admin ? 'admin' : 'player'}` : 'Signed in with Google' : 'Sign in to join the board';
   if (state.config?.demo && signed) $('account-label').title = 'Local test account. This is not a Google sign-in.';
   if (!signed && location.hash === '#admin') location.hash = '#play';
@@ -465,16 +465,9 @@ function renderAdminScores() {
     row.append(node('span','admin-score-status',status), node('div','record',`${score.score} · ${score.initials}`));
     row.append(node('p','',score.email),node('p','small',score.createdAt ? new Date(score.createdAt*1000).toLocaleString() : 'Imported arcade record'));
     if (score.taunt) row.append(node('blockquote','',score.taunt));
-    if (!score.deleted) {
-      const actions = node('div','admin-actions');
-      for (const [label, action] of [['Edit score','edit'],['Remove score','delete']]) {
-        const button = node('button', action === 'delete' ? 'secondary danger' : 'secondary',label);
-        button.setAttribute('aria-label', `${label}: ${score.initials}, ${score.score}`);
-        button.addEventListener('click',()=>openEdit(score,action));actions.append(button);
-      }
-      if(score.hasPhoto){const proof=node('button','text-button','View proof photo');proof.addEventListener('click',()=>showPhoto(score.photoId));actions.append(proof);}
-      row.append(actions);
-    }
+    const manage = node('button', 'secondary manage-submission', score.deleted ? 'View submission' : 'Manage submission');
+    manage.setAttribute('aria-label', `${score.deleted ? 'View' : 'Manage'} submission: ${score.initials}, ${score.score}`);
+    manage.addEventListener('click', () => openSubmission(score)); row.append(manage);
     return row;
   }));
   $('admin-message').textContent = `${scores.length} shown · ${adminScores.filter(s=>!s.deleted).length} active · ${adminScores.filter(s=>s.deleted).length} removed (latest 200)`;
@@ -494,17 +487,58 @@ function renderAdminScores() {
   }
 }
 
+function setScoreTab(view) {
+  $('score-history-panel').hidden = view !== 'history'; $('score-submissions-panel').hidden = view !== 'submissions';
+  $('score-history-tab').setAttribute('aria-pressed', String(view === 'history'));
+  $('score-submissions-tab').setAttribute('aria-pressed', String(view === 'submissions'));
+}
+$('score-history-tab').addEventListener('click', () => setScoreTab('history'));
+$('score-submissions-tab').addEventListener('click', () => setScoreTab('submissions'));
+$('history-view-all').addEventListener('click', () => { setScoreTab('submissions'); $('admin-search').focus(); });
+function openSubmission(score) {
+  if (!state.user?.admin) return;
+  const content = $('submission-detail'); content.replaceChildren(); $('submission-message').textContent = '';
+  content.append(node('strong', 'submission-score', `${score.score} · ${score.initials}`), node('p', '', score.email), node('p', 'small', score.createdAt ? new Date(score.createdAt * 1000).toLocaleString() : 'Imported starting record · original date not recorded'));
+  if (score.taunt) content.append(node('blockquote', '', score.taunt));
+  if (score.deleted) content.append(node('p', 'history-change', 'This submission was removed from the scoreboard. It remains here for the audit history.'));
+  else {
+    const actions = node('div', 'submission-actions');
+    for (const [label, action] of [['Edit score','edit'],['Remove score','delete']]) {
+      const button = node('button', `secondary${action === 'delete' ? ' danger' : ''}`, label);
+      button.addEventListener('click', () => openEdit(score, action)); actions.append(button);
+    }
+    content.append(actions);
+    if (score.hasPhoto) { const proof = node('button','text-button','View proof photo'); proof.addEventListener('click', () => showPhoto(score.photoId)); content.append(proof); }
+  }
+  $('submission-dialog').showModal();
+}
+$('close-submission').addEventListener('click', () => $('submission-dialog').close());
+function historyEntryLabel(entry, currentId) {
+  if (entry.deleted) return 'Removed record';
+  if (entry.id === currentId) return entry.corrected ? 'Current record · corrected' : 'Current record';
+  return entry.imported ? 'Imported starting record' : 'Previous record';
+}
+
 function renderRecordHistory(history, untracked) {
   $('record-history-note').textContent = 'Newest first · Scores and initials as originally entered. Corrections and removals are labeled.' + (untracked ? ` ${untracked} older submission${untracked === 1 ? '' : 's'} predate record tracking; their record status is unknown.` : '');
   $('record-history-list').replaceChildren(...history.map(entry => {
     const item = node('li', 'record-history-item');
-    item.append(node('span', 'admin-score-status', entry.imported ? 'Imported starting record' : 'New record'));
+    const game = gameById($('admin-game').value);
+    item.classList.toggle('current', !entry.deleted && entry.id === game?.record?.id);
+    item.classList.toggle('removed', Boolean(entry.deleted));
+    item.append(node('span', 'admin-score-status', historyEntryLabel(entry, game?.record?.id)));
     item.append(node('strong', 'record-history-score', `${entry.score} · ${entry.initials}`));
     item.append(node('p', 'small', entry.email ? `${entry.imported ? 'Linked player' : 'Submitted by'}: ${entry.email}` : 'Original player account not recorded'));
     const date = node('time', 'small', entry.createdAt ? new Date(entry.createdAt * 1000).toLocaleString() : 'Original date not recorded');
     if (entry.createdAt) date.dateTime = new Date(entry.createdAt * 1000).toISOString();
     item.append(date);
     if (entry.corrected || entry.deleted) item.append(node('p', 'history-change', [entry.corrected ? 'Later corrected by an admin' : '', entry.deleted ? 'Removed from the scoreboard' : ''].filter(Boolean).join(' · ')));
+    const submission = adminScores.find(score => score.id === entry.id);
+    if (submission) {
+      const manage = node('button', 'secondary manage-submission', submission.deleted ? 'View submission' : 'Manage submission');
+      manage.setAttribute('aria-label', `${submission.deleted ? 'View' : 'Manage'} submission: ${entry.initials}, ${entry.score}`);
+      manage.addEventListener('click', () => openSubmission(submission)); item.append(manage);
+    } else item.append(node('p', 'small', 'This milestone predates the latest 200 submissions. Its original details are included in the history export.'));
     return item;
   }));
   if (!history.length) $('record-history-list').append(node('li', 'small', 'No recorded milestones yet. The first new record will appear here.'));
@@ -541,7 +575,7 @@ $('edit-form').addEventListener('submit', async event => {
   event.preventDefault(); const { score, action } = state.editing; $('save-edit').disabled = true;
   try {
     await api(`/admin/scores/${score.id}`, { method: action === 'delete' ? 'DELETE' : 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ revision: score.revision, score: $('edit-score').value, initials: $('edit-initials').value, taunt: $('edit-taunt').value }) });
-    $('edit-dialog').close(); await refreshBoard(); await loadAdmin(); $('admin-feedback').textContent = action === 'delete' ? 'Score removed. The scoreboard has been updated.' : `Correction saved: ${adminScores.find(item => item.id === score.id)?.score || 'score updated'}. The scoreboard is up to date.`;
+    $('edit-dialog').close(); $('submission-dialog').close(); await refreshBoard(); await loadAdmin(); $('admin-feedback').textContent = action === 'delete' ? 'Score removed. The scoreboard has been updated.' : `Correction saved: ${adminScores.find(item => item.id === score.id)?.score || 'score updated'}. The scoreboard is up to date.`;
   } catch (error) { $('edit-message').textContent = error.message; }
   finally { $('save-edit').disabled = false; }
 });
@@ -550,13 +584,13 @@ async function showPhoto(id) {
     const blob = await api(`/photos/${id}`, { blob: true });
     if ($('view-proof').dataset.url) URL.revokeObjectURL($('view-proof').dataset.url);
     const url = URL.createObjectURL(blob); $('view-proof').src = url; $('view-proof').dataset.url = url; $('photo-dialog').showModal();
-  } catch (error) { $('admin-message').textContent = error.message; }
+  } catch (error) { $('admin-message').textContent = error.message; if ($('submission-dialog').open) $('submission-message').textContent = error.message; }
 }
 $('close-photo').addEventListener('click', () => $('photo-dialog').close());
 $('photo-dialog').addEventListener('close', () => { if ($('view-proof').dataset.url) URL.revokeObjectURL($('view-proof').dataset.url); $('view-proof').removeAttribute('src'); delete $('view-proof').dataset.url; });
 $('export-records').addEventListener('click', async () => {
   try { const data = await api('/admin/export'); const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })); const a = node('a'); a.href = url; a.download = 'nicks-arcade-records.json'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
-  catch (error) { $('admin-message').textContent = error.message; }
+  catch (error) { $('admin-feedback').textContent = error.message; }
 });
 
 

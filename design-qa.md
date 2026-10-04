@@ -48,3 +48,18 @@ Iteration: P2 excess reserved title whitespace reduced from 2.1em to 1.05em; des
 Browser validation: tabs, catalog search, No scores filter, leaderboard checkbox off/on, spreadsheet import open/close, editor rename/marquee/assignment open/close, Manage scores routing to correct game, and regular-player admin-control hiding passed. Console reported zero errors and warnings. Existing 21 frontend tests and syntax/build checks passed. Backend unchanged; no backend redeployment needed.
 
 final result: passed
+
+# Manage Scores timeline — October 3, 2026
+
+Source visual truth: `/Users/studio/.codex/generated_images/01a0ed69-4bdd-71d2-b765-99cd8dd40c66/exec-48a2004d-920d-4a3b-a0fe-2ff7066a08a9.png` (third displayed Manage Scores mockup selected by Ron).
+Implementation captures: `docs/screenshots/manage-scores-timeline.jpg` (760×1180) and `docs/screenshots/manage-scores-phone.jpg` (390×844), CSS pixels and density 1. Generated source 1006×1564 normalized to the implementation panel width. Local demo admin with illustrative Asteroids submissions; desktop captured before removing test records, phone after removal to validate state labels. Production score data was untouched.
+
+Full-view and focused timeline inspection: cream/cyan/ink tokens, existing Jersey 10 headings/buttons and ScoreDots score type, horizontal artwork/game summary, equal tabs, flat chronological timeline and full-width Manage submission actions match the chosen direction. Mobile summary remains a compact side-by-side block, long content wraps, page scroll exposes the complete timeline. Existing assets retained without stretching. Dates/player metadata remain truthful to records.
+
+Intentional data constraints: milestones show original values; the management dialog uses current saved values. Corrected and removed states are explicit. Historical improvement amounts in the concept are omitted because adjacent milestones are not reliable baselines after corrections/removals. No unknown legacy dates are manufactured. The existing 200-submission management window is retained with explanatory copy for older milestones.
+
+Browser interactions: record/all-submission tabs, search, show-removed, edit-and-save, reopening a corrected score (verified 8,561 instead of original 8,560), removal confirmation, current-record removal promoting the remaining best score, and read-only removed entries passed against isolated local demo data. One locator was narrowed after a search also matched the submitting admin email; no production action occurred. Console reported zero errors/warnings. All 22 frontend tests pass, including status-label precedence for deleted/current/corrected/imported milestones. No backend changes.
+
+No actionable P0/P1/P2 findings remain. Follow-up: optional pagination beyond the existing latest-200 submission window is outside this visual redesign.
+
+final result: passed

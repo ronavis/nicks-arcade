@@ -244,3 +244,9 @@ Record ages use calendar days in the display device’s timezone, matching the d
 ### Direct settings and custom Donkey Kong cabinet
 
 **Menu → Settings** opens personal settings directly; arcade rules and TV controls remain admin-only. The collection now has 19 cabinets and 123 assignments, including Nick’s custom Arcade1Up-based Donkey Kong cabinet linked to the existing Donkey Kong record. Its classic blue cabinet image is a reference; an uploaded photo of Nick’s build will override it. Donkey Kong Jr. remains a separate cabinet.
+
+### Managing score history
+
+Manage scores opens on **Record history**, a newest-first timeline of recorded milestones with dot-matrix scores, player attribution and dates. Current, previous, imported, corrected and removed records are distinguished. **Manage submission** opens the current saved submission for correction, removal or proof-photo viewing; the timeline continues to show the originally recorded milestone. Removed submissions are read-only.
+
+Use **All submissions** to search initials, email or score, including scores that did not break a record. **Show removed entries** includes removed submissions. The existing latest-200 submission limit remains; older timeline milestones outside that set retain their original details and are available in the export. Unknown legacy dates are not invented, and historical winning margins are not inferred from neighboring entries that may have been corrected or removed.
