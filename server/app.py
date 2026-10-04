@@ -154,6 +154,11 @@ def create_app(config=None, *, allow_demo=False):
           );
           CREATE INDEX IF NOT EXISTS movie_ladder_runs_user
             ON movie_ladder_runs(user_sub, created_at DESC);
+          CREATE TABLE IF NOT EXISTS movie_ladder_public_profiles (
+            user_sub TEXT PRIMARY KEY,
+            display_name TEXT NOT NULL DEFAULT '',
+            sharing INTEGER NOT NULL DEFAULT 0 CHECK(sharing IN (0,1))
+          );
           CREATE TABLE IF NOT EXISTS movie_ladder_question_events (
             id TEXT PRIMARY KEY,
             run_id TEXT NOT NULL,
@@ -642,6 +647,58 @@ def create_app(config=None, *, allow_demo=False):
             )
             row = db.execute('SELECT * FROM movie_ladder_runs WHERE id=?', (run_id,)).fetchone()
         return jsonify(run=public_movie_ladder_run(row)), 201
+
+    @app.get('/api/movie-ladder/leaderboard-profile')
+    @authenticated()
+    def movie_ladder_leaderboard_profile():
+        row = get_db().execute(
+            'SELECT display_name,sharing FROM movie_ladder_public_profiles WHERE user_sub=?',
+            (g.user['sub'],),
+        ).fetchone()
+        return jsonify(displayName=row['display_name'] if row else '', sharing=bool(row['sharing']) if row else False)
+
+    @app.put('/api/movie-ladder/leaderboard-profile')
+    @authenticated()
+    def movie_ladder_save_leaderboard_profile():
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict) or type(payload.get('sharing')) is not bool:
+            raise ValueError('Choose whether to share your best score.')
+        if not isinstance(payload.get('displayName', ''), str):
+            raise ValueError('Enter a leaderboard name.')
+        name = ' '.join(payload.get('displayName', '').split())
+        if (name or payload['sharing']) and not re.fullmatch(r"[\w .'-]{2,24}", name, re.UNICODE):
+            raise ValueError('Use 2–24 letters, numbers, spaces, underscores, apostrophes, periods, or hyphens. Do not use an email address.')
+        with get_db() as db:
+            db.execute(
+                '''INSERT INTO movie_ladder_public_profiles(user_sub,display_name,sharing) VALUES (?,?,?)
+                   ON CONFLICT(user_sub) DO UPDATE SET display_name=excluded.display_name,sharing=excluded.sharing''',
+                (g.user['sub'], name, int(payload['sharing'])),
+            )
+        return jsonify(displayName=name, sharing=payload['sharing'])
+
+    @app.get('/api/movie-ladder/leaderboard')
+    def movie_ladder_leaderboard():
+        limit_text = str(request.args.get('limit', '10'))
+        if not re.fullmatch(r'(?:[1-9]|10)', limit_text):
+            raise ValueError('Leaderboard limit must be 1 through 10.')
+        rows = get_db().execute(
+            '''WITH best AS (
+                 SELECT p.display_name,r.score,r.rung_reached,r.completed,r.rank,r.created_at,
+                        ROW_NUMBER() OVER (PARTITION BY r.user_sub ORDER BY r.score DESC,
+                          r.completed DESC,r.rung_reached DESC,r.created_at ASC,r.id ASC) AS choice
+                 FROM movie_ladder_runs r JOIN movie_ladder_public_profiles p ON p.user_sub=r.user_sub
+                 WHERE p.sharing=1 AND r.score>0
+               ) SELECT * FROM best WHERE choice=1
+                 ORDER BY score DESC,completed DESC,rung_reached DESC,created_at ASC,display_name ASC
+                 LIMIT ?''',
+            (int(limit_text),),
+        ).fetchall()
+        response = jsonify(leaders=[{
+            'position': index + 1, 'name': row['display_name'], 'score': row['score'],
+            'rungReached': row['rung_reached'], 'completed': bool(row['completed']), 'rank': row['rank'],
+        } for index, row in enumerate(rows)])
+        response.headers['Cache-Control'] = 'no-store'
+        return response
 
     @app.get('/api/movie-ladder/runs')
     @authenticated()

@@ -244,3 +244,10 @@ Record ages use calendar days in the display device’s timezone, matching the d
 ### Direct settings and custom Donkey Kong cabinet
 
 **Menu → Settings** opens personal settings directly; arcade rules and TV controls remain admin-only. The collection now has 19 cabinets and 123 assignments, including Nick’s custom Arcade1Up-based Donkey Kong cabinet linked to the existing Donkey Kong record. Its classic blue cabinet image is a reference; an uploaded photo of Nick’s build will override it. Donkey Kong Jr. remains a separate cabinet.
+
+
+## Movie Ladder public standings
+
+Players can choose a public name and explicitly share their best saved Movie Ladder run. Existing history stays private by default. `GET /api/movie-ladder/leaderboard` returns up to ten opted-in players (one best run each), without emails, account subjects, or run IDs. Authenticated `GET`/`PUT /api/movie-ladder/leaderboard-profile` manages only the caller's public name and sharing preference. Withdrawing sharing removes the player from public results without deleting runs. Names use a restricted 2–24 character format; emails and markup are rejected.
+
+This uses the existing client-reported run scores; it does not add independent score verification. Preferences live in the separate `movie_ladder_public_profiles` table. The production rollout preserves the deployed composite app baseline and copies other release files unchanged.
