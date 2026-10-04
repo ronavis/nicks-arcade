@@ -67,3 +67,9 @@ The taunt-settings release adds default_taunt and taunt_enabled (off by default)
 ## Uploaded marquees
 
 The marquee release adds `games.marquee_id`, the `marquee_audit` table, and immutable PNG files under the persistent `marquees/` directory. Only admins can upload or restore defaults. Public `/api/marquees/<uuid>` serves only currently assigned artwork; score-proof photos remain authenticated. Uploads accept JPG, PNG, WebP and HEIC up to 40 MB / 64 MP, normalize orientation, strip metadata and resize to 1600 px. Optimistic revision checks prevent one device from silently overwriting another’s change. Backups include current images and audit-history image references. Preserve the entire data directory and use a marquee-aware backend when rolling back after uploads.
+
+## Movie Ladder TMDb extension
+
+The optional Movie Ladder integration reuses the existing Arcade service and private SQLite metadata store; it does not add a port, nginx location, OS account, or database. Configure `MOVIE_LADDER_ADMIN_EMAILS` in `/etc/nicks-arcade.env` (Ron only for the current release). The TMDb API Read Access Token itself is entered later from Movie Ladder Settings, verified against TMDb before storage, and stored only in the private SQLite `metadata` table. It is never included in the Arcade JSON export.
+
+Release this extension with the normal **Updating the existing installation** sequence above: snapshot health/data, stage a new immutable backend release from the reviewed commit, switch `current`, restart only `nicks-arcade`, then verify the existing Arcade health/leaderboard before testing the new `/arcade-api/movie-ladder/` endpoints. No nginx change is required because the existing `/arcade-api/` mapping already forwards these namespaced routes.
