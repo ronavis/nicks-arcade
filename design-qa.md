@@ -74,3 +74,5 @@ Full view and focused timeline/cabinet review passed: cream/cyan/ink colors, Jer
 Browser checks: ordinary imported record, corrected record (separate current summary), empty game, open/close and both screen sizes passed. Console: zero errors/warnings. All 23 frontend tests pass, including exact duplicate detection and correction/empty-history cases. No backend changes or live data mutations.
 
 final result: passed
+
+Public profile follow-up validation: rapid close/reopen exposed a queued-close-event race that left the replacement profile loading. The close handler now invalidates requests only while the dialog is actually closed. Added regression coverage, then repeated ordinary → corrected → empty-profile browser transitions successfully. All 24 frontend tests pass. Final result remains passed.

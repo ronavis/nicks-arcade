@@ -224,7 +224,7 @@ async function openWhereToPlay(game) {
     }));
   }catch(error){if(request===gameOverviewRequest){$('game-overview-record').hidden=false;$('game-overview-current').textContent='Record unavailable';$('game-overview-message').textContent='Could not load history. Close and reopen this game to try again.';}}
 }
-$('where-to-play-dialog').addEventListener('close',()=>{++gameOverviewRequest;});
+$('where-to-play-dialog').addEventListener('close',()=>{if(!$('where-to-play-dialog').open)++gameOverviewRequest;});
 $('hero-title').setAttribute('role','button');$('hero-title').tabIndex=0;
 $('hero-title').setAttribute('aria-label','Open featured game history');
 $('hero-title').addEventListener('click',()=>{const game=gameById(state.featured);if(game)openWhereToPlay(game);});
