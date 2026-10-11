@@ -107,3 +107,7 @@ User screenshot showed rotation dots/arrows crossing the cyan border above Aroun
 In-app browser checks at 320×568, 390×844, 430×932. Initial fixed-size attempt still overlapped at 320; flexible cabinet-row sizing resolved that (4.27px control-box-to-divider gap). At 430 the gap is 6.44px. Final 390 screenshot confirms Dig Dug, three cabinet images/labels, carousel and next section are separated. Screenshot: docs/screenshots/mobile-carousel-fixed.png. No console warnings/errors. 26 frontend tests passed; build and diff check passed. Desktop CSS outside the mobile query is unchanged. Physical iPhone Safari not directly tested.
 
 final result: passed
+
+## October 11 — Nick's marquee navigation
+
+Local preview only. Replaced lower carousel controls with turquoise marquee-side arrows; removed the featured image frame; enlarged initials; retained date/margin row; rebalanced full cabinet images. At viewport widths 320, 390, 430 and 1080, measured positive cabinet-to-divider gaps (6.4–21.2px). Verified arrows remained within a 1920x1080 viewport at 90 and 270 degrees. Visually inspected the 390px Pac-Mania preview. All 27 frontend tests pass, including temporary manual browsing, resetting its 60-second deadline, explicit Pause, celebrations and hidden-page guards. Syntax/build pass. Actual Firestick remote testing remains with Nick; no production publication in this pass.

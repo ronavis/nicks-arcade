@@ -257,3 +257,9 @@ Individual game profiles use the same dot-matrix record timeline as Manage score
 ### Cabinet gallery and profiles
 
 Manage cabinets opens a responsive photo gallery (three columns on desktop, two on phones). Select any cabinet to open its dedicated profile with its name, photo and searchable assigned-game list. **All cabinets** returns to the gallery, retaining the search and restoring the selected cabinet's scroll position. **Edit name** and **Change photo** focus the corresponding field in the existing cabinet editor. **Add games**, multi-cabinet assignments and the existing removal confirmation are available from the profile; removing a cabinet keeps the games and scores.
+
+### Marquee navigation and browsing pause
+
+The featured scoreboard uses large turquoise previous/next arrows beside an unframed marquee, larger dot-matrix initials, and a centered cabinet field. The former lower navigation dots are removed. Record dates and improvement amounts share a reserved row below the initials.
+
+Using either arrow holds automatic rotation for 60 seconds after the latest click; rotation resumes on the next scheduled rotation tick. This temporary hold is local to the display. Explicit Pause remains paused until Play is selected. Score polling, record ages and celebration updates continue independently.

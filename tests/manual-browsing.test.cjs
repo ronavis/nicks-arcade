@@ -1,0 +1,22 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const vm=require('node:vm');
+test('manual browsing holds rotation for sixty seconds, resets on navigation and preserves explicit pause',()=>{
+ const source=fs.readFileSync('app.js','utf8');
+ let now=1000, tick, advances=[];
+ const handlers={};
+ const context={Date:{now:()=>now},state:{paused:false},advance:step=>advances.push(step),$:id=>({addEventListener:(event,fn)=>handlers[id]=fn}),setInterval:fn=>{tick=fn;return 1},clearInterval(){},celebrationActive:false,document:{hidden:false,querySelector:()=>null},matchMedia:()=>({matches:false})};
+ vm.createContext(context);
+ vm.runInContext(source.slice(source.indexOf('let browsingUntil'),source.indexOf("$('pause').addEventListener")),context);
+ vm.runInContext(source.slice(source.indexOf('let rotationTimer'),source.indexOf('applyDisplaySettings({ rotationSeconds: 15 });')).replace("if ($('game-picker').open) renderPicker();",''),context);
+ vm.runInContext('applyDisplaySettings({rotationSeconds:15})',context);
+ handlers['next-game'](); assert.deepEqual(advances,[1]);
+ now=60000; tick(); assert.equal(advances.length,1);
+ handlers['previous-game'](); assert.deepEqual(advances,[1,-1]);
+ now=119999;tick();assert.equal(advances.length,2);
+ now=120000;tick();assert.equal(advances.length,3);
+ context.state.paused=true;now=200000;tick();assert.equal(advances.length,3);
+ context.state.paused=false;context.celebrationActive=true;tick();assert.equal(advances.length,3);
+ context.celebrationActive=false;context.document.hidden=true;tick();assert.equal(advances.length,3);
+});

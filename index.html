@@ -12,13 +12,13 @@
   <link rel="preload" href="vendor/bitcount-double.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="vendor/jersey10.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="vendor/icons/style.css">
-  <link rel="stylesheet" href="main.css?v=mobile-carousel-spacing-20261003">
+  <link rel="stylesheet" href="main.css?v=marquee-navigation-20261011">
   <script src="config.js" defer></script>
   <script src="vendor/qr.js" defer></script>
   <script src="record-celebrations.js?v=cabinet-gallery-20261003" defer></script>
   <script src="artwork-catalog.js?v=collection-20261001" defer></script>
   <script src="artwork.js?v=cabinet-only-1" defer></script>
-  <script src="app.js?v=cabinet-gallery-20261003" defer></script>
+  <script src="app.js?v=marquee-navigation-20261011" defer></script>
   <script src="cabinet-art.js?v=menu-settings-dk-20261001" defer></script>
   <script src="cabinets.js?v=cabinet-gallery-20261003" defer></script>
 </head>
@@ -42,13 +42,12 @@
         <header class="board-header"><h1>NICK’S ARCADE</h1><p>HIGH SCORES</p></header>
         <div class="board-paper">
           <section class="spotlight" aria-label="Featured game">
-            <img id="hero-marquee" class="hero-marquee" alt="" width="700" height="210">
+            <div class="marquee-navigation"><button id="previous-game" class="marquee-arrow previous" aria-label="Previous featured game"></button><img id="hero-marquee" class="hero-marquee" alt="" width="700" height="210"><button id="next-game" class="marquee-arrow next" aria-label="Next featured game"></button></div>
             <h2 id="hero-title" class="game-name">GALAGA</h2>
             <p id="record-label" class="rule-title red">RECORD TO BEAT</p>
             <div id="hero-score" class="hero-score">—</div>
-            <div class="initials-with-margin"><div id="hero-initials" class="hero-initials">—</div><button id="hero-improvement" class="record-improvement" hidden></button></div>
-            <p id="record-age" class="record-age"></p><div id="featured-cabinets" class="featured-cabinets unassigned"></div><div class="rotation"><button id="previous-game" class="plain icon-button" aria-label="Previous featured game"><i class="ph-bold ph-caret-left" aria-hidden="true"></i></button><div id="page-dots" class="page-dots"></div><button id="next-game" class="plain icon-button" aria-label="Next featured game"><i class="ph-bold ph-caret-right" aria-hidden="true"></i></button></div>
-          </section>
+            <div class="initials-with-margin"><div id="hero-initials" class="hero-initials">—</div></div>
+            <div class="record-details"><p id="record-age" class="record-age"></p><button id="hero-improvement" class="record-improvement" hidden></button></div><div id="featured-cabinets" class="featured-cabinets unassigned"></div></section>
           <section class="around"><h2 class="rule-title">AROUND THE ARCADE</h2><div id="around-list" class="around-list"></div></section>
         </div>
         <div class="board-footer"><a id="qr-link" class="qr-footer" href="#play"><div class="qr-box"><canvas id="qr-code" aria-label="QR code to enter a score at Nick’s Arcade"></canvas></div><div><strong>Play. Scan. Post.</strong><span>Sign in with Google to enter a score.</span></div></a><aside class="fair-play-note" aria-label="Fair play at Nick’s arcade"><div class="fair-play-heading"><img src="images/scouts-honor.png" alt="Three-finger scout’s-honor salute"><strong>PLAY<br>FAIR.</strong></div><p>Earn it at<br>Nick’s arcade.<br>Brag honestly.</p></aside></div>

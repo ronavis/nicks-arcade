@@ -49,7 +49,7 @@ function renderBoard() {
     $('hero-title').textContent = 'Nick’s Arcade'; $('record-label').textContent = 'LEADERBOARD';
     $('hero-score').textContent = 'COMING SOON'; $('hero-score').className = 'hero-score empty-record';
     $('hero-initials').textContent = ''; $('record-age').textContent = '';
-    renderImprovement('hero-improvement', null); $('around-list').replaceChildren(); delete $('around-list').dataset.rendered; $('page-dots').replaceChildren();
+    renderImprovement('hero-improvement', null); $('around-list').replaceChildren(); delete $('around-list').dataset.rendered;
     return;
   }
   state.featured = game.id; renderFeaturedCabinets(game);
@@ -77,13 +77,7 @@ function renderBoard() {
   }));
   }
   warmArtwork(around.map(artworkUrl));
-  const positions = Array.from({ length: Math.min(5, state.boardGames.length) }, (_, offset) => (index + offset) % state.boardGames.length);
-  $('page-dots').replaceChildren(...positions.map((position, offset) => {
-    const dot = node('button', `page-dot${offset === 0 ? ' active' : ''}`);
-    dot.setAttribute('aria-label', `Show ${state.boardGames[position].title}`);
-    if (!offset) dot.setAttribute('aria-current', 'true');
-    dot.addEventListener('click', () => feature(state.boardGames[position].id)); return dot;
-  }));
+
 }
 function refreshRecordAge() {
   const game = state.boardGames.find(game => game.id === state.featured) || state.boardGames[0];
@@ -277,8 +271,13 @@ function resizeBoard() { const width = $('board').clientWidth; if (width > 0) $(
 new ResizeObserver(resizeBoard).observe($('board'));
 window.addEventListener('hashchange', route);
 window.addEventListener('resize', resizeBoard);
-$('previous-game').addEventListener('click', () => advance(-1));
-$('next-game').addEventListener('click', () => advance());
+let browsingUntil = 0;
+function browseGame(step) {
+  browsingUntil = Date.now() + 60000;
+  advance(step);
+}
+$('previous-game').addEventListener('click', () => browseGame(-1));
+$('next-game').addEventListener('click', () => browseGame(1));
 $('pause').addEventListener('click', () => { state.paused = !state.paused; $('pause').replaceChildren(icon(state.paused ? 'play' : 'pause'), document.createTextNode(state.paused ? ' Play' : ' Pause')); });
 $('fullscreen').addEventListener('click', async () => {
   try { if (document.fullscreenElement) await document.exitFullscreen(); else await $('display-panel').requestFullscreen(); } catch (_) { $('connection').hidden = false; $('connection').textContent = 'Use your browser’s full-screen control on this device.'; }
@@ -294,7 +293,7 @@ function applyDisplaySettings(settings) {
   rotationSeconds = seconds;
   clearInterval(rotationTimer);
   rotationTimer = setInterval(() => {
-    if (!state.paused && !celebrationActive && !document.hidden && !matchMedia('(prefers-reduced-motion: reduce)').matches && !document.querySelector('dialog[open]')) advance();
+    if (Date.now() >= browsingUntil && !state.paused && !celebrationActive && !document.hidden && !matchMedia('(prefers-reduced-motion: reduce)').matches && !document.querySelector('dialog[open]')) advance();
   }, seconds * 1000);
 }
 applyDisplaySettings({ rotationSeconds: 15 });
