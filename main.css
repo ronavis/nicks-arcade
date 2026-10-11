@@ -378,3 +378,28 @@
  .spotlight .featured-cabinet span{flex-shrink:0}
  .spotlight .rotation{padding-block:calc(var(--u)*1);margin-bottom:calc(var(--u)*1.5)}
 }
+
+/* Nick's October scoreboard layout: artwork navigation and a spacious cabinet field. */
+.marquee-navigation{display:grid;grid-template-columns:12% minmax(0,1fr) 12%;align-items:center;gap:calc(var(--u)*2);width:100%;flex-shrink:0}
+.spotlight .marquee-navigation .hero-marquee{height:calc(var(--u)*14);border:0;border-radius:0;background:transparent;min-width:0}
+.marquee-arrow{display:flex;align-items:center;justify-content:center;width:100%;min-height:44px;height:calc(var(--u)*13);padding:0;border:0;background:transparent}
+.marquee-arrow:before{content:"";width:calc(var(--u)*8);height:calc(var(--u)*9);background:var(--cyan);clip-path:polygon(0 50%,100% 0,100% 100%)}
+.marquee-arrow.next:before{transform:rotate(180deg)}
+.marquee-arrow:hover:before{background:#008d98}
+.spotlight .hero-initials:not(.empty-record){font-size:calc(var(--u)*14);line-height:calc(var(--u)*14)}
+.spotlight .record-details{display:flex;justify-content:center;align-items:center;gap:calc(var(--u)*1.5);width:100%;min-height:calc(var(--u)*6);flex-shrink:0;margin:calc(var(--u)*1) 0}
+.record-details .record-age{margin:0}
+.record-details .record-age:empty{display:none}
+.record-details .record-improvement{position:relative;left:auto;top:auto;transform:none;max-width:35%;font-size:calc(var(--u)*2.5)}
+.spotlight>.featured-cabinets{height:calc(var(--u)*29);min-height:0;flex:1;display:flex;flex-direction:column;margin-top:calc(var(--u)*1);padding-bottom:calc(var(--u)*3)}
+.spotlight .cabinet-strip-label{flex-shrink:0}
+.spotlight .cabinet-strip-row{flex:1;min-height:0;align-items:center}
+.spotlight .featured-cabinet{display:flex;flex-direction:column;align-items:center}
+.spotlight .cabinet-crop{height:calc(var(--u)*18);width:100%;flex:none}
+.spotlight .featured-cabinet span{flex-shrink:0}
+.spotlight .cabinet-strip-row{align-items:stretch;padding-top:calc(var(--u)*1)}
+.spotlight .featured-cabinet{height:100%;min-height:0;justify-content:center}
+.spotlight .cabinet-crop{flex:1;min-height:0;max-height:calc(var(--u)*18);height:auto}
+.spotlight .hero-initials:not(.empty-record){line-height:calc(var(--u)*11)}
+.spotlight .record-details{min-height:calc(var(--u)*4);margin:calc(var(--u)*.5) 0}
+.spotlight>.featured-cabinets{padding-bottom:calc(var(--u)*2)}
