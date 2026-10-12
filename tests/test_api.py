@@ -11,9 +11,10 @@ from server.app import create_app, score_value
 
 
 def identity(token):
-    if token not in {'player', 'admin', 'unverified', 'outsider'}:
+    if token not in {'player', 'admin', 'nick', 'unverified', 'outsider'}:
         raise ValueError('Invalid test identity')
-    return {'sub': token, 'email': 'ronavis@gmail.com' if token == 'admin' else 'player@gmail.com', 'email_verified': token != 'unverified'}
+    email = {'admin': 'ronavis@gmail.com', 'nick': 'nick@gmail.com'}.get(token, 'player@gmail.com')
+    return {'sub': token, 'email': email, 'email_verified': token != 'unverified'}
 
 
 @pytest.fixture
@@ -786,3 +787,221 @@ def test_admin_record_history_faster_times_and_tracking_gap(app):
     result=c.get('/api/admin/scores?gameId=vsexcitebike',headers=headers('admin')).json
     assert result['untrackedSubmissions']==2
     assert len(result['recordHistory'])==1 and result['recordHistory'][0]['imported']
+
+
+class FakeTmdbResponse:
+    def __init__(self, payload, status_code=200):
+        self._payload = payload
+        self.status_code = status_code
+        self.ok = 200 <= status_code < 300
+
+    def json(self):
+        return self._payload
+
+
+def test_movie_ladder_tmdb_is_ron_only_even_for_another_arcade_admin(app, monkeypatch):
+    app.config['ADMIN_EMAILS'].add('nick@gmail.com')
+    c = app.test_client()
+    assert c.get('/api/session', headers=headers('nick')).json['admin'] is True
+    assert c.get('/api/movie-ladder/admin/tmdb', headers=headers('nick')).status_code == 403
+    assert c.get('/api/movie-ladder/admin/tmdb', headers=headers('admin')).json == {
+        'configured': False, 'lastVerifiedAt': None
+    }
+
+    calls = []
+    def fake_get(url, headers=None, params=None, timeout=None):
+        calls.append((url, headers, params, timeout))
+        return FakeTmdbResponse({'images': {}})
+
+    import server.app as module
+    monkeypatch.setattr(module.requests, 'get', fake_get)
+    token = 'tmdb-read-token-' + ('x' * 40)
+    saved = c.put('/api/movie-ladder/admin/tmdb', headers=headers('admin'), json={'token': token})
+    assert saved.status_code == 200
+    assert saved.json['configured'] is True
+    assert token not in saved.text
+    status = c.get('/api/movie-ladder/admin/tmdb', headers=headers('admin'))
+    assert status.status_code == 200 and status.json['configured'] is True
+    assert token not in status.text
+    assert calls[0][0].endswith('/configuration')
+    assert calls[0][1]['Authorization'] == 'Bearer ' + token
+    assert calls[0][3] == 10
+
+
+def test_movie_ladder_tmdb_rejected_token_is_not_saved(app, monkeypatch):
+    import server.app as module
+    monkeypatch.setattr(
+        module.requests,
+        'get',
+        lambda *a, **k: FakeTmdbResponse({'status_message': 'Invalid API key'}, 401),
+    )
+    c = app.test_client()
+    token = 'tmdb-read-token-' + ('y' * 40)
+    response = c.put('/api/movie-ladder/admin/tmdb', headers=headers('admin'), json={'token': token})
+    assert response.status_code == 502
+    status = c.get('/api/movie-ladder/admin/tmdb', headers=headers('admin'))
+    assert status.json == {'configured': False, 'lastVerifiedAt': None}
+
+
+def test_movie_ladder_tmdb_search_uses_private_stored_token_and_normalizes_artwork(app, monkeypatch):
+    import server.app as module
+    requests_seen = []
+
+    def fake_get(url, headers=None, params=None, timeout=None):
+        requests_seen.append((url, dict(headers or {}), dict(params or {})))
+        if url.endswith('/configuration'):
+            return FakeTmdbResponse({'images': {}})
+        if url.endswith('/search/movie'):
+            return FakeTmdbResponse({'results': [{
+                'id': 578,
+                'title': 'Jaws',
+                'release_date': '1975-06-20',
+                'poster_path': '/poster.jpg',
+                'backdrop_path': '/backdrop.jpg',
+            }]})
+        raise AssertionError(url)
+
+    monkeypatch.setattr(module.requests, 'get', fake_get)
+    c = app.test_client()
+    token = 'tmdb-read-token-' + ('z' * 40)
+    assert c.put('/api/movie-ladder/admin/tmdb', headers=headers('admin'), json={'token': token}).status_code == 200
+
+    result = c.get('/api/movie-ladder/tmdb/search?title=Jaws&year=1975')
+    assert result.status_code == 200
+    assert result.json == {
+        'id': 578,
+        'title': 'Jaws',
+        'releaseDate': '1975-06-20',
+        'poster': 'https://image.tmdb.org/t/p/w500/poster.jpg',
+        'backdrop': 'https://image.tmdb.org/t/p/w780/backdrop.jpg',
+    }
+    assert token not in result.text
+    search = requests_seen[-1]
+    assert search[1]['Authorization'] == 'Bearer ' + token
+    assert search[2]['query'] == 'Jaws'
+    assert search[2]['year'] == '1975'
+
+
+def test_movie_ladder_tmdb_test_and_disconnect(app, monkeypatch):
+    import server.app as module
+    monkeypatch.setattr(module.requests, 'get', lambda *a, **k: FakeTmdbResponse({'images': {}}))
+    c = app.test_client()
+    token = 'tmdb-read-token-' + ('q' * 40)
+    assert c.put('/api/movie-ladder/admin/tmdb', headers=headers('admin'), json={'token': token}).status_code == 200
+    tested = c.post('/api/movie-ladder/admin/tmdb/test', headers=headers('admin'))
+    assert tested.status_code == 200 and tested.json['ok'] is True
+    removed = c.delete('/api/movie-ladder/admin/tmdb', headers=headers('admin'))
+    assert removed.json == {'configured': False}
+    assert c.get('/api/movie-ladder/tmdb/search?title=Jaws&year=1975').status_code == 503
+
+
+def test_movie_ladder_tmdb_person_prefers_actor_and_returns_profile(app, monkeypatch):
+    import server.app as module
+
+    def fake_get(url, headers=None, params=None, timeout=None):
+        if url.endswith('/configuration'):
+            return FakeTmdbResponse({'images': {}})
+        if url.endswith('/search/person'):
+            assert params['query'] == 'Harrison Ford'
+            return FakeTmdbResponse({'results': [
+                {
+                    'id': 999,
+                    'name': 'Harrison Ford',
+                    'known_for_department': 'Directing',
+                    'profile_path': '/wrong.jpg',
+                },
+                {
+                    'id': 3,
+                    'name': 'Harrison Ford',
+                    'known_for_department': 'Acting',
+                    'profile_path': '/harrison.jpg',
+                },
+            ]})
+        raise AssertionError(url)
+
+    monkeypatch.setattr(module.requests, 'get', fake_get)
+    c = app.test_client()
+    token = 'tmdb-read-token-' + ('p' * 40)
+    assert c.put('/api/movie-ladder/admin/tmdb', headers=headers('admin'), json={'token': token}).status_code == 200
+
+    result = c.get('/api/movie-ladder/tmdb/person?name=Harrison%20Ford')
+    assert result.status_code == 200
+    assert result.json == {
+        'id': 3,
+        'name': 'Harrison Ford',
+        'department': 'Acting',
+        'profile': 'https://image.tmdb.org/t/p/w185/harrison.jpg',
+    }
+    assert token not in result.text
+
+
+def test_movie_ladder_tmdb_person_missing_profile_is_safe(app, monkeypatch):
+    import server.app as module
+
+    def fake_get(url, headers=None, params=None, timeout=None):
+        if url.endswith('/configuration'):
+            return FakeTmdbResponse({'images': {}})
+        if url.endswith('/search/person'):
+            return FakeTmdbResponse({'results': [{
+                'id': 4,
+                'name': 'No Photo Actor',
+                'known_for_department': 'Acting',
+                'profile_path': None,
+            }]})
+        raise AssertionError(url)
+
+    monkeypatch.setattr(module.requests, 'get', fake_get)
+    c = app.test_client()
+    token = 'tmdb-read-token-' + ('r' * 40)
+    assert c.put('/api/movie-ladder/admin/tmdb', headers=headers('admin'), json={'token': token}).status_code == 200
+    result = c.get('/api/movie-ladder/tmdb/person?name=No%20Photo%20Actor')
+    assert result.status_code == 200
+    assert result.json['profile'] is None
+
+
+def test_movie_ladder_tmdb_person_can_prefer_director_department(app, monkeypatch):
+    import server.app as module
+
+    def fake_get(url, headers=None, params=None, timeout=None):
+        if url.endswith('/configuration'):
+            return FakeTmdbResponse({'images': {}})
+        if url.endswith('/search/person'):
+            assert params['query'] == 'John Carpenter'
+            return FakeTmdbResponse({'results': [
+                {
+                    'id': 100,
+                    'name': 'John Carpenter',
+                    'known_for_department': 'Acting',
+                    'profile_path': '/actor.jpg',
+                },
+                {
+                    'id': 11770,
+                    'name': 'John Carpenter',
+                    'known_for_department': 'Directing',
+                    'profile_path': '/director.jpg',
+                },
+            ]})
+        raise AssertionError(url)
+
+    monkeypatch.setattr(module.requests, 'get', fake_get)
+    c = app.test_client()
+    token = 'tmdb-read-token-' + ('d' * 40)
+    assert c.put('/api/movie-ladder/admin/tmdb', headers=headers('admin'), json={'token': token}).status_code == 200
+
+    result = c.get('/api/movie-ladder/tmdb/person?name=John%20Carpenter&department=Directing')
+    assert result.status_code == 200
+    assert result.json == {
+        'id': 11770,
+        'name': 'John Carpenter',
+        'department': 'Directing',
+        'profile': 'https://image.tmdb.org/t/p/w185/director.jpg',
+    }
+
+
+def test_movie_ladder_tmdb_person_rejects_unknown_department(app, monkeypatch):
+    import server.app as module
+    monkeypatch.setattr(module.requests, 'get', lambda *a, **k: FakeTmdbResponse({'images': {}}))
+    c = app.test_client()
+    token = 'tmdb-read-token-' + ('e' * 40)
+    assert c.put('/api/movie-ladder/admin/tmdb', headers=headers('admin'), json={'token': token}).status_code == 200
+    assert c.get('/api/movie-ladder/tmdb/person?name=Someone&department=Producing').status_code == 400
